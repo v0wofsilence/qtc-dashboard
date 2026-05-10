@@ -125,6 +125,25 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .td-cell-val{font-family:var(--mono);font-size:.9rem;font-weight:600;color:var(--w1)}
 .td-cell-sub{font-family:var(--mono);font-size:.5rem;color:var(--w4);margin-top:.1rem}
 .td-bar{height:4px;background:var(--b5);margin-top:.3rem}.td-bar-fill{height:100%}
+.tp-hero{display:flex;gap:1.5rem;align-items:center;padding:1.2rem;background:var(--b2);border:1px solid var(--b5);margin-bottom:1.5rem}
+.tp-score-ring{position:relative;width:120px;height:120px;flex-shrink:0}
+.tp-score-ring svg{width:120px;height:120px;transform:rotate(-90deg)}
+.tp-ring-bg{fill:none;stroke:var(--b5);stroke-width:6}
+.tp-ring-fg{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .6s}
+.tp-score-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.tp-score-num{font-family:var(--mono);font-size:2rem;font-weight:700;line-height:1}
+.tp-score-label{font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)}
+.tp-info{flex:1}
+.tp-name{font-weight:700;font-size:1.1rem;color:var(--w);margin-bottom:.2rem}
+.tp-tier-tag{display:inline-block;font-family:var(--mono);font-size:.56rem;font-weight:600;color:var(--accent);border:1px solid rgba(140,177,246,.3);padding:2px 8px;margin-bottom:.5rem}
+.tp-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+.tp-meta-item{display:flex;flex-direction:column}
+.tp-meta-label{font-size:.48rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)}
+.tp-meta-val{font-family:var(--mono);font-size:.85rem;font-weight:600}
+.tp-notes{background:var(--b2);border:1px solid var(--b5);padding:1rem;margin-bottom:1.5rem}
+.tp-notes textarea{width:100%;min-height:80px;padding:8px 10px;background:var(--b4);border:1px solid var(--b5);color:var(--w1);font-family:var(--font);font-size:.74rem;resize:vertical}
+.tp-notes textarea:focus{outline:none;border-color:var(--accent)}
+.tp-back{font-size:.72rem;color:var(--accent);cursor:pointer;margin-bottom:1rem;display:inline-block}.tp-back:hover{text-decoration:underline}
 /* ── Edit Modal ── */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
@@ -168,6 +187,7 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 <div id="v-calendar" class="vw"><div id="dayPanel" class="day-panel"></div><div id="calc"></div></div>
 <div id="v-roster" class="vw"><div id="rost"></div></div>
 <div id="v-salary" class="vw"><div id="salc"></div></div>
+<div id="v-trader" class="vw"><div id="tdetail"></div></div>
 <div id="v-system" class="vw"><div id="sysc"></div></div>
 </div>
 </div>
@@ -303,41 +323,66 @@ if(!pnl&&!salEvts.length&&!trades.length)h+='<div style="text-align:center;paddi
 panel.innerHTML=h;panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'start'})}
 function closeDay(){E('dayPanel').classList.remove('open');E('dayPanel').innerHTML=''}
 
-// ── VIEW TRADER DETAIL (modal) ──
+// ── SHARPE & SORTINO ──
+function calcRatios(dailyPnl,bal){
+  var vals=Object.values(dailyPnl||{});if(vals.length<5)return{sharpe:'—',sortino:'—',conf:'Low'};
+  // Group into monthly returns
+  var months={};Object.keys(dailyPnl).forEach(function(dt){var mk=dt.slice(0,7);months[mk]=(months[mk]||0)+dailyPnl[dt]});
+  var mRets=Object.values(months).map(function(v){return bal>0?v/bal:0});
+  if(mRets.length<2)return{sharpe:'—',sortino:'—',conf:'Low'};
+  var mean=mRets.reduce(function(a,b){return a+b},0)/mRets.length;
+  var variance=mRets.reduce(function(a,b){return a+(b-mean)*(b-mean)},0)/mRets.length;
+  var std=Math.sqrt(variance);
+  var downside=mRets.filter(function(r){return r<0});
+  var downVar=downside.length>0?downside.reduce(function(a,b){return a+b*b},0)/downside.length:0;
+  var downStd=Math.sqrt(downVar);
+  var rf=0.05/12; // ~5% annual risk-free
+  var sharpe=std>0?((mean-rf)*Math.sqrt(12))/(std*Math.sqrt(12)):0;
+  var sortino=downStd>0?((mean-rf)*Math.sqrt(12))/(downStd*Math.sqrt(12)):0;
+  var conf=mRets.length>=12?'High':mRets.length>=6?'Medium':'Low';
+  return{sharpe:sharpe.toFixed(2),sortino:sortino.toFixed(2),conf:conf}
+}
+
+// ── TRADER NOTES (localStorage) ──
+function getNote(id){return(S.sal[id]&&S.sal[id].notes)||''}
+function saveNote(id){var el=E('tp-notes-input');if(!el)return;var s=S.sal[id]||{};s.notes=el.value;S.sal[id]=s;sS()}
+
+// ── VIEW TRADER (full page) ──
 function viewTrader(id){
-  var t=gt(id);if(!t)return;var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{};
+  nav('trader');
+  var t=gt(id);if(!t){E('tdetail').innerHTML='<div class="nil">Not found</div>';return}
+  var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{};
   var b=l?.balance||0,e=l?.equity||0,u=e-b,h=hlth(S.hist[id]||[]);
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id);
   var f=fees(q.pnl||0,s.split||50,s.amt||0,b,di.paidThisCycle);
+  var ratios=calcRatios(q.dailyPnl||{},b);
 
-  var html='<div class="modal-header"><div class="modal-title">'+a.name+' — Full Profile</div><div class="modal-close" onclick="closeEdit()">✕</div></div><div class="modal-body" style="max-height:70vh;overflow-y:auto">';
+  // Q-Score hero ring
+  var circ=2*Math.PI*48,offset=circ-(( q.score||0)/100)*circ;
+  var html='<span class="tp-back" onclick="nav(\'roster\')">← Back to Roster</span>';
+  html+='<div class="tp-hero"><div class="tp-score-ring"><svg viewBox="0 0 120 120"><circle class="tp-ring-bg" cx="60" cy="60" r="48"/><circle class="tp-ring-fg" cx="60" cy="60" r="48" stroke="'+tCol(q.score||0)+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'"/></svg><div class="tp-score-center"><div class="tp-score-num" style="color:'+tCol(q.score||0)+'">'+(q.score||'—')+'</div><div class="tp-score-label">Q-Score</div></div></div>';
+  html+='<div class="tp-info"><div class="tp-name">'+a.name+' <span style="color:'+h.c+';font-size:.8rem">'+h.a+'</span> <span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">FE '+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></div>';
+  html+='<div class="tp-tier-tag">'+trTier+' · '+(q.conf||'—')+' confidence · '+h.l+'</div>';
+  html+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(b)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sharpe</span><span class="tp-meta-val">'+ratios.sharpe+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sortino</span><span class="tp-meta-val">'+ratios.sortino+'</span></div></div></div></div>';
 
-  // Core metrics
-  html+='<div class="td-section"><div class="td-section-title">Performance</div><div class="td-grid">';
-  html+='<div class="td-cell"><div class="td-cell-label">Q-Score</div><div class="td-cell-val" style="color:'+tCol(q.score||0)+';font-size:1.3rem">'+(q.score||'—')+'</div><div class="td-cell-sub">'+( q.conf||'—')+' · <span style="color:'+h.c+'">'+h.a+' '+h.l+'</span></div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Tier</div><div class="td-cell-val" style="font-size:.8rem">'+trTier+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Balance</div><div class="td-cell-val">$'+F(b)+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Equity</div><div class="td-cell-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Open P&L</div><div class="td-cell-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</div></div>';
+  // Performance & Ratios
+  html+='<div class="td-section"><div class="td-section-title">Performance & Risk Ratios</div><div class="td-grid">';
   html+='<div class="td-cell"><div class="td-cell-label">Total P&L</div><div class="td-cell-val" style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Return</div><div class="td-cell-val">'+(q.ret||'0')+'%</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Max DD</div><div class="td-cell-val" style="color:var(--dn)">'+(q.dd||'0')+'%</div></div>';
-  html+='</div></div>';
-
-  // Trading stats
-  html+='<div class="td-section"><div class="td-section-title">Trading Statistics</div><div class="td-grid">';
   html+='<div class="td-cell"><div class="td-cell-label">Win Rate</div><div class="td-cell-val">'+(q.wr||'0')+'%</div><div class="td-bar"><div class="td-bar-fill" style="width:'+(q.wr||0)+'%;background:'+(parseFloat(q.wr||0)>=50?'var(--up)':'var(--dn)')+'"></div></div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Profit Factor</div><div class="td-cell-val">'+(q.pf||'0')+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Total Trades</div><div class="td-cell-val">'+(q.trades||0)+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Trading Days</div><div class="td-cell-val">'+(q.days||0)+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Sharpe Ratio</div><div class="td-cell-val" style="color:'+(parseFloat(ratios.sharpe)>=1?'var(--up)':parseFloat(ratios.sharpe)>=0.5?'var(--warn)':'var(--dn)')+'">'+ratios.sharpe+'</div><div class="td-cell-sub">'+ratios.conf+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Sortino Ratio</div><div class="td-cell-val" style="color:'+(parseFloat(ratios.sortino)>=2?'var(--up)':parseFloat(ratios.sortino)>=1?'var(--warn)':'var(--dn)')+'">'+ratios.sortino+'</div><div class="td-cell-sub">'+ratios.conf+'</div></div>';
   html+='</div></div>';
 
   // Q-Score breakdown
   if(q.at&&q.at.rc!==undefined){
     html+='<div class="td-section"><div class="td-section-title">Q-Score Attributes</div><div class="td-grid">';
-    var attrs=[{n:'Risk Control',s:q.at.rc,w:25},{n:'Performance',s:q.at.fp,w:20.5},{n:'Consistency',s:q.at.cs,w:20.5},{n:'DD Recovery',s:q.at.dr,w:11.4},{n:'Discipline',s:q.at.dp,w:11.4},{n:'Eval Quality',s:q.at.eq,w:11.4}];
-    attrs.forEach(function(at){html+='<div class="td-cell"><div class="td-cell-label">'+at.n+' ('+at.w+'%)</div><div class="td-cell-val" style="color:'+tCol(at.s||0)+'">'+(at.s||'—')+'</div><div class="td-bar"><div class="td-bar-fill" style="width:'+(at.s||0)+'%;background:var(--accent)"></div></div></div>'});
+    [{n:'Risk Control',s:q.at.rc,w:25},{n:'Performance',s:q.at.fp,w:20.5},{n:'Consistency',s:q.at.cs,w:20.5},{n:'DD Recovery',s:q.at.dr,w:11.4},{n:'Discipline',s:q.at.dp,w:11.4},{n:'Eval Quality',s:q.at.eq,w:11.4}].forEach(function(at){html+='<div class="td-cell"><div class="td-cell-label">'+at.n+' ('+at.w+'%)</div><div class="td-cell-val" style="color:'+tCol(at.s||0)+'">'+(at.s||'—')+'</div><div class="td-bar"><div class="td-bar-fill" style="width:'+(at.s||0)+'%;background:var(--accent)"></div></div></div>'});
     html+='</div></div>';
   }
 
@@ -348,44 +393,49 @@ function viewTrader(id){
   html+='<div class="td-cell"><div class="td-cell-label">Net Firm</div><div class="td-cell-val" style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Breakeven</div><div class="td-cell-val">$'+f.be.toLocaleString()+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">ROIC</div><div class="td-cell-val">'+f.roic+'%</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Split</div><div class="td-cell-val">'+(s.split||50)+'%</div></div>';
   html+='</div></div>';
 
   // Salary
   html+='<div class="td-section"><div class="td-section-title">Salary</div><div class="td-grid">';
   html+='<div class="td-cell"><div class="td-cell-label">Amount</div><div class="td-cell-val">$'+(s.amt||0).toLocaleString()+'/mo</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Split</div><div class="td-cell-val">'+(s.split||50)+'%</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Cycle</div><div class="td-cell-val" style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">Day '+di.daysSince+'/'+di.cycle+(di.paidThisCycle?' PAID':'')+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Lifetime Paid</div><div class="td-cell-val">$'+(s.paid||0).toLocaleString()+'</div><div class="td-cell-sub">'+(s.months||0)+' months</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Start Date</div><div class="td-cell-val" style="font-size:.7rem">'+(s.start||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Next Due</div><div class="td-cell-val" style="font-size:.7rem">'+di.dueDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Start Date</div><div class="td-cell-val" style="font-size:.72rem">'+(s.start||'—')+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Next Due</div><div class="td-cell-val" style="font-size:.72rem">'+di.dueDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+'</div></div>';
   html+='</div></div>';
+
+  // Notes
+  html+='<div class="td-section"><div class="td-section-title">Notes</div><div class="tp-notes"><textarea id="tp-notes-input" placeholder="Add notes about this trader...">'+getNote(id).replace(/</g,'&lt;')+'</textarea><div style="margin-top:.4rem"><button class="btn btn-s" onclick="saveNote(\''+id+'\')">Save Notes</button></div></div></div>';
 
   // Open positions
   var pos=(t.pos||[]);
   if(pos.length){
-    html+='<div class="td-section"><div class="td-section-title">Open Positions ('+pos.length+')</div><table style="width:100%"><thead><tr><th>Symbol</th><th>Side</th><th>Vol</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead><tbody>';
+    html+='<div class="td-section"><div class="td-section-title">Open Positions ('+pos.length+')</div><div class="tw"><table><thead><tr><th>Symbol</th><th>Side</th><th>Vol</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead><tbody>';
     pos.forEach(function(p){var pn=p.profit||0;var buy=p.type&&p.type.includes('BUY');html+='<tr><td>'+p.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(p.volume||'—')+'</td><td>'+F(p.openPrice,5)+'</td><td>'+F(p.currentPrice,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});
-    html+='</tbody></table></div>';
+    html+='</tbody></table></div></div>';
   }
 
   // Recent trades
-  var trades=(t.hist||[]).slice().sort(function(a,b){return new Date(b.time)-new Date(a.time)}).slice(0,20);
+  var trades=(t.hist||[]).slice().sort(function(a,b){return new Date(b.time)-new Date(a.time)}).slice(0,30);
   if(trades.length){
-    html+='<div class="td-section"><div class="td-section-title">Recent Trades ('+Math.min(20,(t.hist||[]).length)+' of '+(t.hist||[]).length+')</div><table style="width:100%"><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Vol</th><th>P&L</th></tr></thead><tbody>';
+    html+='<div class="td-section"><div class="td-section-title">Recent Trades ('+Math.min(30,(t.hist||[]).length)+' of '+(t.hist||[]).length+')</div><div class="tw"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Vol</th><th>P&L</th></tr></thead><tbody>';
     trades.forEach(function(tr){var pn=tr.profit||0;var d=new Date(tr.time);var buy=tr.type==='DEAL_TYPE_BUY';html+='<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td>'+tr.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(tr.volume||'—')+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});
-    html+='</tbody></table></div>';
+    html+='</tbody></table></div></div>';
   }
 
-  // Connection info
+  // Connection
   html+='<div class="td-section"><div class="td-section-title">Connection</div><div class="td-grid">';
-  html+='<div class="td-cell"><div class="td-cell-label">Status</div><div class="td-cell-val cv '+(a.connectionStatus==='CONNECTED'?'up':a.connectionStatus==='MANUAL'?'ac':'dn')+'" style="font-size:.7rem">'+(a.connectionStatus||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Server</div><div class="td-cell-val" style="font-size:.65rem">'+(a.server||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Login</div><div class="td-cell-val" style="font-size:.65rem">'+(a.login||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Platform</div><div class="td-cell-val" style="font-size:.65rem">'+(a.platform||'—')+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Status</div><div class="td-cell-val cv '+(a.connectionStatus==='CONNECTED'?'up':a.connectionStatus==='MANUAL'?'ac':'dn')+'" style="font-size:.72rem">'+(a.connectionStatus||'—')+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Server</div><div class="td-cell-val" style="font-size:.68rem">'+(a.server||'—')+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Login</div><div class="td-cell-val" style="font-size:.68rem">'+(a.login||'—')+'</div></div>';
+  html+='<div class="td-cell"><div class="td-cell-label">Platform</div><div class="td-cell-val" style="font-size:.68rem">'+(a.platform||'—')+'</div></div>';
   html+='</div></div>';
 
-  html+='</div><div class="modal-footer"><button class="btn" onclick="editTrader(\''+id+'\')">Edit Trader</button><button class="btn" onclick="closeEdit()">Close</button></div>';
-  E('editModalContent').innerHTML=html;E('editModal').classList.add('open');
+  // Action buttons
+  html+='<div class="br" style="margin-top:1rem"><button class="btn" onclick="editTrader(\''+id+'\')">Edit Trader</button></div>';
+
+  E('tdetail').innerHTML=html;
 }
 
 // ── ROSTER ──
