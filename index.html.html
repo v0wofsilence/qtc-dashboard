@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QT Capital — MetaAPI Live Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0E14;--bg2:#111620;--bg3:#161B26;--bg4:#1C2233;--bdr:#1E2536;--t1:#E8ECF4;--t2:#8892A6;--t3:#555F73;--blue:#2E75B6;--orange:#ED8936;--green:#38A169;--red:#E53E3E;--purple:#8B5CF6;--cyan:#06B6D4;--grad:linear-gradient(135deg,#2E75B6,#ED8936)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;min-height:100vh}
+.app{max-width:1200px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.hdr{text-align:center;margin-bottom:2rem}
+.hdr-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);background:rgba(237,137,54,.1);border:1px solid rgba(237,137,54,.2);padding:3px 14px;border-radius:100px;margin-bottom:.8rem}
+.hdr h1{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.2rem}
+.hdr p{color:var(--t2);font-size:.8rem}
+.status-bar{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.5rem;padding:.6rem 1rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;font-size:.78rem}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.ok{background:var(--green);box-shadow:0 0 6px rgba(56,161,105,.5)}
+.dot.err{background:var(--red);box-shadow:0 0 6px rgba(229,62,62,.5)}
+.dot.load{background:var(--orange);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#statusText{color:var(--t2)}
+.log{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-height:250px;overflow-y:auto;font-family:'DM Mono',monospace;font-size:.7rem;line-height:1.8;color:var(--t3)}
+.log-ok{color:var(--green)}.log-err{color:var(--red)}.log-info{color:var(--cyan)}.log-warn{color:var(--orange)}
+.card{background:var(--bg3);border:1px solid var(--bdr);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.card.c-blue::before{background:var(--blue)}.card.c-green::before{background:var(--green)}.card.c-orange::before{background:var(--orange)}.card.c-purple::before{background:var(--purple)}
+.card h3{font-size:.88rem;font-weight:600;margin-bottom:1rem}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
+.kpi{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:.9rem;text-align:center}
+.kpi-label{font-size:.58rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:.25rem}
+.kpi-val{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:700}
+.kpi-sub{font-size:.62rem;color:var(--t3);margin-top:.1rem}
+table{width:100%;border-collapse:collapse;font-size:.76rem}
+th{text-align:left;padding:7px 10px;background:var(--bg2);color:var(--t3);font-weight:600;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
+td{padding:7px 10px;border-bottom:1px solid var(--bdr);color:var(--t2)}
+tr:hover td{background:var(--bg4)}
+.empty{text-align:center;padding:2rem;color:var(--t3);font-size:.8rem}
+.btn{display:block;width:100%;max-width:320px;margin:0 auto 1.5rem;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--blue),#3d88c9);border:none;border-radius:10px;cursor:pointer;transition:all .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(46,117,182,.3)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.ts{font-size:.68rem;color:var(--t3);font-family:'DM Mono',monospace;margin-left:.5rem}
+.metric-row{display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bdr);font-size:.82rem}
+.metric-row:last-child{border-bottom:none}
+.ml{color:var(--t2)}.mv{font-family:'DM Mono',monospace;font-weight:600}
+@media(max-width:768px){.app{padding:1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <div class="hdr-badge">QT Capital</div>
+  <h1>MetaAPI Live Feed</h1>
+  <p>Real-time connection to your MT5 account</p>
+</div>
+
+<div class="status-bar">
+  <div class="dot" id="dot"></div>
+  <span id="statusText">Ready — click Connect</span>
+</div>
+
+<button class="btn" id="connectBtn" onclick="startConnection()">Connect to MetaAPI</button>
+
+<div class="log" id="log"></div>
+
+<div id="dashboard" style="display:none">
+  <div id="accountPanel"></div>
+  <div id="metricsPanel"></div>
+  <div id="connPanel"></div>
+</div>
+
+</div>
+
+<script>
+const TOKEN = 'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJlY2RmMWNiYTg0YWU3MDJmZThhNmZhMzM1YTJlYWE4ZiIsImFjY2Vzc1J1bGVzIjpbeyJpZCI6InRyYWRpbmctYWNjb3VudC1tYW5hZ2VtZW50LWFwaSIsIm1ldGhvZHMiOlsidHJhZGluZy1hY2NvdW50LW1hbmFnZW1lbnQtYXBpOnJlc3Q6cHVibGljOio6KiJdLCJyb2xlcyI6WyJyZWFkZXIiXSwicmVzb3VyY2VzIjpbImFjY291bnQ6JFVTRVJfSUQkOjZlZDU1MTM0LThjOTgtNDNjOS1hM2M5LTYxM2IxMGYyYTM3YiJdfSx7ImlkIjoibWV0YWFwaS1yZXN0LWFwaSIsIm1ldGhvZHMiOlsibWV0YWFwaS1hcGk6cmVzdDpwdWJsaWM6KjoqIl0sInJvbGVzIjpbInJlYWRlciIsIndyaXRlciJdLCJyZXNvdXJjZXMiOlsiYWNjb3VudDokVVNFUl9JRCQ6NmVkNTUxMzQtOGM5OC00M2M5LWEzYzktNjEzYjEwZjJhMzdiIl19LHsiaWQiOiJtZXRhYXBpLXJwYy1hcGkiLCJtZXRob2RzIjpbIm1ldGFhcGktYXBpOndzOnB1YmxpYzoqOioiXSwicm9sZXMiOlsicmVhZGVyIiwid3JpdGVyIl0sInJlc291cmNlcyI6WyJhY2NvdW50OiRVU0VSX0lEJDo2ZWQ1NTEzNC04Yzk4LTQzYzktYTNjOS02MTNiMTBmMmEzN2IiXX0seyJpZCI6Im1ldGFhcGktcmVhbC10aW1lLXN0cmVhbWluZy1hcGkiLCJtZXRob2RzIjpbIm1ldGFhcGktYXBpOndzOnB1YmxpYzoqOioiXSwicm9sZXMiOlsicmVhZGVyIiwid3JpdGVyIl0sInJlc291cmNlcyI6WyJhY2NvdW50OiRVU0VSX0lEJDo2ZWQ1NTEzNC04Yzk4LTQzYzktYTNjOS02MTNiMTBmMmEzN2IiXX0seyJpZCI6Im1ldGFzdGF0cy1hcGkiLCJtZXRob2RzIjpbIm1ldGFzdGF0cy1hcGk6cmVzdDpwdWJsaWM6KjoqIl0sInJvbGVzIjpbInJlYWRlciJdLCJyZXNvdXJjZXMiOlsiYWNjb3VudDokVVNFUl9JRCQ6NmVkNTUxMzQtOGM5OC00M2M5LWEzYzktNjEzYjEwZjJhMzdiIl19LHsiaWQiOiJyaXNrLW1hbmFnZW1lbnQtYXBpIiwibWV0aG9kcyI6WyJyaXNrLW1hbmFnZW1lbnQtYXBpOnJlc3Q6cHVibGljOio6KiJdLCJyb2xlcyI6WyJyZWFkZXIiXSwicmVzb3VyY2VzIjpbImFjY291bnQ6JFVTRVJfSUQkOjZlZDU1MTM0LThjOTgtNDNjOS1hM2M5LTYxM2IxMGYyYTM3YiJdfV0sImlnbm9yZVJhdGVMaW1pdHMiOmZhbHNlLCJ0b2tlbklkIjoiMjAyMTAyMTMiLCJpbXBlcnNvbmF0ZWQiOmZhbHNlLCJyZWFsVXNlcklkIjoiZWNkZjFjYmE4NGFlNzAyZmU4YTZmYTMzNWEyZWFhOGYiLCJpYXQiOjE3Nzg0NDAzNDEsImV4cCI6MTc4NjIxNjM0MX0.mxPEPwygNAzjQ_9vVZIa0EXE5yS-1fklroBX3Q2jhTfUj894_Drm3KeI5Jd1G3HUcmLH2GrjCE_yTWOVa9uIqldD-kEJ6RA7bNLMGfjhim10dtwtJWUDvq13s3o4wFnJvOclAbyiJ5SNMsSleT1OKWwXdxutO1mxq2PQGnhBcX0xcdxoLf90cbbQu0UT274UBSSEP66S_SkQu0v5l8yzeOBIzTdL6Pd-o0rrn-IZtnexJPG55jAdH5T6AJ8JCkOwTUDcxpMwlZ_N42QQ1dfWNbJBQ-0aGbAWK8iLdEpsDX8mn6qtR6CXKt_MCwfrApKGZTrv_oQVqYibyqTkNqEp4LP56TaleZO4YzALk1zaIn7727Z0JQaSgP5ROqvR6vH2XHxlJriETK7VU2mj0w7xln0R3TA4pb4XZ2YxWX6D5vP1gDghbimHDShMDmWuyEC0IOaHoMYBZZeEVRLq3B1JNw5oHa4brUPIMQfB60A7tO7qazFT-rciJD4M5nuwKfajIb-aw7hVdtu3oMlYTeKb2M-gpBM-dV2D3Wv6c7Yc10ldszqh6J7GmuypAvDL4IjcQdxeLawAjLeg1y-8pjcdD8lVPJc-fMHdNDYfQSc45UDp1UD1EKMfHAREObkzxJmkdQ05jebNMb719gi-5d-U4Vk90qSr-p5qTttOCOJdPO8';
+const ACCOUNT_ID = '6ed55134-8c98-43c9-a3c9-613b10f2a37b';
+
+const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
+const METASTATS = 'https://metastats-api-v1.london.agiliumtrade.agiliumtrade.ai';
+
+const $ = id => document.getElementById(id);
+const fmt = (n,d=2) => n!=null ? Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
+const ts = () => new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+function log(msg,cls=''){const el=$('log');el.innerHTML+=`<div class="${cls}">[${ts()}] ${msg}</div>`;el.scrollTop=el.scrollHeight;}
+function setStatus(s,m){$('dot').className='dot '+s;$('statusText').textContent=m;}
+
+async function apiFetch(url) {
+  const res = await fetch(url, { headers: { 'auth-token': TOKEN } });
+  if (!res.ok) {
+    const t = await res.text().catch(()=>'');
+    throw new Error(`${res.status}: ${t.slice(0,300)}`);
+  }
+  return res.json();
+}
+
+async function startConnection() {
+  const btn = $('connectBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
+  setStatus('load','Connecting...');
+  log('Starting connection...','log-info');
+
+  try {
+    // Step 1: Account metadata (provisioning API — works from browser)
+    log('Fetching account from provisioning API...','log-info');
+    const account = await apiFetch(`${MGMT}/users/current/accounts/${ACCOUNT_ID}`);
+    log(`Account: ${account.name||account.login} @ ${account.server}`, 'log-ok');
+    log(`State: ${account.state} | Connection: ${account.connectionStatus}`, 'log-ok');
+    log(`Platform: ${account.platform} | Region: ${account.region}`, 'log-info');
+
+    // Step 2: Try MetaStats API for trading metrics
+    log('Fetching trading metrics via MetaStats API...','log-info');
+    const region = account.region || 'london';
+    const metastatsUrl = `https://metastats-api-v1.${region}.agiliumtrade.agiliumtrade.ai`;
+
+    let metrics = null;
+    try {
+      metrics = await apiFetch(`${metastatsUrl}/users/current/accounts/${ACCOUNT_ID}/metrics`);
+      log('MetaStats metrics loaded successfully', 'log-ok');
+    } catch(e) {
+      log('MetaStats direct failed: ' + e.message, 'log-warn');
+      // Try without region
+      try {
+        metrics = await apiFetch(`https://metastats-api-v1.agiliumtrade.agiliumtrade.ai/users/current/accounts/${ACCOUNT_ID}/metrics`);
+        log('MetaStats (no region) loaded', 'log-ok');
+      } catch(e2) {
+        log('MetaStats fallback failed: ' + e2.message, 'log-warn');
+      }
+    }
+
+    // Step 3: Try fetching open trades via MetaStats
+    let trades = null;
+    try {
+      log('Fetching trade history via MetaStats...','log-info');
+      trades = await apiFetch(`${metastatsUrl}/users/current/accounts/${ACCOUNT_ID}/open-trades`);
+      log('Open trades loaded', 'log-ok');
+    } catch(e) {
+      log('Open trades: ' + e.message, 'log-warn');
+    }
+
+    // Step 4: Try the client API through various URL patterns
+    let accountInfo = null;
+    const clientUrls = [
+      `https://mt-client-api-v1.${region}.agiliumtrade.agiliumtrade.ai`,
+      `https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai`,
+    ];
+
+    for (const url of clientUrls) {
+      try {
+        log(`Trying client API: ${url.split('//')[1].split('/')[0]}...`, 'log-info');
+        accountInfo = await apiFetch(`${url}/users/current/accounts/${ACCOUNT_ID}/accountInformation`);
+        log('Client API connected — live account data available', 'log-ok');
+        break;
+      } catch(e) {
+        log(`Client API blocked (CORS): ${e.message.slice(0,80)}`, 'log-warn');
+      }
+    }
+
+    // We have at least the provisioning data
+    setStatus('ok', 'Connected');
+    btn.style.display = 'none';
+    $('dashboard').style.display = 'block';
+
+    // Render what we have
+    renderAccount(account, accountInfo, metrics);
+    renderMetrics(metrics);
+    renderConnection(account, !!accountInfo, !!metrics);
+
+    log('Dashboard loaded. Data available from ' +
+      (accountInfo ? 'Client API + ' : '') +
+      (metrics ? 'MetaStats + ' : '') +
+      'Provisioning API', 'log-ok');
+
+  } catch(err) {
+    console.error(err);
+    log('FAILED: ' + err.message, 'log-err');
+    setStatus('err','Connection failed');
+    btn.disabled=false;
+    btn.textContent='Retry Connection';
+  }
+}
+
+function renderAccount(account, liveInfo, metrics) {
+  // Use live info if available, otherwise extract what we can from provisioning + metastats
+  const balance = liveInfo?.balance || metrics?.balance || account.balance || '—';
+  const equity = liveInfo?.equity || metrics?.equity || balance;
+  const upl = (typeof equity === 'number' && typeof balance === 'number') ? equity - balance : 0;
+  const currency = liveInfo?.currency || account.baseCurrency || 'USD';
+  const leverage = liveInfo?.leverage || account.leverage || '—';
+  const margin = liveInfo?.margin || 0;
+  const freeMargin = liveInfo?.freeMargin || 0;
+
+  $('accountPanel').innerHTML = `<div class="card c-blue">
+    <h3>Account: ${account.name || account.login}<span class="ts">${ts()}</span></h3>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Balance</div><div class="kpi-val">${typeof balance==='number'?'$'+fmt(balance):balance}</div><div class="kpi-sub">${currency}</div></div>
+      <div class="kpi"><div class="kpi-label">Equity</div><div class="kpi-val" style="color:${equity>=balance?'var(--green)':'var(--red)'}">${typeof equity==='number'?'$'+fmt(equity):equity}</div></div>
+      ${typeof upl==='number'&&upl!==0?`<div class="kpi"><div class="kpi-label">Unrealised P&L</div><div class="kpi-val" style="color:${upl>=0?'var(--green)':'var(--red)'}">$${fmt(upl)}</div></div>`:''}
+      ${margin?`<div class="kpi"><div class="kpi-label">Margin</div><div class="kpi-val">$${fmt(margin)}</div></div>`:''}
+      ${freeMargin?`<div class="kpi"><div class="kpi-label">Free Margin</div><div class="kpi-val">$${fmt(freeMargin)}</div></div>`:''}
+      <div class="kpi"><div class="kpi-label">Leverage</div><div class="kpi-val">${typeof leverage==='number'?'1:'+leverage:leverage}</div></div>
+      <div class="kpi"><div class="kpi-label">Platform</div><div class="kpi-val" style="font-size:.9rem">${account.platform||'MT5'}</div></div>
+      <div class="kpi"><div class="kpi-label">Server</div><div class="kpi-val" style="font-size:.7rem">${account.server||'—'}</div></div>
+    </div>
+  </div>`;
+}
+
+function renderMetrics(metrics) {
+  if (!metrics) {
+    $('metricsPanel').innerHTML = `<div class="card c-orange">
+      <h3>Trading Metrics</h3>
+      <div class="empty">MetaStats API not available from browser. Deploy to a server or use the Q-Score Engine CSV import to manually input metrics.<br><br>
+      <span style="color:var(--t2)">The provisioning API confirms your account is connected and deployed. For full live data (positions, trade history, equity streaming), the dashboard needs to be hosted on a web server — not opened as a local file.</span></div>
+    </div>`;
+    return;
+  }
+
+  const m = metrics;
+  $('metricsPanel').innerHTML = `
+    <div class="card c-green">
+      <h3>Performance Metrics<span class="ts">${ts()}</span></h3>
+      <div class="kpi-grid">
+        ${m.trades!=null?`<div class="kpi"><div class="kpi-label">Total Trades</div><div class="kpi-val">${m.trades}</div></div>`:''}
+        ${m.wonTrades!=null?`<div class="kpi"><div class="kpi-label">Won Trades</div><div class="kpi-val" style="color:var(--green)">${m.wonTrades}</div></div>`:''}
+        ${m.lostTrades!=null?`<div class="kpi"><div class="kpi-label">Lost Trades</div><div class="kpi-val" style="color:var(--red)">${m.lostTrades}</div></div>`:''}
+        ${m.profit!=null?`<div class="kpi"><div class="kpi-label">Net Profit</div><div class="kpi-val" style="color:${m.profit>=0?'var(--green)':'var(--red)'}">$${fmt(m.profit)}</div></div>`:''}
+        ${m.pips!=null?`<div class="kpi"><div class="kpi-label">Pips</div><div class="kpi-val">${fmt(m.pips,1)}</div></div>`:''}
+      </div>
+    </div>
+    <div class="card c-purple">
+      <h3>Risk & Ratios</h3>
+      <div class="kpi-grid">
+        ${m.profitFactor!=null?`<div class="kpi"><div class="kpi-label">Profit Factor</div><div class="kpi-val">${fmt(m.profitFactor)}</div></div>`:''}
+        ${m.maxDrawdown!=null?`<div class="kpi"><div class="kpi-label">Max Drawdown</div><div class="kpi-val" style="color:var(--red)">${fmt(m.maxDrawdown)}%</div></div>`:''}
+        ${m.sharpeRatio!=null?`<div class="kpi"><div class="kpi-label">Sharpe Ratio</div><div class="kpi-val">${fmt(m.sharpeRatio)}</div></div>`:''}
+        ${m.sortinoRatio!=null?`<div class="kpi"><div class="kpi-label">Sortino Ratio</div><div class="kpi-val">${fmt(m.sortinoRatio)}</div></div>`:''}
+        ${m.expectancy!=null?`<div class="kpi"><div class="kpi-label">Expectancy</div><div class="kpi-val">$${fmt(m.expectancy)}</div></div>`:''}
+      </div>
+      ${m.monthlyAnalytics?renderMonthly(m.monthlyAnalytics):''}
+    </div>`;
+}
+
+function renderMonthly(monthly) {
+  if (!monthly || !monthly.length) return '';
+  return `<h3 style="margin-top:1rem">Monthly Breakdown</h3>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Month</th><th>Trades</th><th>Profit</th><th>Pips</th><th>Win Rate</th></tr></thead>
+      <tbody>${monthly.slice(-6).map(m => {
+        const p = m.profit||0;
+        return `<tr>
+          <td style="color:var(--t1);font-weight:500">${m.date||m.month||'—'}</td>
+          <td>${m.trades||0}</td>
+          <td style="color:${p>=0?'var(--green)':'var(--red)'};font-weight:600">$${fmt(p)}</td>
+          <td>${fmt(m.pips||0,1)}</td>
+          <td>${m.wonTrades&&m.trades?((m.wonTrades/m.trades)*100).toFixed(1)+'%':'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+}
+
+function renderConnection(account, hasLive, hasMetrics) {
+  $('connPanel').innerHTML = `<div class="card c-blue">
+    <h3>Connection Status</h3>
+    <div class="metric-row"><span class="ml">Account</span><span class="mv">${account.name||account.login||'—'}</span></div>
+    <div class="metric-row"><span class="ml">Server</span><span class="mv">${account.server||'—'}</span></div>
+    <div class="metric-row"><span class="ml">Platform</span><span class="mv">${account.platform||'MT5'}</span></div>
+    <div class="metric-row"><span class="ml">Region</span><span class="mv">${account.region||'—'}</span></div>
+    <div class="metric-row"><span class="ml">State</span><span class="mv" style="color:${account.state==='DEPLOYED'?'var(--green)':'var(--orange)'}">${account.state}</span></div>
+    <div class="metric-row"><span class="ml">Connection</span><span class="mv" style="color:${account.connectionStatus==='CONNECTED'?'var(--green)':'var(--red)'}">${account.connectionStatus}</span></div>
+    <div class="metric-row"><span class="ml">Provisioning API</span><span class="mv" style="color:var(--green)">● Working</span></div>
+    <div class="metric-row"><span class="ml">MetaStats API</span><span class="mv" style="color:${hasMetrics?'var(--green)':'var(--red)'}">● ${hasMetrics?'Working':'Blocked (CORS)'}</span></div>
+    <div class="metric-row"><span class="ml">Client API (Live)</span><span class="mv" style="color:${hasLive?'var(--green)':'var(--red)'}">● ${hasLive?'Working':'Blocked (CORS)'}</span></div>
+    ${!hasLive||!hasMetrics?`<div style="margin-top:1rem;padding:.8rem;background:var(--bg2);border-radius:8px;font-size:.78rem;color:var(--t2);line-height:1.6">
+      <strong style="color:var(--orange)">CORS Limitation:</strong> MetaAPI's trading data APIs block direct browser requests from local files. To get full live data (positions, trade history, real-time streaming), the dashboard needs to be deployed to a web server. Options:<br><br>
+      <strong>1. Deploy to Vercel (free, 2 minutes):</strong> Push to GitHub, connect to Vercel, deploy. All APIs work from a hosted domain.<br>
+      <strong>2. Run locally with Node.js:</strong> <code style="background:var(--bg4);padding:2px 6px;border-radius:3px">npx serve .</code> then open localhost:3000<br>
+      <strong>3. Use the Q-Score Engine:</strong> Your existing tool accepts manual input and CSV imports — use it until the dashboard is hosted.
+    </div>`:''}
+  </div>`;
+}
+</script>
+</body>
+</html>
