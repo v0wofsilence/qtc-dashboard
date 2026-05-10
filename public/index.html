@@ -117,6 +117,22 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .fe-tag{display:inline-block;font-family:var(--mono);font-size:.52rem;font-weight:600;padding:1px 5px;margin-left:.3rem}
 .fe-pos{color:var(--up);border:1px solid rgba(0,220,130,.3);background:rgba(0,220,130,.06)}
 .fe-neg{color:var(--dn);border:1px solid rgba(255,77,77,.3);background:rgba(255,77,77,.06)}
+/* ── Edit Modal ── */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--b2);border:1px solid var(--b5);width:480px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.2rem;border-bottom:1px solid var(--b5)}
+.modal-title{font-weight:600;font-size:.85rem;color:var(--w)}
+.modal-close{font-size:.9rem;color:var(--w3);cursor:pointer;padding:3px 8px;background:var(--b4);border:1px solid var(--b5)}.modal-close:hover{color:var(--w1);border-color:var(--accent)}
+.modal-body{padding:1.2rem}
+.modal-body .mf-group{margin-bottom:.9rem}
+.modal-body .mf-label{font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.25rem}
+.modal-body .mf-input{width:100%;padding:8px 10px;background:var(--b4);border:1px solid var(--b5);color:var(--w1);font-family:var(--mono);font-size:.75rem}.modal-body .mf-input:focus{outline:none;border-color:var(--accent)}
+.modal-body select.mf-input{cursor:pointer;appearance:none;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23666' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.modal-body .mf-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.modal-body .mf-hint{font-family:var(--mono);font-size:.54rem;color:var(--w4);margin-top:.15rem}
+.modal-footer{display:flex;gap:6px;padding:0 1.2rem 1.2rem}
+.modal-footer .btn{flex:1;text-align:center;padding:9px 14px}
 @media(max-width:900px){.sidebar{display:none}.layout{flex-direction:column}.content{padding:1rem}.kpis,.cal-summary{grid-template-columns:repeat(2,1fr)}.tg,.sg,.lb{grid-template-columns:1fr}}
 </style>
 </head>
@@ -147,6 +163,7 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 <div id="v-system" class="vw"><div id="sysc"></div></div>
 </div>
 </div>
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEdit()"><div class="modal" id="editModalContent"></div></div>
 <script>
 var E=function(id){return document.getElementById(id)},F=function(n,d){d=d||2;return n!=null?Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—'},T=function(){return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})},R=Math.round;
 setInterval(function(){E('ck').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})+' '+new Date().toLocaleTimeString('en-GB')},1000);
@@ -194,20 +211,40 @@ ss('ok','Live');log('All systems operational','ok');renderAll();
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo()},20000)})();
 function renderAll(){rOv();rPo();rCa();rRo();rSa();rSy()}
 
-// ── EDIT TRADER (universal - works for MetaAPI and manual) ──
+// ── EDIT TRADER (modal) ──
+var editId=null;
 function editTrader(id){
-  var t=gt(id);if(!t)return;var s=S.sal[id]||{};var a=t.a;
-  var currentTier=s.tier||tier(t.q?.score||0,id);
-  var sal=prompt('Salary ($/mo):',s.amt||3000);if(sal===null)return;s.amt=parseInt(sal)||s.amt;
-  var sp=prompt('Split (%):',s.split||50);if(sp!==null)s.split=parseInt(sp)||s.split;
-  var ti=prompt('Tier (1=Junior Analyst, 2=Analyst, 3=Senior Analyst):',currentTier==='Senior Analyst'?'3':currentTier==='Analyst'?'2':'1');
-  if(ti!==null){var tMap={'1':'Junior Analyst','2':'Analyst','3':'Senior Analyst','Junior Analyst':'Junior Analyst','Analyst':'Analyst','Senior Analyst':'Senior Analyst'};s.tier=tMap[ti.trim()]||currentTier}
-  var cy=prompt('Salary Cycle (days):',s.cycle||30);if(cy!==null)s.cycle=parseInt(cy)||30;
-  var sd=prompt('First Trade Date (YYYY-MM-DD):',s.start||new Date().toISOString().slice(0,10));if(sd!==null&&sd.match(/^\d{4}-\d{2}-\d{2}$/))s.start=sd;
-  S.sal[id]=s;sS();
-  if(t.isM&&t.m){var al=prompt('Allocation ($):',t.m.alloc);if(al!==null)t.m.alloc=parseInt(al)||t.m.alloc;var sc=prompt('Q-Score (0-100):',t.m.score||0);if(sc!==null)t.m.score=parseInt(sc)||0;sM()}
-  renderAll();
+  editId=id;var t=gt(id);if(!t)return;var s=S.sal[id]||{};var a=t.a;
+  var currentTier=s.tier||tier(t.q?.score||0,id);var isManual=t.isM;
+  var h='<div class="modal-header"><div class="modal-title">Edit — '+a.name+'</div><div class="modal-close" onclick="closeEdit()">✕</div></div><div class="modal-body">';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">Salary ($/mo)</div><input class="mf-input" id="ed-sal" type="number" value="'+(s.amt||3000)+'"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Split (%)</div><input class="mf-input" id="ed-split" type="number" value="'+(s.split||50)+'" min="50" max="80"></div></div>';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">Tier</div><select class="mf-input" id="ed-tier"><option value="Junior Analyst"'+(currentTier==='Junior Analyst'?' selected':'')+'>Junior Analyst</option><option value="Analyst"'+(currentTier==='Analyst'?' selected':'')+'>Analyst</option><option value="Senior Analyst"'+(currentTier==='Senior Analyst'?' selected':'')+'>Senior Analyst</option></select></div>';
+  h+='<div class="mf-group"><div class="mf-label">Salary Cycle (days)</div><input class="mf-input" id="ed-cycle" type="number" value="'+(s.cycle||30)+'"></div></div>';
+  h+='<div class="mf-group"><div class="mf-label">First Trade Date</div><input class="mf-input" id="ed-start" type="date" value="'+(s.start||new Date().toISOString().slice(0,10))+'"><div class="mf-hint">Day 1 of salary cycle</div></div>';
+  if(isManual){
+    h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">Allocation ($)</div><input class="mf-input" id="ed-alloc" type="number" value="'+(t.m.alloc||30000)+'"></div>';
+    h+='<div class="mf-group"><div class="mf-label">Q-Score (0–100)</div><input class="mf-input" id="ed-score" type="number" value="'+(t.m.score||0)+'" min="0" max="100"></div></div>';
+  }
+  h+='</div><div class="modal-footer"><button class="btn btn-s" onclick="saveEdit()">Save Changes</button><button class="btn" onclick="closeEdit()">Cancel</button></div>';
+  E('editModalContent').innerHTML=h;E('editModal').classList.add('open');
 }
+function saveEdit(){
+  if(!editId)return;var t=gt(editId);if(!t)return;var s=S.sal[editId]||{};
+  s.amt=parseInt(E('ed-sal').value)||s.amt;
+  s.split=parseInt(E('ed-split').value)||s.split;
+  s.tier=E('ed-tier').value;
+  s.cycle=parseInt(E('ed-cycle').value)||30;
+  var sd=E('ed-start').value;if(sd&&sd.match(/^\d{4}-\d{2}-\d{2}$/))s.start=sd;
+  S.sal[editId]=s;sS();
+  if(t.isM&&t.m){
+    var al=E('ed-alloc');if(al)t.m.alloc=parseInt(al.value)||t.m.alloc;
+    var sc=E('ed-score');if(sc)t.m.score=parseInt(sc.value)||0;
+    sM();
+  }
+  closeEdit();renderAll();
+}
+function closeEdit(){E('editModal').classList.remove('open');editId=null}
 
 // ── OVERVIEW ──
 function rOv(){var ids=allIds();if(!ids.length){E('fk').innerHTML='';E('cards').innerHTML='<div class="nil">No traders — add via Roster</div>';E('leaderboards').innerHTML='';return}
