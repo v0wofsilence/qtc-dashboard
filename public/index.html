@@ -166,6 +166,14 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .tp-notes textarea{width:100%;min-height:80px;padding:8px 10px;background:var(--b4);border:1px solid var(--b5);color:var(--w1);font-family:var(--font);font-size:.74rem;resize:vertical}
 .tp-notes textarea:focus{outline:none;border-color:var(--accent)}
 .tp-back{font-size:.72rem;color:var(--accent);cursor:pointer;margin-bottom:1rem;display:inline-block}.tp-back:hover{text-decoration:underline}
+.eq-chart{background:var(--b2);border:1px solid var(--b5);padding:1rem;margin-bottom:1.5rem;position:relative}
+.eq-chart svg{width:100%;display:block}
+.eq-chart-title{font-size:.52rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--w3);margin-bottom:.6rem}
+.sort-bar{display:flex;align-items:center;gap:.4rem;margin-bottom:.8rem;flex-wrap:wrap}
+.sort-btn{padding:4px 10px;font-family:var(--mono);font-size:.6rem;font-weight:500;color:var(--w3);background:var(--b3);border:1px solid var(--b5);cursor:pointer;transition:all .1s}
+.sort-btn:hover{color:var(--w1);border-color:var(--accent)}
+.sort-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(140,177,246,.08)}
+.sort-label{font-size:.52rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w4);margin-right:.3rem}
 /* ── Edit Modal ── */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
@@ -573,6 +581,33 @@ function openTCDay(ds){
   panel.innerHTML=h;panel.style.display='block';panel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+// ── EQUITY CURVE ──
+function buildEquityCurve(dailyPnl,startBal){
+  var dates=Object.keys(dailyPnl||{}).sort();
+  if(dates.length<2)return'<div class="eq-chart"><div class="eq-chart-title">Equity Curve</div><div style="text-align:center;color:var(--w4);font-size:.7rem;padding:1.5rem 0">Requires 2+ trading days</div></div>';
+  // Build cumulative equity
+  var eq=[],cum=startBal||0;dates.forEach(function(dt){cum+=dailyPnl[dt];eq.push({d:dt,v:cum})});
+  var minV=Math.min.apply(null,eq.map(function(p){return p.v}));
+  var maxV=Math.max.apply(null,eq.map(function(p){return p.v}));
+  var range=maxV-minV||1;
+  var W=700,H=180,padL=55,padR=10,padT=15,padB=30;
+  var cW=W-padL-padR,cH=H-padT-padB;
+  // Build path
+  var pts=eq.map(function(p,i){var x=padL+(i/(eq.length-1))*cW;var y=padT+cH-(((p.v-minV)/range)*cH);return{x:x,y:y}});
+  var line=pts.map(function(p,i){return(i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)}).join(' ');
+  // Gradient fill
+  var fill=line+' L'+pts[pts.length-1].x.toFixed(1)+','+(padT+cH)+' L'+pts[0].x.toFixed(1)+','+(padT+cH)+' Z';
+  var endVal=eq[eq.length-1].v;var isUp=endVal>=startBal;
+  var col=isUp?'#00DC82':'#FF4D4D';
+  // Y-axis labels (5 ticks)
+  var yLabels='';for(var i=0;i<=4;i++){var v=minV+(range*(i/4));var y=padT+cH-((i/4)*cH);yLabels+='<text x="'+(padL-6)+'" y="'+(y+3)+'" text-anchor="end" fill="#666" font-family="IBM Plex Mono,monospace" font-size="8">$'+R(v).toLocaleString()+'</text><line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#1A1A1A" stroke-width="1"/>'};
+  // X-axis labels (first, mid, last)
+  var xLabels='';[0,Math.floor(eq.length/2),eq.length-1].forEach(function(i){if(!eq[i])return;var x=padL+(i/(eq.length-1))*cW;xLabels+='<text x="'+x+'" y="'+(H-5)+'" text-anchor="middle" fill="#666" font-family="IBM Plex Mono,monospace" font-size="8">'+eq[i].d.slice(5)+'</text>'});
+  // Dot on last point
+  var last=pts[pts.length-1];
+  return'<div class="eq-chart"><div class="eq-chart-title">Equity Curve</div><svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+yLabels+xLabels+'<defs><linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+col+'" stop-opacity=".25"/><stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs><path d="'+fill+'" fill="url(#eqGrad)"/><path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/><circle cx="'+last.x.toFixed(1)+'" cy="'+last.y.toFixed(1)+'" r="3.5" fill="'+col+'"/><text x="'+last.x.toFixed(1)+'" y="'+(last.y-8)+'" text-anchor="end" fill="'+col+'" font-family="IBM Plex Mono,monospace" font-size="9" font-weight="600">$'+R(endVal).toLocaleString()+'</text></svg></div>';
+}
+
 // ── VIEW TRADER (full page) ──
 function viewTrader(id){
   nav('trader');
@@ -591,6 +626,9 @@ function viewTrader(id){
   html+='<div class="tp-info"><div class="tp-name">'+a.name+' <span style="color:'+h.c+';font-size:.8rem">'+h.a+'</span> <span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">FE '+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></div>';
   html+='<div class="tp-tier-tag">'+trTier+' · '+(q.conf||'—')+' confidence · '+h.l+'</div>';
   html+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(b)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sharpe</span><span class="tp-meta-val">'+ratios.sharpe+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sortino</span><span class="tp-meta-val">'+ratios.sortino+'</span></div></div></div></div>';
+
+  // Equity curve chart
+  html+=buildEquityCurve(q.dailyPnl||{},b);
 
   // Performance & Ratios
   html+='<div class="td-section"><div class="td-section-title">Performance & Risk Ratios</div><div class="td-grid">';
@@ -673,8 +711,17 @@ function closeGears(){document.querySelectorAll('.gear-menu.open').forEach(funct
 document.addEventListener('click',function(e){if(!e.target.closest('.gear-wrap'))closeGears()});
 
 // ── ROSTER ──
+var rosterSort={key:'name',dir:'asc'};
+function sortRoster(key){if(rosterSort.key===key){rosterSort.dir=rosterSort.dir==='asc'?'desc':'asc'}else{rosterSort.key=key;rosterSort.dir=key==='name'?'asc':'desc'}rRo()}
 function rRo(){var ids=allIds();var archivedIds=allIdsArchived();
-E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Cycle</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
+// Sort ids
+var sortData=ids.map(function(id){var t=gt(id);if(!t)return{id:id,name:'',bal:0,wr:0,pnl:0,np:0};return{id:id,name:t.a.name,bal:t.l?.balance||0,wr:parseFloat(t.q?.wr||0),pnl:t.q?.pnl||0,np:netPosition(id)}});
+var sk=rosterSort.key,sd=rosterSort.dir==='asc'?1:-1;
+sortData.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return va.localeCompare(vb)*sd;return(va-vb)*sd});
+ids=sortData.map(function(d){return d.id});
+var arrow=rosterSort.dir==='asc'?' ↑':' ↓';
+function sBtn(key,label){return'<button class="sort-btn'+(rosterSort.key===key?' active':'')+'" onclick="sortRoster(\''+key+'\')">'+label+(rosterSort.key===key?arrow:'')+'</button>'}
+E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Cycle</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0;
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
