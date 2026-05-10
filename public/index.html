@@ -131,6 +131,15 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .fe-pos{color:var(--up);border:1px solid rgba(0,220,130,.3);background:rgba(0,220,130,.06)}
 .fe-neg{color:var(--dn);border:1px solid rgba(255,77,77,.3);background:rgba(255,77,77,.06)}
 .eye-btn{color:var(--accent);cursor:pointer;font-size:.82rem;opacity:.6;transition:opacity .1s}.eye-btn:hover{opacity:1}
+.gear-wrap{position:relative;display:inline-block}
+.gear-btn{color:var(--w3);cursor:pointer;font-size:.9rem;padding:2px 4px;transition:color .1s}.gear-btn:hover{color:var(--w1)}
+.gear-menu{position:absolute;right:0;top:100%;background:var(--b2);border:1px solid var(--b5);z-index:100;min-width:130px;display:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.gear-menu.open{display:block}
+.gear-item{display:flex;align-items:center;gap:.5rem;padding:7px 12px;font-family:var(--font);font-size:.68rem;font-weight:500;color:var(--w2);cursor:pointer;transition:background .08s;border:none;background:none;width:100%;text-align:left}
+.gear-item:hover{background:var(--b3);color:var(--w1)}
+.gear-item.warn{color:var(--warn)}.gear-item.warn:hover{color:var(--warn);background:rgba(229,192,123,.06)}
+.gear-item.danger{color:var(--dn)}.gear-item.danger:hover{color:var(--dn);background:rgba(255,77,77,.06)}
+.gear-icon{width:14px;text-align:center;font-size:.72rem}
 .td-section{margin-bottom:1rem}.td-section-title{font-size:.52rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--w3);margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--b5)}
 .td-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:.8rem}
 .td-cell{background:var(--b3);padding:.6rem .7rem}
@@ -650,14 +659,19 @@ function viewTrader(id){
   E('tdetail').innerHTML=html;
 }
 
+// ── GEAR MENU ──
+function toggleGear(id){var el=E(id);var open=el.classList.contains('open');closeGears();if(!open)el.classList.add('open')}
+function closeGears(){document.querySelectorAll('.gear-menu.open').forEach(function(m){m.classList.remove('open')})}
+document.addEventListener('click',function(e){if(!e.target.closest('.gear-wrap'))closeGears()});
+
 // ── ROSTER ──
 function rRo(){var ids=allIds();var archivedIds=allIdsArchived();
-E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th></th><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Cycle</th><th>Firm Econ</th><th>Actions</th></tr></thead><tbody>'+ids.map(function(id){
+E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Cycle</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0;
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
   var rowClass=metQuota?'row-met':'row-below';
-  return'<tr class="'+rowClass+'"><td><span class="eye-btn" onclick="event.stopPropagation();viewTrader(\''+id+'\')" title="View details">👁</span></td><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td style="white-space:nowrap"><span class="sh-btn" onclick="event.stopPropagation();editTrader(\''+id+'\')">Edit</span> <span class="sh-btn" onclick="event.stopPropagation();archiveTrader(\''+id+'\')" style="color:var(--warn);border-color:rgba(229,192,123,.2)">Archive</span> <span class="sh-btn" onclick="event.stopPropagation();deleteTrader(\''+id+'\')" style="color:var(--dn);border-color:rgba(255,77,77,.2)">Delete</span></td></tr>'
+  return'<tr class="'+rowClass+'"><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><div class="gear-wrap"><span class="gear-btn" onclick="event.stopPropagation();toggleGear(\'gm-'+id+'\')">⚙</span><div class="gear-menu" id="gm-'+id+'"><button class="gear-item" onclick="closeGears();viewTrader(\''+id+'\')"><span class="gear-icon">👁</span>View Profile</button><button class="gear-item" onclick="closeGears();editTrader(\''+id+'\')"><span class="gear-icon">✎</span>Edit</button><button class="gear-item warn" onclick="closeGears();archiveTrader(\''+id+'\')"><span class="gear-icon">▣</span>Archive</button><button class="gear-item danger" onclick="closeGears();deleteTrader(\''+id+'\')"><span class="gear-icon">✕</span>Delete</button></div></div></td></tr>'
 }).join('')+'</tbody></table></div>'+
 (archivedIds.length?'<div class="sh"><span class="sh-t">Archived Traders</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>P&L</th><th>Salary Paid</th><th>FE</th><th>Archived</th><th>Actions</th></tr></thead><tbody>'+archivedIds.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,q=t.q||{},s=S.sal[id]||{},np=netPosition(id);
