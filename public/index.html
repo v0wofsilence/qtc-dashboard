@@ -288,7 +288,8 @@ function netPosition(id){var t=gt(id);if(!t)return 0;var s=S.sal[id]||{};if(s.fe
 // ── State ──
 var S={accts:[],traders:{},manual:JSON.parse(localStorage.getItem('qtc_m')||'[]'),sal:JSON.parse(localStorage.getItem('qtc_s')||'{}'),hist:JSON.parse(localStorage.getItem('qtc_h')||'{}'),calMonth:new Date().getMonth(),calYear:new Date().getFullYear()};
 function sM(){localStorage.setItem('qtc_m',JSON.stringify(S.manual))}function sS(){localStorage.setItem('qtc_s',JSON.stringify(S.sal))}function sH(){localStorage.setItem('qtc_h',JSON.stringify(S.hist))}
-function allIds(){var ids=Object.keys(S.traders);S.manual.forEach(function(m){var id='m-'+m.name;if(ids.indexOf(id)<0)ids.push(id)});return ids}
+function allIds(){var ids=Object.keys(S.traders);S.manual.forEach(function(m){var id='m-'+m.name;if(ids.indexOf(id)<0)ids.push(id)});return ids.filter(function(id){return!(S.sal[id]&&S.sal[id].archived)})}
+function allIdsArchived(){var ids=Object.keys(S.traders);S.manual.forEach(function(m){var id='m-'+m.name;if(ids.indexOf(id)<0)ids.push(id)});return ids.filter(function(id){return S.sal[id]&&S.sal[id].archived})}
 function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(function(x){return'm-'+x.name===id});if(m)return{a:{name:m.name,login:m.login||'',server:'—',platform:'—',connectionStatus:'MANUAL'},l:{balance:m.alloc||0,equity:m.alloc||0},pos:[],hist:[],q:{score:m.score||0,conf:'—',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}},isM:true,m:m};return null}
 
 // ── Init ──
@@ -650,13 +651,18 @@ function viewTrader(id){
 }
 
 // ── ROSTER ──
-function rRo(){var ids=allIds();E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th></th><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Cycle</th><th>Firm Econ</th><th>Edit</th><th></th></tr></thead><tbody>'+ids.map(function(id){
+function rRo(){var ids=allIds();var archivedIds=allIdsArchived();
+E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th></th><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Cycle</th><th>Firm Econ</th><th>Actions</th></tr></thead><tbody>'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0;
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
   var rowClass=metQuota?'row-met':'row-below';
-  return'<tr class="'+rowClass+'"><td><span class="eye-btn" onclick="event.stopPropagation();viewTrader(\''+id+'\')" title="View details">👁</span></td><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><span class="sh-btn" onclick="event.stopPropagation();editTrader(\''+id+'\')">Edit</span></td><td>'+(t.isM?'<span style="color:var(--dn);cursor:pointer" onclick="event.stopPropagation();rmM(\''+id+'\')">✕</span>':'')+'</td></tr>'
-}).join('')+'</tbody></table></div>'}
+  return'<tr class="'+rowClass+'"><td><span class="eye-btn" onclick="event.stopPropagation();viewTrader(\''+id+'\')" title="View details">👁</span></td><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td style="white-space:nowrap"><span class="sh-btn" onclick="event.stopPropagation();editTrader(\''+id+'\')">Edit</span> <span class="sh-btn" onclick="event.stopPropagation();archiveTrader(\''+id+'\')" style="color:var(--warn);border-color:rgba(229,192,123,.2)">Archive</span> <span class="sh-btn" onclick="event.stopPropagation();deleteTrader(\''+id+'\')" style="color:var(--dn);border-color:rgba(255,77,77,.2)">Delete</span></td></tr>'
+}).join('')+'</tbody></table></div>'+
+(archivedIds.length?'<div class="sh"><span class="sh-t">Archived Traders</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>P&L</th><th>Salary Paid</th><th>FE</th><th>Archived</th><th>Actions</th></tr></thead><tbody>'+archivedIds.map(function(id){
+  var t=gt(id);if(!t)return'';var a=t.a,q=t.q||{},s=S.sal[id]||{},np=netPosition(id);
+  return'<tr style="opacity:.6"><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+tCol(q.score||0)+'">'+(q.score||'—')+'</td><td><span class="tag tag-t">'+tier(q.score||0,id)+'</span></td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.paid||0).toLocaleString()+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td style="font-size:.58rem;color:var(--w4)">'+(s.archivedDate||'—')+'</td><td style="white-space:nowrap"><span class="sh-btn" onclick="event.stopPropagation();restoreTrader(\''+id+'\')">Restore</span> <span class="sh-btn" onclick="event.stopPropagation();deleteTrader(\''+id+'\')" style="color:var(--dn);border-color:rgba(255,77,77,.2)">Delete</span></td></tr>'
+}).join('')+'</tbody></table></div>':'')}
 function showAdd(){E('addC').innerHTML='<div class="fp">'+
 '<div style="display:flex;gap:0;margin-bottom:1rem"><button class="btn btn-s" id="tab-mt5" onclick="showMT5Tab()">Connect MT5 Account</button><button class="btn" id="tab-manual" onclick="showManualTab()">Add Manual Trader</button></div>'+
 '<div id="addTab"></div></div>';showMT5Tab()}
@@ -721,7 +727,16 @@ var p2d=E('qp2d').value;if(p2d)salObj.p2d=parseFloat(p2d);
 var p2p=E('qp2p').value;if(p2p)salObj.p2p=parseFloat(p2p);
 var p2dd=E('qp2dd').value;if(p2dd)salObj.p2dd=parseFloat(p2dd);
 S.sal[id]=salObj;sM();sS();E('addC').innerHTML='';E('tc').textContent=(S.accts.length+S.manual.length)+' traders';renderAll()}
-function rmM(id){var n=id.replace('m-','');if(!confirm('Remove '+n+'?'))return;S.manual=S.manual.filter(function(m){return m.name!==n});delete S.sal[id];delete S.hist[id];sM();sS();sH();renderAll()}
+function archiveTrader(id){var t=gt(id);if(!t)return;if(!confirm('Archive '+t.a.name+'? They will be removed from active roster but data is preserved.'))return;var s=S.sal[id]||{};s.archived=true;s.archivedDate=new Date().toISOString().slice(0,10);S.sal[id]=s;sS();renderAll()}
+function restoreTrader(id){var s=S.sal[id]||{};delete s.archived;delete s.archivedDate;S.sal[id]=s;sS();renderAll()}
+function deleteTrader(id){var t=gt(id);if(!t)return;if(!confirm('PERMANENTLY DELETE '+t.a.name+'? This removes all data including salary history, Q-Score history, and notes. This cannot be undone.'))return;if(!confirm('Are you sure? Type the trader name to confirm.\n\nExpected: '+t.a.name)){var c=prompt('Type trader name to confirm deletion:');if(c!==t.a.name){alert('Name did not match. Deletion cancelled.');return}}
+  // Remove manual trader
+  if(t.isM)S.manual=S.manual.filter(function(m){return'm-'+m.name!==id});
+  // Remove from MetaAPI tracker
+  if(S.traders[id])delete S.traders[id];
+  // Clean up all stored data
+  delete S.sal[id];delete S.hist[id];
+  sM();sS();sH();E('tc').textContent=(S.accts.length+S.manual.length)+' traders';renderAll()}
 
 // ── SALARY ──
 function rSa(){var ids=allIds(),tot=0,tp=0;ids.forEach(function(id){tot+=(S.sal[id]?.amt||0);tp+=(S.sal[id]?.paid||0)});
