@@ -314,7 +314,9 @@ function allIdsArchived(){var ids=Object.keys(S.traders);S.manual.forEach(functi
 function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(function(x){return'm-'+x.name===id});if(m)return{a:{name:m.name,login:m.login||'',server:'—',platform:'—',connectionStatus:'MANUAL'},l:{balance:m.alloc||0,equity:m.alloc||0},pos:[],hist:[],q:{score:m.score||0,conf:'—',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}},isM:true,m:m};return null}
 
 // ── Init ──
-(async function(){log('Initialising...','inf');
+(async function(){
+try{
+log('Initialising...','inf');
 try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');S.accts=[]}
 for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
   try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
@@ -322,10 +324,13 @@ for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac
   try{var h=await px('history',id);S.traders[id].hist=Array.isArray(h)?h.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[]}catch(e){}
   if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
   S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
-  if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);sH()}}
+  if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);try{sH()}catch(e){}}}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
-try{sS()}catch(e){}var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Refresh: 20s';
-ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');renderAll();
+try{sS()}catch(e){log('sS error: '+e.message,'er')}
+var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Refresh: 20s';
+ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
+try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
+}catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo()},20000)})();
 function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rSy()}
 
