@@ -347,6 +347,104 @@ function calcRatios(dailyPnl,bal){
 function getNote(id){return(S.sal[id]&&S.sal[id].notes)||''}
 function saveNote(id){var el=E('tp-notes-input');if(!el)return;var s=S.sal[id]||{};s.notes=el.value;S.sal[id]=s;sS()}
 
+// ── PER-TRADER CALENDAR ──
+var tcMo=new Date().getMonth(),tcYr=new Date().getFullYear(),tcId=null;
+function buildTraderCal(id,dailyPnl,sal,tradeHist){
+  tcId=id;var yr=tcYr,mo=tcMo;
+  var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();
+  var todayStr=new Date().toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+  var joinDate=sal.start||'';
+
+  // Build trade map for this month: date -> [{symbol,type,volume,profit,time}]
+  var tradeDays={};(tradeHist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt&&dt.slice(0,7)===moKey){if(!tradeDays[dt])tradeDays[dt]=[];tradeDays[dt].push(tr)}});
+
+  // Salary due dates
+  var salDates={};var st=sal.start?new Date(sal.start):new Date();var cy=sal.cycle||30;var nx=new Date(st);
+  while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);
+  while(nx<=new Date(yr,mo+1,0)){salDates[nx.toISOString().slice(0,10)]=sal.amt||0;nx.setDate(nx.getDate()+cy)}
+
+  // Monthly totals
+  var totalPnl=0,winD=0,lossD=0,tradD=0,totalTrades=0;
+  Object.keys(dailyPnl).forEach(function(dt){if(dt.slice(0,7)===moKey){var p=dailyPnl[dt];totalPnl+=p;tradD++;if(p>0)winD++;else if(p<0)lossD++}});
+  Object.keys(tradeDays).forEach(function(dt){totalTrades+=tradeDays[dt].length});
+
+  var h='<div class="td-section"><div class="td-section-title">Calendar — '+moNames[mo]+' '+yr+'</div>';
+  // Nav
+  h+='<div class="cal-header" style="margin-bottom:.6rem"><button class="cal-nav" onclick="tcMo--;if(tcMo<0){tcMo=11;tcYr--}refreshTCal()">←</button><div class="cal-title" style="font-size:.8rem">'+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="tcMo++;if(tcMo>11){tcMo=0;tcYr++}refreshTCal()">→</button></div>';
+  // Summary
+  h+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Month P&L</div><div class="cal-sum-val" style="color:'+(totalPnl>=0?'var(--up)':'var(--dn)')+'">'+(totalPnl>=0?'+':'')+'$'+F(totalPnl)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trading Days</div><div class="cal-sum-val">'+tradD+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Win / Loss</div><div class="cal-sum-val"><span style="color:var(--up)">'+winD+'</span> / <span style="color:var(--dn)">'+lossD+'</span></div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trades</div><div class="cal-sum-val">'+totalTrades+'</div></div></div>';
+  // Day detail panel
+  h+='<div id="tcDayPanel" style="display:none;background:var(--b2);border:1px solid var(--b5);padding:1rem;margin-bottom:1rem"></div>';
+  // Grid
+  h+='<div class="cal-grid">';var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];for(var i=0;i<7;i++)h+='<div class="cal-dow">'+dows[i]+'</div>';
+  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)h+='<div class="cal-day empty"></div>';
+
+  for(var d=1;d<=daysInMonth;d++){
+    var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;
+    var isToday=ds===todayStr;var isJoin=ds===joinDate;
+    var pnl=dailyPnl[ds];var dayTrades=tradeDays[ds]||[];var hasSal=salDates[ds]!==undefined;
+
+    h+='<div class="cal-day'+(isToday?' today':'')+'" onclick="openTCDay(\''+ds+'\')" style="min-height:80px">';
+    h+='<div class="cal-date">'+d+'</div>';
+    if(isJoin)h+='<div style="font-family:var(--mono);font-size:.4rem;color:var(--accent);font-weight:600;margin-bottom:2px">JOINED</div>';
+    if(pnl!==undefined)h+='<div class="cal-pnl" style="font-size:.65rem;color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+R(pnl)+'</div>';
+    if(dayTrades.length)h+='<div style="font-family:var(--mono);font-size:.42rem;color:var(--w4)">'+dayTrades.length+' trade'+(dayTrades.length>1?'s':'')+'</div>';
+    if(hasSal)h+='<div class="cal-event sal" style="font-size:.4rem">SALARY $'+salDates[ds].toLocaleString()+'</div>';
+    h+='</div>';
+  }
+  var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)h+='<div class="cal-day empty"></div>';
+  h+='</div></div>';
+  return h;
+}
+
+function refreshTCal(){if(!tcId)return;var t=gt(tcId);if(!t)return;var q=t.q||{};var s=S.sal[tcId]||{};
+  // Re-render just the calendar section
+  var calSection=buildTraderCal(tcId,q.dailyPnl||{},s,t.hist||[]);
+  // Find and replace the calendar section in tdetail
+  var el=E('tdetail');var sections=el.querySelectorAll('.td-section');
+  for(var i=0;i<sections.length;i++){if(sections[i].querySelector('.cal-grid')){sections[i].outerHTML=calSection.slice(calSection.indexOf('<div class="td-section">'));break}}}
+
+function openTCDay(ds){
+  var panel=E('tcDayPanel');if(!panel||!tcId)return;
+  var t=gt(tcId);if(!t)return;var q=t.q||{},s=S.sal[tcId]||{};
+  var d=new Date(ds);var moN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dayN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var label=dayN[d.getUTCDay()]+' '+d.getUTCDate()+' '+moN[d.getUTCMonth()]+' '+d.getUTCFullYear();
+  var pnl=(q.dailyPnl||{})[ds];
+  var joinDate=s.start||'';var isJoin=ds===joinDate;
+
+  // Get trades for this day
+  var dayTrades=[];(t.hist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt===ds)dayTrades.push(tr)});
+
+  // Salary due?
+  var salDue=false,salAmt=0;var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);
+  while(nx<=new Date(ds)){nx.setDate(nx.getDate()+cy)}var prev=new Date(nx);prev.setDate(prev.getDate()-cy);
+  if(prev.toISOString().slice(0,10)===ds){salDue=true;salAmt=s.amt||0}
+
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem"><div style="font-family:var(--mono);font-size:.78rem;font-weight:600;color:var(--w1)">'+label+'</div><div class="dp-close" onclick="E(\'tcDayPanel\').style.display=\'none\'">✕</div></div>';
+
+  // Events
+  if(isJoin)h+='<div style="font-family:var(--mono);font-size:.66rem;color:var(--accent);margin-bottom:.5rem;padding:4px 8px;border:1px solid rgba(140,177,246,.3);background:rgba(140,177,246,.06);display:inline-block">PROGRAM JOIN DATE</div><br>';
+
+  if(pnl!==undefined){h+='<div style="margin-bottom:.5rem"><div style="font-size:.5rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.2rem">Daily P&L</div><div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</div></div>'}
+
+  if(salDue){h+='<div style="margin-bottom:.5rem"><div style="font-size:.5rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.2rem">Salary Due</div><div style="font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--accent)">$'+salAmt.toLocaleString()+'</div></div>'}
+
+  if(dayTrades.length){
+    h+='<div style="font-size:.5rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.3rem">Trades ('+dayTrades.length+')</div>';
+    h+='<table style="width:100%"><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th>P&L</th></tr></thead><tbody>';
+    dayTrades.sort(function(a,b){return new Date(a.time)-new Date(b.time)});
+    dayTrades.forEach(function(tr){var pn=tr.profit||0;var tm=new Date(tr.time);var buy=tr.type&&tr.type.includes('BUY');
+      h+='<tr><td>'+tm.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+tr.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(tr.volume||'—')+'</td><td>'+F(tr.price,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});
+    h+='</tbody></table>';
+  }
+
+  if(!pnl&&!salDue&&!dayTrades.length&&!isJoin)h+='<div style="color:var(--w4);font-size:.72rem">No events on this day</div>';
+
+  panel.innerHTML=h;panel.style.display='block';panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 // ── VIEW TRADER (full page) ──
 function viewTrader(id){
   nav('trader');
@@ -431,6 +529,9 @@ function viewTrader(id){
   html+='<div class="td-cell"><div class="td-cell-label">Login</div><div class="td-cell-val" style="font-size:.68rem">'+(a.login||'—')+'</div></div>';
   html+='<div class="td-cell"><div class="td-cell-label">Platform</div><div class="td-cell-val" style="font-size:.68rem">'+(a.platform||'—')+'</div></div>';
   html+='</div></div>';
+
+  // Trader Calendar
+  html+=buildTraderCal(id,q.dailyPnl||{},s,t.hist||[]);
 
   // Action buttons
   html+='<div class="br" style="margin-top:1rem"><button class="btn" onclick="editTrader(\''+id+'\')">Edit Trader</button></div>';
