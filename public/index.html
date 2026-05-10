@@ -637,7 +637,7 @@ function viewTrader(id){
 
   // Q-Score hero ring
   var circ=2*Math.PI*48,offset=circ-(( q.score||0)/100)*circ;
-  var html='<span class="tp-back" onclick="nav(\'roster\')">← Back to Roster</span>';
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span class="tp-back" onclick="nav(\'roster\')" style="margin-bottom:0">← Back to Roster</span><div class="br"><button class="btn" onclick="editTrader(\''+id+'\')">Edit Trader</button><button class="btn" onclick="genPDF(\''+id+'\')">Export Report</button></div></div>';
 
   // Top panel: Q-Score ring + trader info + details + notes
   html+='<div class="tp-hero" style="align-items:flex-start"><div class="tp-score-ring"><svg viewBox="0 0 120 120"><circle class="tp-ring-bg" cx="60" cy="60" r="48"/><circle class="tp-ring-fg" cx="60" cy="60" r="48" stroke="'+(q.pending?'var(--w4)':tCol(q.score||0))+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+(q.pending?circ:offset)+'"/></svg><div class="tp-score-center"><div class="tp-score-num" style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+'">'+(q.pending?'—':q.score||'—')+'</div><div class="tp-score-label">'+(q.pending?'Score in '+(q.daysUntilScore||0)+'d':'Q-Score')+'</div></div></div>';
@@ -730,7 +730,6 @@ function viewTrader(id){
   html+=buildTraderCal(id,q.dailyPnl||{},s,t.hist||[]);
 
   // Action buttons
-  html+='<div class="br" style="margin-top:1rem"><button class="btn" onclick="editTrader(\''+id+'\')">Edit Trader</button><button class="btn" onclick="genPDF(\''+id+'\')">Export Report</button></div>';
 
   E('tdetail').innerHTML=html;
 }
