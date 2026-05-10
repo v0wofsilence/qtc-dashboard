@@ -695,7 +695,7 @@ async function connectMT5(){
     var r=await fetch('/api/metaapi?action=create-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,login:login,password:pass,server:server,platform:platform})});
     var d=await r.json();
     if(!r.ok||d.error){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Error: '+(d.error||'Unknown')+'</span>';E('mt-submit').disabled=false;E('mt-submit').textContent='Connect & Deploy';return}
-    E('mt-status').innerHTML='<span style="color:var(--up);font-size:.7rem">Account created'+(d.deployed?' & deployed':'')+' (ID: '+d.id.slice(0,8)+'...)</span>';
+    E('mt-status').innerHTML='<span style="color:var(--up);font-size:.7rem">Account created'+(d.deployed?' & deployed':'')+' (ID: '+String(d.id).slice(0,8)+'...)</span>';
     // Save salary/eval config for this account
     var sd=E('mt-start').value||new Date().toISOString().slice(0,10);
     var salObj={amt:parseInt(E('mt-sal').value)||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:sd,split:50,inst:E('mt-inst').value,hold:E('mt-hold').value};
