@@ -7,132 +7,579 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--black:#000;--b1:#050505;--b2:#0A0A0A;--b3:#0F0F0F;--b4:#141414;--b5:#1A1A1A;--b6:#222;--w:#FFF;--w1:#E5E5E5;--w2:#999;--w3:#666;--w4:#444;--w5:#2A2A2A;--up:#00DC82;--dn:#FF4D4D;--accent:#8CB1F6;--accent2:#6B93D9;--font:'Outfit',sans-serif;--mono:'IBM Plex Mono',monospace}
+:root{--black:#000;--b1:#050505;--b2:#0A0A0A;--b3:#0F0F0F;--b4:#141414;--b5:#1A1A1A;--b6:#222;--w:#FFF;--w1:#E5E5E5;--w2:#999;--w3:#666;--w4:#444;--w5:#2A2A2A;--up:#00DC82;--dn:#FF4D4D;--accent:#8CB1F6;--accent2:#6B93D9;--warn:#E5C07B;--font:'Outfit',sans-serif;--mono:'IBM Plex Mono',monospace}
 body{font-family:var(--font);background:var(--black);color:var(--w1);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:48px;background:var(--b2);border-bottom:1px solid var(--b5)}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:48px;background:var(--b2);border-bottom:1px solid var(--b5);position:sticky;top:0;z-index:100}
 .topbar-left{display:flex;align-items:center;gap:1.5rem}
-.logo{font-weight:700;font-size:.85rem;letter-spacing:.08em;color:var(--accent)}
+.logo{font-weight:700;font-size:.85rem;letter-spacing:.08em;color:var(--accent);cursor:pointer}
 .logo span{color:var(--w3);font-weight:400;margin-left:.4rem;letter-spacing:.02em}
 .topbar-status{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.68rem;color:var(--w3)}
 .topbar-status .pulse{width:6px;height:6px;border-radius:50%;background:var(--up);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.topbar-right{font-family:var(--mono);font-size:.7rem;color:var(--w3)}
+.topbar-right{display:flex;align-items:center;gap:1.5rem}
+.topbar-clock{font-family:var(--mono);font-size:.7rem;color:var(--w3)}
+
+/* Nav */
+.nav{display:flex;gap:0;border-bottom:1px solid var(--b5);background:var(--b1)}
+.nav-btn{padding:10px 20px;font-family:var(--font);font-size:.72rem;font-weight:500;color:var(--w3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .12s;letter-spacing:.02em}
+.nav-btn:hover{color:var(--w1)}.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Main */
 .main{padding:1.5rem 2rem 4rem;max-width:1400px;margin:0 auto}
-.syslog{background:var(--b1);border:1px solid var(--b5);font-family:var(--mono);font-size:.65rem;line-height:1.9;padding:.8rem 1rem;margin-bottom:1.5rem;max-height:140px;overflow-y:auto;color:var(--w3)}
-.syslog .ok{color:var(--up)}.syslog .er{color:var(--dn)}.syslog .inf{color:var(--accent)}.syslog .wrn{color:#E5C07B}
+.view{display:none}.view.active{display:block}
+
+/* Section headers */
 .sh{display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem;margin-top:1.8rem}
 .sh:first-child{margin-top:0}
 .sh-line{flex:1;height:1px;background:var(--b5)}
 .sh-label{font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--w3);white-space:nowrap}
 .sh-ts{font-family:var(--mono);font-size:.6rem;color:var(--w4)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
-.kpi{background:var(--b2);padding:1.1rem 1.2rem}
-.kpi-l{font-size:.58rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.4rem}
-.kpi-v{font-family:var(--mono);font-size:1.4rem;font-weight:600;color:var(--w);letter-spacing:-.02em}
-.kpi-s{font-family:var(--mono);font-size:.6rem;color:var(--w4);margin-top:.2rem}
+
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
+.kpi{background:var(--b2);padding:1rem 1.1rem}
+.kpi-l{font-size:.55rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.35rem}
+.kpi-v{font-family:var(--mono);font-size:1.3rem;font-weight:600;color:var(--w);letter-spacing:-.02em}
+.kpi-s{font-family:var(--mono);font-size:.58rem;color:var(--w4);margin-top:.15rem}
+
+/* Tables */
 .tbl-wrap{border:1px solid var(--b5);background:var(--b2);margin-bottom:1.5rem;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.75rem}
-th{text-align:left;padding:9px 14px;font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);background:var(--b3);border-bottom:1px solid var(--b5)}
-td{padding:9px 14px;border-bottom:1px solid var(--b4);color:var(--w2);font-family:var(--mono);font-size:.72rem}
-tr:hover td{background:var(--b3)}
+table{width:100%;border-collapse:collapse;font-size:.74rem}
+th{text-align:left;padding:8px 12px;font-family:var(--mono);font-size:.56rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);background:var(--b3);border-bottom:1px solid var(--b5)}
+td{padding:8px 12px;border-bottom:1px solid var(--b4);color:var(--w2);font-family:var(--mono);font-size:.7rem}
+tr{cursor:pointer;transition:background .08s}tr:hover td{background:var(--b3)}
 .sym{color:var(--w);font-weight:600;font-family:var(--font)}
-.tag{display:inline-block;padding:1px 6px;font-size:.6rem;font-weight:600;letter-spacing:.04em;border:1px solid}
+.tag{display:inline-block;padding:1px 6px;font-size:.58rem;font-weight:600;letter-spacing:.04em;border:1px solid}
 .tag-buy{color:var(--up);border-color:rgba(0,220,130,.25);background:rgba(0,220,130,.06)}
 .tag-sell{color:var(--dn);border-color:rgba(255,77,77,.25);background:rgba(255,77,77,.06)}
+.tag-tier{color:var(--accent);border-color:rgba(140,177,246,.25);background:rgba(140,177,246,.06)}
+
+/* Connection grid */
 .conn{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
-.conn-item{background:var(--b2);padding:.7rem 1.2rem;display:flex;justify-content:space-between;align-items:center}
-.conn-item .cl{font-size:.72rem;color:var(--w3)}.conn-item .cv{font-family:var(--mono);font-size:.72rem;font-weight:500;color:var(--w1)}
-.conn-item .cv.up{color:var(--up)}.conn-item .cv.dn{color:var(--dn)}
-.nil{text-align:center;padding:2.5rem;color:var(--w4);font-size:.78rem;font-style:italic}
-@media(max-width:768px){.topbar{padding:0 1rem}.main{padding:1rem 1rem 3rem}.kpis{grid-template-columns:repeat(2,1fr)}.conn{grid-template-columns:1fr}}
+.conn-item{background:var(--b2);padding:.65rem 1.1rem;display:flex;justify-content:space-between;align-items:center}
+.conn-item .cl{font-size:.7rem;color:var(--w3)}.conn-item .cv{font-family:var(--mono);font-size:.7rem;font-weight:500;color:var(--w1)}
+.cv.up{color:var(--up)}.cv.dn{color:var(--dn)}.cv.ac{color:var(--accent)}
+
+/* Trader cards */
+.trader-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
+.trader-card{background:var(--b2);padding:1.2rem 1.3rem;cursor:pointer;transition:background .1s;position:relative}
+.trader-card:hover{background:var(--b3)}
+.tc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.8rem}
+.tc-name{font-weight:600;font-size:.88rem;color:var(--w)}
+.tc-tier{font-family:var(--mono);font-size:.58rem;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.tc-row{display:flex;justify-content:space-between;padding:.25rem 0;font-size:.72rem}
+.tc-label{color:var(--w3)}.tc-val{font-family:var(--mono);font-weight:500}
+.tc-score{font-family:var(--mono);font-size:1.8rem;font-weight:700;color:var(--accent);line-height:1}
+.tc-score-label{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--w4);margin-top:.15rem}
+.tc-status{position:absolute;top:1.2rem;right:1.3rem;width:6px;height:6px;border-radius:50%}
+
+/* Salary panel */
+.sal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
+.sal-card{background:var(--b2);padding:1rem 1.2rem}
+.sal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.sal-name{font-weight:600;font-size:.82rem}.sal-amount{font-family:var(--mono);font-weight:700;font-size:1.1rem}
+.sal-row{display:flex;justify-content:space-between;font-size:.7rem;padding:.2rem 0}
+.sal-row .sl{color:var(--w3)}.sal-row .sv{font-family:var(--mono);font-weight:500}
+
+/* Detail view */
+.detail-back{font-size:.72rem;color:var(--accent);cursor:pointer;margin-bottom:1rem;display:inline-block}
+.detail-back:hover{text-decoration:underline}
+
+/* Empty */
+.nil{text-align:center;padding:2.5rem;color:var(--w4);font-size:.78rem}
+
+/* Log */
+.syslog{background:var(--b1);border:1px solid var(--b5);font-family:var(--mono);font-size:.64rem;line-height:1.9;padding:.7rem 1rem;margin-bottom:1.5rem;max-height:120px;overflow-y:auto;color:var(--w3)}
+.syslog .ok{color:var(--up)}.syslog .er{color:var(--dn)}.syslog .inf{color:var(--accent)}.syslog .wrn{color:var(--warn)}
+
+@media(max-width:768px){
+  .topbar{padding:0 1rem}.main{padding:1rem}.nav-btn{padding:8px 12px;font-size:.68rem}
+  .kpis{grid-template-columns:repeat(2,1fr)}.trader-grid{grid-template-columns:1fr}
+  .sal-grid{grid-template-columns:1fr}.conn{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<div class="topbar"><div class="topbar-left"><div class="logo">QT CAPITAL<span>Terminal</span></div><div class="topbar-status"><div class="pulse" id="dot"></div><span id="statusText">Connecting</span></div></div><div class="topbar-right" id="clock"></div></div>
-<div class="main">
-<div class="syslog" id="log"></div>
-<div id="accountPanel"></div>
-<div id="posPanel"></div>
-<div id="histPanel"></div>
-<div id="metricsPanel"></div>
-<div id="connPanel"></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo" onclick="showView('overview')">QT CAPITAL<span>Terminal</span></div>
+    <div class="topbar-status"><div class="pulse" id="dot"></div><span id="statusText">Connecting</span></div>
+  </div>
+  <div class="topbar-right">
+    <span id="traderCount" style="font-family:var(--mono);font-size:.68rem;color:var(--w4)"></span>
+    <span class="topbar-clock" id="clock"></span>
+  </div>
 </div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showView('overview')">Overview</button>
+  <button class="nav-btn" onclick="showView('roster')">Roster</button>
+  <button class="nav-btn" onclick="showView('salary')">Salary</button>
+  <button class="nav-btn" onclick="showView('detail')">Trader Detail</button>
+  <button class="nav-btn" onclick="showView('system')">System</button>
+</div>
+
+<div class="main">
+
+<!-- OVERVIEW -->
+<div id="v-overview" class="view active">
+  <div class="syslog" id="log"></div>
+  <div id="firmKpis"></div>
+  <div id="traderCards"></div>
+  <div id="firmPositions"></div>
+</div>
+
+<!-- ROSTER -->
+<div id="v-roster" class="view">
+  <div id="rosterContent"></div>
+</div>
+
+<!-- SALARY -->
+<div id="v-salary" class="view">
+  <div id="salaryContent"></div>
+</div>
+
+<!-- DETAIL -->
+<div id="v-detail" class="view">
+  <div id="detailContent"><div class="nil">Select a trader from Overview or Roster to view details</div></div>
+</div>
+
+<!-- SYSTEM -->
+<div id="v-system" class="view">
+  <div id="systemContent"></div>
+</div>
+
+</div>
+
 <script>
+// ═══════════════════════════════════════════════
+//  CORE UTILS
+// ═══════════════════════════════════════════════
 const $=id=>document.getElementById(id);
 const fmt=(n,d=2)=>n!=null?Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const ts=()=>new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-setInterval(()=>{const n=new Date();$('clock').textContent=n.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})+'  '+n.toLocaleTimeString('en-GB')},1000);
+const pct=(n,b)=>b>0?((n/b)*100).toFixed(2)+'%':'—';
+setInterval(()=>{$('clock').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})+' '+new Date().toLocaleTimeString('en-GB')},1000);
+
 function log(m,c=''){const e=$('log');e.innerHTML+=`<span class="${c}">[${ts()}] ${m}</span>\n`;e.scrollTop=e.scrollHeight}
-function setStatus(s,m){const d=$('dot');d.style.background=s==='ok'?'var(--up)':s==='err'?'var(--dn)':'var(--accent)';d.style.animation=s==='ok'?'none':'blink 2s infinite';$('statusText').textContent=m}
-async function proxy(e){const r=await fetch('/api/metaapi?endpoint='+e);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
-(async function(){
-  log('Initialising connection...','inf');
-  const s={account:false,live:false,positions:false,history:false,metrics:false};
-  try{log('Resolving account...','inf');s.account=await proxy('account');log('Account: '+(s.account.name||s.account.login)+' ['+s.account.state+']','ok')}catch(e){log('Account failed: '+e.message,'er');setStatus('err','Disconnected');return}
-  try{log('Fetching market data...','inf');s.live=await proxy('account-info');log('Balance: $'+fmt(s.live.balance)+' | Equity: $'+fmt(s.live.equity),'ok')}catch(e){log('Market data: '+e.message,'wrn')}
-  try{s.positions=await proxy('positions');log('Positions: '+(Array.isArray(s.positions)?s.positions.length:0)+' open','ok')}catch(e){log('Positions: '+e.message,'wrn')}
-  try{const d=await proxy('history');s.history=Array.isArray(d)?d.filter(x=>x.type==='DEAL_TYPE_BUY'||x.type==='DEAL_TYPE_SELL'):[];log('History: '+s.history.length+' deals (30d)','ok')}catch(e){log('History: '+e.message,'wrn')}
-  try{s.metrics=await proxy('metrics');log('Analytics loaded','ok')}catch(e){log('Analytics: '+e.message,'wrn')}
-  setStatus('ok','Live');log('All systems operational','ok');
-  renderAll(s);
-  setInterval(async()=>{try{s.live=await proxy('account-info');s.positions=await proxy('positions');renderAccount(s.account,s.live);renderPositions(s.positions)}catch(e){}},15000);
+function setStatus(s,m){$('dot').style.background=s==='ok'?'var(--up)':s==='err'?'var(--dn)':'var(--accent)';$('dot').style.animation=s==='ok'?'none':'blink 2s infinite';$('statusText').textContent=m}
+
+// Navigation
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  $('v-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.textContent.toLowerCase().replace(' ','')===id||b.textContent.toLowerCase().includes(id.slice(0,4)))b.classList.add('active')});
+}
+
+async function proxy(endpoint,accountId){
+  var url='/api/metaapi?endpoint='+endpoint;
+  if(accountId)url+='&accountId='+accountId;
+  var r=await fetch(url);var d=await r.json();
+  if(!r.ok)throw new Error(d.error||r.status);
+  return d;
+}
+
+// ═══════════════════════════════════════════════
+//  Q-SCORE ENGINE (ported from standalone tool)
+// ═══════════════════════════════════════════════
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v))}
+function lerp(v,a,b,c,d){var t=Math.max(0,Math.min(1,(v-a)/(b-a)));return c+t*(d-c)}
+function invLerp(v,a,b,c,d){var t=Math.max(0,Math.min(1,(b-v)/(b-a)));return c+t*(d-c)}
+var R=Math.round;
+
+function scoreRiskControl(dd1,dd2,dd3){
+  var worst=Math.max(dd1,dd2,dd3),avg=(dd1+dd2+dd3)/3;
+  var ws=worst<=4?invLerp(worst,0,4,100,80):worst<=6?invLerp(worst,4,6,80,50):worst<=8?invLerp(worst,6,8,50,20):invLerp(worst,8,10,20,0);
+  var as=avg<=3?invLerp(avg,0,3,100,80):avg<=5?invLerp(avg,3,5,80,50):avg<=7?invLerp(avg,5,7,50,20):invLerp(avg,7,10,20,0);
+  return clamp(R(ws*.55+as*.45),0,100);
+}
+function scorePerformance(ret,dd,pf,days,trades){
+  var rd=dd>0?ret/dd:0;
+  var s1=rd>=4?lerp(rd,4,8,80,100):rd>=2.5?lerp(rd,2.5,4,50,80):rd>=1.5?lerp(rd,1.5,2.5,20,50):lerp(rd,0,1.5,0,20);
+  var s2=pf>=2?lerp(pf,2,3.5,80,100):pf>=1.5?lerp(pf,1.5,2,50,80):pf>=1.2?lerp(pf,1.2,1.5,20,50):lerp(pf,0,1.2,0,20);
+  var s3=days>=60?lerp(days,60,120,80,100):days>=30?lerp(days,30,60,50,80):days>=15?lerp(days,15,30,20,50):lerp(days,0,15,0,20);
+  var s4=trades>=300?lerp(trades,300,800,80,100):trades>=150?lerp(trades,150,300,50,80):trades>=50?lerp(trades,50,150,20,50):lerp(trades,0,50,0,20);
+  return clamp(R(s1*.35+s2*.25+s3*.2+s4*.2),0,100);
+}
+function scoreConsistency(pw,bd,pf){
+  var s1=pw>=75?lerp(pw,75,95,80,100):pw>=60?lerp(pw,60,75,50,80):pw>=45?lerp(pw,45,60,20,50):lerp(pw,0,45,0,20);
+  var s2=bd<=8?invLerp(bd,0,8,100,80):bd<=18?invLerp(bd,8,18,80,50):bd<=35?invLerp(bd,18,35,50,20):invLerp(bd,35,70,20,0);
+  var s3=pf>=2?lerp(pf,2,3.5,80,100):pf>=1.5?lerp(pf,1.5,2,50,80):pf>=1.2?lerp(pf,1.2,1.5,20,50):lerp(pf,0,1.2,0,20);
+  return clamp(R(s1*.4+s2*.35+s3*.25),0,100);
+}
+function scoreDrawdownRecovery(dd,ret){
+  var rr=dd>0?ret/dd:0;
+  var s1=rr>=4?lerp(rr,4,8,80,100):rr>=2?lerp(rr,2,4,50,80):rr>=1?lerp(rr,1,2,20,50):lerp(rr,0,1,0,20);
+  var s2=dd<=3?invLerp(dd,0,3,100,85):dd<=5?invLerp(dd,3,5,85,55):dd<=8?invLerp(dd,5,8,55,20):invLerp(dd,8,10,20,0);
+  return clamp(R(s1*.6+s2*.4),0,100);
+}
+function scoreDiscipline(spike,violations){
+  var s1=spike<=2?invLerp(spike,1,2,100,75):spike<=3?invLerp(spike,2,3,75,45):spike<=4?invLerp(spike,3,4,45,15):5;
+  var s2=violations===0?100:violations===1?40:violations===2?15:0;
+  return clamp(R(s1*.5+s2*.5),0,100);
+}
+
+function computeQScore(trades,balance){
+  if(!trades||trades.length<5)return{score:0,attrs:{},confidence:'Low',trades:0};
+  // Aggregate metrics from trade array
+  var wins=0,losses=0,grossWin=0,grossLoss=0,totalPnl=0;
+  var peak=0,eq=0,maxDd=0,lotSizes=[],durations=[];
+  var dayMap={},weekMap={};
+
+  trades.forEach(function(t){
+    var p=t.profit||0; totalPnl+=p;
+    if(p>0){wins++;grossWin+=p}else if(p<0){losses++;grossLoss+=Math.abs(p)}
+    eq+=p;if(eq>peak)peak=eq;var dd=peak-eq;if(dd>maxDd)maxDd=dd;
+    if(t.volume)lotSizes.push(t.volume);
+    // Duration from brokerTime if available
+    var date=t.time?new Date(t.time).toISOString().slice(0,10):'';
+    if(date){dayMap[date]=(dayMap[date]||0)+p;
+      var d=new Date(t.time);var wk=d.getFullYear()+'-W'+Math.ceil((d.getDate()+new Date(d.getFullYear(),d.getMonth(),1).getDay())/7);
+      weekMap[wk]=(weekMap[wk]||0)+p}
+  });
+
+  var tradeCount=trades.length;
+  var days=Object.keys(dayMap).length;
+  var ddPct=balance>0?maxDd/balance*100:0;
+  var retPct=balance>0?totalPnl/balance*100:0;
+  var pf=grossLoss>0?grossWin/grossLoss:grossWin>0?99:0;
+  var weeks=Object.values(weekMap);
+  var profWeeks=weeks.length>0?weeks.filter(function(w){return w>0}).length/weeks.length*100:50;
+  var dayPnls=Object.values(dayMap);
+  var bestDay=dayPnls.length>0?Math.max.apply(null,dayPnls):0;
+  var bestDayPct=totalPnl>0?bestDay/totalPnl*100:0;
+  var avgLot=lotSizes.length>0?lotSizes.reduce(function(a,b){return a+b},0)/lotSizes.length:1;
+  var maxLot=lotSizes.length>0?Math.max.apply(null,lotSizes):1;
+  var spike=avgLot>0?maxLot/avgLot:1;
+
+  // Score attributes
+  var rc=scoreRiskControl(ddPct,ddPct*.8,ddPct);
+  var fp=scorePerformance(retPct,ddPct,pf,days,tradeCount);
+  var cs=scoreConsistency(profWeeks,bestDayPct,pf);
+  var dr=scoreDrawdownRecovery(ddPct,retPct);
+  var dp=scoreDiscipline(spike,0);
+
+  // Weighted (entry weights — no Ce)
+  var score=R(fp*.205+rc*.25+cs*.205+dr*.114+dp*.114+60*.114); // Eq carried at 60
+  score=clamp(score,0,100);
+
+  var confidence=days>=60&&tradeCount>=300?'High':days>=30&&tradeCount>=100?'Medium':'Low';
+
+  return{
+    score:score,confidence:confidence,trades:tradeCount,days:days,
+    pnl:R(totalPnl),retPct:retPct.toFixed(2),ddPct:ddPct.toFixed(2),pf:pf.toFixed(2),
+    winRate:tradeCount>0?(wins/tradeCount*100).toFixed(1):'0',
+    profWeeks:profWeeks.toFixed(0),bestDayPct:bestDayPct.toFixed(1),spike:spike.toFixed(1),
+    attrs:{rc:rc,fp:fp,cs:cs,dr:dr,dp:dp,eq:60}
+  };
+}
+
+function tierFromScore(s){return s>=65?'Senior Analyst':s>=50?'Analyst':'Junior Analyst'}
+function tierColor(s){return s>=65?'var(--up)':s>=50?'var(--accent)':'var(--w2)'}
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+var STATE = {
+  accounts: [],    // MetaAPI account list
+  traders: {},     // { accountId: { account, live, positions, history, qscore, salary } }
+  salary: JSON.parse(localStorage.getItem('qtc_salary')||'{}'), // { accountId: { amount, nextPay, cycle, paid, status } }
+};
+
+function saveSalary(){localStorage.setItem('qtc_salary',JSON.stringify(STATE.salary))}
+
+// ═══════════════════════════════════════════════
+//  INIT — Load all accounts
+// ═══════════════════════════════════════════════
+(async function init(){
+  log('Initialising QT Capital Terminal...','inf');
+
+  try{
+    log('Fetching connected accounts...','inf');
+    STATE.accounts=await proxy('list-accounts');
+    log(STATE.accounts.length+' account(s) found','ok');
+    $('traderCount').textContent=STATE.accounts.length+' account'+(STATE.accounts.length!==1?'s':'');
+  }catch(e){
+    log('Failed to list accounts: '+e.message,'er');
+    setStatus('err','Disconnected');
+    return;
+  }
+
+  // Load data for each account
+  for(var i=0;i<STATE.accounts.length;i++){
+    var acct=STATE.accounts[i];
+    var id=acct.id;
+    STATE.traders[id]={account:acct,live:null,positions:null,history:null,qscore:null};
+
+    try{
+      log('Loading '+acct.name+'...','inf');
+      var live=await proxy('account-info',id);
+      STATE.traders[id].live=live;
+      log(acct.name+': $'+fmt(live.balance),'ok');
+    }catch(e){log(acct.name+' account-info: '+e.message,'wrn')}
+
+    try{
+      var pos=await proxy('positions',id);
+      STATE.traders[id].positions=Array.isArray(pos)?pos:[];
+    }catch(e){STATE.traders[id].positions=[]}
+
+    try{
+      var hist=await proxy('history',id);
+      var trades=Array.isArray(hist)?hist.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[];
+      STATE.traders[id].history=trades;
+    }catch(e){STATE.traders[id].history=[]}
+
+    // Compute Q-Score
+    var bal=STATE.traders[id].live?.balance||0;
+    STATE.traders[id].qscore=computeQScore(STATE.traders[id].history,bal);
+
+    // Init salary if not exists
+    if(!STATE.salary[id]){
+      STATE.salary[id]={amount:3000,nextPay:'',cycle:30,totalPaid:0,months:0,status:'active'};
+      saveSalary();
+    }
+  }
+
+  setStatus('ok','Live');
+  log('All systems operational — '+STATE.accounts.length+' traders loaded','ok');
+
+  renderAll();
+
+  // Auto-refresh
+  setInterval(async function(){
+    for(var i=0;i<STATE.accounts.length;i++){
+      var id=STATE.accounts[i].id;
+      try{
+        STATE.traders[id].live=await proxy('account-info',id);
+        STATE.traders[id].positions=await proxy('positions',id);
+      }catch(e){}
+    }
+    renderOverview();
+  },20000);
 })();
-function renderAll(s){renderAccount(s.account,s.live);renderPositions(s.positions);renderHistory(s.history);renderMetrics(s.metrics);renderConnection(s)}
-function renderAccount(a,l){
-  const bal=l?.balance,eq=l?.equity,upl=(eq!=null&&bal!=null)?eq-bal:null,margin=l?.margin,free=l?.freeMargin,lev=l?.leverage||a?.leverage,name=l?.name||a?.name||a?.login||'—';
-  $('accountPanel').innerHTML=`<div class="sh"><span class="sh-label">${name}</span><span class="sh-line"></span><span class="sh-ts">${ts()}</span></div>
-  <div class="kpis">
-    <div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v">${bal!=null?'$'+fmt(bal):'—'}</div><div class="kpi-s">${l?.currency||a?.baseCurrency||'USD'}</div></div>
-    <div class="kpi"><div class="kpi-l">Equity</div><div class="kpi-v" style="color:${eq>=bal?'var(--up)':'var(--dn)'}">${eq!=null?'$'+fmt(eq):'—'}</div></div>
-    ${upl!=null?`<div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:${upl>=0?'var(--up)':'var(--dn)'}">${upl>=0?'+':''}$${fmt(upl)}</div><div class="kpi-s">${bal?(upl/bal*100).toFixed(3)+'%':''}</div></div>`:''}
-    ${margin!=null?`<div class="kpi"><div class="kpi-l">Margin Used</div><div class="kpi-v">$${fmt(margin)}</div></div>`:''}
-    ${free!=null?`<div class="kpi"><div class="kpi-l">Free Margin</div><div class="kpi-v">$${fmt(free)}</div></div>`:''}
-    <div class="kpi"><div class="kpi-l">Leverage</div><div class="kpi-v">${lev?'1:'+lev:'—'}</div></div>
-  </div>`;
+
+// ═══════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════
+function renderAll(){renderOverview();renderRoster();renderSalary();renderSystem()}
+
+function renderOverview(){
+  var ids=Object.keys(STATE.traders);
+  if(!ids.length){$('firmKpis').innerHTML='';$('traderCards').innerHTML='<div class="nil">No accounts connected</div>';return}
+
+  // Firm KPIs
+  var totalBal=0,totalEq=0,totalUpl=0,totalPos=0,totalTrades=0,avgScore=0,scoreCount=0;
+  ids.forEach(function(id){
+    var t=STATE.traders[id];
+    if(t.live){totalBal+=t.live.balance||0;totalEq+=t.live.equity||0;totalUpl+=(t.live.equity||0)-(t.live.balance||0)}
+    totalPos+=(t.positions||[]).length;
+    totalTrades+=(t.history||[]).length;
+    if(t.qscore&&t.qscore.score>0){avgScore+=t.qscore.score;scoreCount++}
+  });
+  if(scoreCount>0)avgScore=R(avgScore/scoreCount);
+
+  $('firmKpis').innerHTML=`<div class="sh"><span class="sh-label">Firm Overview</span><span class="sh-line"></span><span class="sh-ts">${ts()}</span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-l">Accounts</div><div class="kpi-v">${ids.length}</div></div>
+      <div class="kpi"><div class="kpi-l">Total Balance</div><div class="kpi-v">$${fmt(totalBal)}</div></div>
+      <div class="kpi"><div class="kpi-l">Total Equity</div><div class="kpi-v" style="color:${totalEq>=totalBal?'var(--up)':'var(--dn)'}">$${fmt(totalEq)}</div></div>
+      <div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:${totalUpl>=0?'var(--up)':'var(--dn)'}">${totalUpl>=0?'+':''}$${fmt(totalUpl)}</div></div>
+      <div class="kpi"><div class="kpi-l">Open Positions</div><div class="kpi-v">${totalPos}</div></div>
+      <div class="kpi"><div class="kpi-l">Trades (30d)</div><div class="kpi-v">${totalTrades}</div></div>
+      <div class="kpi"><div class="kpi-l">Avg Q-Score</div><div class="kpi-v" style="color:${tierColor(avgScore)}">${avgScore||'—'}</div></div>
+    </div>`;
+
+  // Trader cards
+  $('traderCards').innerHTML=`<div class="sh"><span class="sh-label">Traders</span><span class="sh-line"></span></div>
+    <div class="trader-grid">${ids.map(function(id){
+      var t=STATE.traders[id],a=t.account,l=t.live,q=t.qscore||{score:0},s=STATE.salary[id]||{};
+      var bal=l?.balance||0,eq=l?.equity||0,upl=eq-bal;
+      var posCount=(t.positions||[]).length;
+      var connected=a.connectionStatus==='CONNECTED';
+      return`<div class="trader-card" onclick="openDetail('${id}')">
+        <div class="tc-status" style="background:${connected?'var(--up)':'var(--dn)'}"></div>
+        <div class="tc-top">
+          <div><div class="tc-name">${a.name||a.login}</div><div class="tc-tier">${tierFromScore(q.score)}</div></div>
+          <div style="text-align:right"><div class="tc-score" style="color:${tierColor(q.score)}">${q.score||'—'}</div><div class="tc-score-label">Q-Score</div></div>
+        </div>
+        <div class="tc-row"><span class="tc-label">Balance</span><span class="tc-val">$${fmt(bal)}</span></div>
+        <div class="tc-row"><span class="tc-label">Equity</span><span class="tc-val" style="color:${eq>=bal?'var(--up)':'var(--dn)'}">$${fmt(eq)}</span></div>
+        <div class="tc-row"><span class="tc-label">Open P&L</span><span class="tc-val" style="color:${upl>=0?'var(--up)':'var(--dn)'}">${upl>=0?'+':''}$${fmt(upl)}</span></div>
+        <div class="tc-row"><span class="tc-label">Positions</span><span class="tc-val">${posCount}</span></div>
+        <div class="tc-row"><span class="tc-label">Trades (30d)</span><span class="tc-val">${(t.history||[]).length}</span></div>
+        <div class="tc-row"><span class="tc-label">Salary</span><span class="tc-val">$${(s.amount||3000).toLocaleString()}/mo</span></div>
+      </div>`;
+    }).join('')}</div>`;
+
+  // Firm-wide positions
+  var allPos=[];
+  ids.forEach(function(id){
+    var t=STATE.traders[id];
+    (t.positions||[]).forEach(function(p){p._trader=t.account.name||t.account.login;allPos.push(p)});
+  });
+
+  if(allPos.length){
+    $('firmPositions').innerHTML=`<div class="sh"><span class="sh-label">All Open Positions</span><span class="sh-line"></span><span class="sh-ts">${ts()}</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Trader</th><th>Symbol</th><th>Side</th><th>Volume</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead>
+      <tbody>${allPos.map(function(p){
+        var pnl=p.profit||0,buy=p.type&&p.type.includes('BUY');
+        return`<tr><td class="sym">${p._trader}</td><td>${p.symbol}</td><td><span class="tag tag-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td><td>${p.volume||'—'}</td><td>${fmt(p.openPrice,5)}</td><td>${fmt(p.currentPrice,5)}</td><td style="color:${pnl>=0?'var(--up)':'var(--dn)'};font-weight:600">${pnl>=0?'+':''}$${fmt(pnl)}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+  }else{$('firmPositions').innerHTML=''}
 }
-function renderPositions(pos){
-  const h=`<div class="sh"><span class="sh-label">Open Positions</span><span class="sh-line"></span><span class="sh-ts">${ts()}</span></div>`;
-  if(!pos||!Array.isArray(pos)||!pos.length){$('posPanel').innerHTML=h+`<div class="tbl-wrap"><div class="nil">No open positions</div></div>`;return}
-  $('posPanel').innerHTML=h+`<div class="tbl-wrap"><table><thead><tr><th>Symbol</th><th>Side</th><th>Volume</th><th>Entry</th><th>Current</th><th>P&L</th><th>Swap</th><th>SL</th><th>TP</th></tr></thead><tbody>${pos.map(p=>{const pnl=p.profit||p.unrealizedProfit||0;const buy=p.type&&p.type.includes('BUY');return`<tr><td class="sym">${p.symbol}</td><td><span class="tag tag-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td><td>${p.volume??p.currentVolume??'—'}</td><td>${fmt(p.openPrice,5)}</td><td>${fmt(p.currentPrice,5)}</td><td style="color:${pnl>=0?'var(--up)':'var(--dn)'};font-weight:600">${pnl>=0?'+':''}$${fmt(pnl)}</td><td style="color:var(--w4)">${fmt(p.swap||0)}</td><td style="color:var(--w4)">${p.stopLoss?fmt(p.stopLoss,5):'—'}</td><td style="color:var(--w4)">${p.takeProfit?fmt(p.takeProfit,5):'—'}</td></tr>`}).join('')}</tbody></table></div>`;
+
+// ═══════════════════════════════════════════════
+//  ROSTER VIEW
+// ═══════════════════════════════════════════════
+function renderRoster(){
+  var ids=Object.keys(STATE.traders);
+  $('rosterContent').innerHTML=`<div class="sh"><span class="sh-label">Trader Roster</span><span class="sh-line"></span><span class="sh-label">${ids.length} Accounts</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>Equity</th><th>Open P&L</th><th>Trades</th><th>Win Rate</th><th>PF</th><th>Max DD</th><th>Salary</th><th>Status</th></tr></thead>
+      <tbody>${ids.map(function(id){
+        var t=STATE.traders[id],a=t.account,l=t.live,q=t.qscore||{},s=STATE.salary[id]||{};
+        var bal=l?.balance||0,eq=l?.equity||0,upl=eq-bal;
+        return`<tr onclick="openDetail('${id}')">
+          <td class="sym">${a.name||a.login}</td>
+          <td style="color:${tierColor(q.score||0)};font-weight:700">${q.score||'—'}</td>
+          <td><span class="tag tag-tier">${tierFromScore(q.score||0)}</span></td>
+          <td>$${fmt(bal)}</td>
+          <td style="color:${eq>=bal?'var(--up)':'var(--dn)'}">$${fmt(eq)}</td>
+          <td style="color:${upl>=0?'var(--up)':'var(--dn)'}">${upl>=0?'+':''}$${fmt(upl)}</td>
+          <td>${q.trades||0}</td>
+          <td>${q.winRate||'—'}%</td>
+          <td>${q.pf||'—'}</td>
+          <td style="color:var(--dn)">${q.ddPct||'—'}%</td>
+          <td>$${(s.amount||3000).toLocaleString()}</td>
+          <td><span class="cv ${a.connectionStatus==='CONNECTED'?'up':'dn'}">${a.connectionStatus==='CONNECTED'?'LIVE':'OFF'}</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
 }
-function renderHistory(trades){
-  const h=`<div class="sh"><span class="sh-label">Trade History</span><span class="sh-line"></span><span class="sh-label">30 Days</span></div>`;
-  if(!trades||!trades.length){$('histPanel').innerHTML=h+`<div class="tbl-wrap"><div class="nil">No closed trades</div></div>`;return}
-  trades.sort((a,b)=>new Date(b.time)-new Date(a.time));const show=trades.slice(0,30);
-  const totalPnl=trades.reduce((s,t)=>s+(t.profit||0),0),wins=trades.filter(t=>(t.profit||0)>0).length,losses=trades.filter(t=>(t.profit||0)<0).length;
-  const wr=trades.length>0?(wins/trades.length*100).toFixed(1):'0';
-  const gw=trades.filter(t=>t.profit>0).reduce((s,t)=>s+t.profit,0),gl=Math.abs(trades.filter(t=>t.profit<0).reduce((s,t)=>s+t.profit,0)),pf=gl>0?(gw/gl).toFixed(2):gw>0?'∞':'—';
-  $('histPanel').innerHTML=h+`<div class="kpis"><div class="kpi"><div class="kpi-l">Trades</div><div class="kpi-v">${trades.length}</div></div><div class="kpi"><div class="kpi-l">Net P&L</div><div class="kpi-v" style="color:${totalPnl>=0?'var(--up)':'var(--dn)'}">${totalPnl>=0?'+':''}$${fmt(totalPnl)}</div></div><div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v">${wr}%</div><div class="kpi-s">${wins}W ${losses}L</div></div><div class="kpi"><div class="kpi-l">Profit Factor</div><div class="kpi-v">${pf}</div></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Volume</th><th>Price</th><th>P&L</th><th>Comm</th></tr></thead><tbody>${show.map(t=>{const pnl=t.profit||0;const d=new Date(t.time);const buy=t.type==='DEAL_TYPE_BUY';return`<tr><td>${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td><td class="sym">${t.symbol}</td><td><span class="tag tag-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td><td>${t.volume??'—'}</td><td>${fmt(t.price,5)}</td><td style="color:${pnl>=0?'var(--up)':'var(--dn)'};font-weight:600">${pnl>=0?'+':''}$${fmt(pnl)}</td><td style="color:var(--w4)">${fmt(t.commission||0)}</td></tr>`}).join('')}</tbody></table></div>`;
+
+// ═══════════════════════════════════════════════
+//  SALARY VIEW
+// ═══════════════════════════════════════════════
+function renderSalary(){
+  var ids=Object.keys(STATE.traders);
+  var totalMonthly=0;
+  ids.forEach(function(id){totalMonthly+=(STATE.salary[id]?.amount||3000)});
+
+  $('salaryContent').innerHTML=`<div class="sh"><span class="sh-label">Salary Management</span><span class="sh-line"></span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-l">Monthly Obligation</div><div class="kpi-v">$${totalMonthly.toLocaleString()}</div></div>
+      <div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">${ids.length}</div></div>
+      <div class="kpi"><div class="kpi-l">Avg Salary</div><div class="kpi-v">$${ids.length>0?fmt(totalMonthly/ids.length):'—'}</div></div>
+    </div>
+    <div class="sal-grid">${ids.map(function(id){
+      var t=STATE.traders[id],a=t.account,s=STATE.salary[id]||{amount:3000,totalPaid:0,months:0,status:'active'};
+      return`<div class="sal-card">
+        <div class="sal-top"><span class="sal-name">${a.name||a.login}</span><span class="sal-amount" style="color:var(--accent)">$${(s.amount||3000).toLocaleString()}/mo</span></div>
+        <div class="sal-row"><span class="sl">Status</span><span class="sv ${s.status==='active'?'up':'dn'}">${(s.status||'active').toUpperCase()}</span></div>
+        <div class="sal-row"><span class="sl">Total Paid</span><span class="sv">$${(s.totalPaid||0).toLocaleString()}</span></div>
+        <div class="sal-row"><span class="sl">Months</span><span class="sv">${s.months||0}</span></div>
+        <div class="sal-row"><span class="sl">Cycle</span><span class="sv">${s.cycle||30} days</span></div>
+        <div style="display:flex;gap:6px;margin-top:.6rem">
+          <button onclick="editSalary('${id}')" style="flex:1;padding:5px;font-family:var(--font);font-size:.65rem;font-weight:500;background:var(--b4);border:1px solid var(--b5);color:var(--w2);cursor:pointer">Edit</button>
+          <button onclick="recordPayment('${id}')" style="flex:1;padding:5px;font-family:var(--font);font-size:.65rem;font-weight:500;background:rgba(140,177,246,.1);border:1px solid rgba(140,177,246,.2);color:var(--accent);cursor:pointer">Record Payment</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
 }
-function renderMetrics(m){
-  if(!m||(!m.trades&&!m.profit)){$('metricsPanel').innerHTML='';return}
-  $('metricsPanel').innerHTML=`<div class="sh"><span class="sh-label">Analytics</span><span class="sh-line"></span></div><div class="kpis">
-    ${m.trades!=null?`<div class="kpi"><div class="kpi-l">Total Trades</div><div class="kpi-v">${m.trades}</div></div>`:''}
-    ${m.profit!=null?`<div class="kpi"><div class="kpi-l">Cumulative P&L</div><div class="kpi-v" style="color:${m.profit>=0?'var(--up)':'var(--dn)'}">${m.profit>=0?'+':''}$${fmt(m.profit)}</div></div>`:''}
-    ${m.profitFactor!=null?`<div class="kpi"><div class="kpi-l">Profit Factor</div><div class="kpi-v">${fmt(m.profitFactor)}</div></div>`:''}
-    ${m.maxDrawdown!=null?`<div class="kpi"><div class="kpi-l">Max Drawdown</div><div class="kpi-v" style="color:var(--dn)">${fmt(m.maxDrawdown)}%</div></div>`:''}
-    ${m.sharpeRatio!=null?`<div class="kpi"><div class="kpi-l">Sharpe</div><div class="kpi-v">${fmt(m.sharpeRatio)}</div></div>`:''}
-    ${m.sortinoRatio!=null?`<div class="kpi"><div class="kpi-l">Sortino</div><div class="kpi-v">${fmt(m.sortinoRatio)}</div></div>`:''}
-    ${m.expectancy!=null?`<div class="kpi"><div class="kpi-l">Expectancy</div><div class="kpi-v">$${fmt(m.expectancy)}</div></div>`:''}
-  </div>`;
+
+function editSalary(id){
+  var s=STATE.salary[id]||{amount:3000,status:'active',cycle:30};
+  var newAmt=prompt('Salary amount ($/mo):',s.amount);
+  if(newAmt===null)return;
+  s.amount=parseInt(newAmt)||3000;
+  var newStatus=prompt('Status (active/paused/held):',s.status||'active');
+  if(newStatus)s.status=newStatus;
+  STATE.salary[id]=s;
+  saveSalary();renderSalary();
 }
-function renderConnection(s){
-  const a=s.account;
-  $('connPanel').innerHTML=`<div class="sh"><span class="sh-label">System</span><span class="sh-line"></span></div><div class="conn">
-    <div class="conn-item"><span class="cl">Account</span><span class="cv">${a?.name||'—'}</span></div>
-    <div class="conn-item"><span class="cl">Server</span><span class="cv">${a?.server||'—'}</span></div>
-    <div class="conn-item"><span class="cl">Platform</span><span class="cv">${a?.platform||'MT5'}</span></div>
-    <div class="conn-item"><span class="cl">Region</span><span class="cv">${a?.region||'—'}</span></div>
-    <div class="conn-item"><span class="cl">State</span><span class="cv up">${a?.state||'—'}</span></div>
-    <div class="conn-item"><span class="cl">Link</span><span class="cv up">${a?.connectionStatus||'—'}</span></div>
-    <div class="conn-item"><span class="cl">Market Data</span><span class="cv ${s.live?'up':'dn'}">${s.live?'LIVE':'OFF'}</span></div>
-    <div class="conn-item"><span class="cl">Positions</span><span class="cv ${s.positions?'up':'dn'}">${s.positions?'LIVE':'OFF'}</span></div>
-    <div class="conn-item"><span class="cl">History</span><span class="cv ${s.history?'up':'dn'}">${s.history?s.history.length+' DEALS':'OFF'}</span></div>
-    <div class="conn-item"><span class="cl">Analytics</span><span class="cv ${s.metrics?'up':'dn'}">${s.metrics?'LOADED':'OFF'}</span></div>
-    <div class="conn-item"><span class="cl">Refresh</span><span class="cv">15s</span></div>
-    <div class="conn-item"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div>
-  </div>`;
+
+function recordPayment(id){
+  var s=STATE.salary[id];if(!s)return;
+  if(!confirm('Record $'+s.amount.toLocaleString()+' payment for '+STATE.traders[id].account.name+'?'))return;
+  s.totalPaid=(s.totalPaid||0)+s.amount;
+  s.months=(s.months||0)+1;
+  STATE.salary[id]=s;
+  saveSalary();renderSalary();
+}
+
+// ═══════════════════════════════════════════════
+//  TRADER DETAIL
+// ═══════════════════════════════════════════════
+function openDetail(id){
+  showView('detail');
+  var t=STATE.traders[id],a=t.account,l=t.live,q=t.qscore||{},s=STATE.salary[id]||{};
+  var bal=l?.balance||0,eq=l?.equity||0,upl=eq-bal;
+  var trades=t.history||[];
+
+  var attrHtml='';
+  if(q.attrs){
+    var attrs=[{n:'Risk Control',c:'Rc',s:q.attrs.rc,w:25},{n:'Performance',c:'Fp',s:q.attrs.fp,w:20.5},{n:'Consistency',c:'Cs',s:q.attrs.cs,w:20.5},{n:'DD Recovery',c:'Dr',s:q.attrs.dr,w:11.4},{n:'Discipline',c:'Dp',s:q.attrs.dp,w:11.4},{n:'Eval Quality',c:'Eq',s:q.attrs.eq,w:11.4}];
+    attrHtml=`<div class="sh"><span class="sh-label">Q-Score Attributes</span><span class="sh-line"></span></div>
+      <div class="kpis">${attrs.map(function(a){return`<div class="kpi"><div class="kpi-l">${a.n} (${a.w}%)</div><div class="kpi-v" style="color:${tierColor(a.s)}">${a.s}</div></div>`}).join('')}</div>`;
+  }
+
+  // Trade history table
+  var histHtml='';
+  if(trades.length){
+    trades.sort(function(a,b){return new Date(b.time)-new Date(a.time)});
+    var show=trades.slice(0,50);
+    histHtml=`<div class="sh"><span class="sh-label">Trade History</span><span class="sh-line"></span><span class="sh-label">${trades.length} Trades</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Volume</th><th>Price</th><th>P&L</th></tr></thead>
+      <tbody>${show.map(function(t){
+        var pnl=t.profit||0,d=new Date(t.time),buy=t.type==='DEAL_TYPE_BUY';
+        return`<tr><td>${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td><td class="sym">${t.symbol}</td><td><span class="tag tag-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td><td>${t.volume||'—'}</td><td>${fmt(t.price,5)}</td><td style="color:${pnl>=0?'var(--up)':'var(--dn)'};font-weight:600">${pnl>=0?'+':''}$${fmt(pnl)}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+
+  $('detailContent').innerHTML=`
+    <span class="detail-back" onclick="showView('overview')">← Back to Overview</span>
+    <div class="sh"><span class="sh-label">${a.name||a.login}</span><span class="sh-line"></span><span class="sh-ts">${a.server} · ${a.platform}</span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-l">Q-Score</div><div class="kpi-v" style="color:${tierColor(q.score||0)};font-size:2rem">${q.score||'—'}</div><div class="kpi-s">${tierFromScore(q.score||0)} · ${q.confidence||'—'} confidence</div></div>
+      <div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v">$${fmt(bal)}</div></div>
+      <div class="kpi"><div class="kpi-l">Equity</div><div class="kpi-v" style="color:${eq>=bal?'var(--up)':'var(--dn)'}">$${fmt(eq)}</div></div>
+      <div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:${upl>=0?'var(--up)':'var(--dn)'}">${upl>=0?'+':''}$${fmt(upl)}</div></div>
+      <div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v">${q.winRate||'—'}%</div></div>
+      <div class="kpi"><div class="kpi-l">Profit Factor</div><div class="kpi-v">${q.pf||'—'}</div></div>
+      <div class="kpi"><div class="kpi-l">Max DD</div><div class="kpi-v" style="color:var(--dn)">${q.ddPct||'—'}%</div></div>
+      <div class="kpi"><div class="kpi-l">Trades (30d)</div><div class="kpi-v">${q.trades||0}</div><div class="kpi-s">${q.days||0} trading days</div></div>
+      <div class="kpi"><div class="kpi-l">Salary</div><div class="kpi-v">$${(s.amount||3000).toLocaleString()}</div><div class="kpi-s">${(s.status||'active').toUpperCase()}</div></div>
+    </div>
+    ${attrHtml}
+    ${histHtml}`;
+}
+
+// ═══════════════════════════════════════════════
+//  SYSTEM VIEW
+// ═══════════════════════════════════════════════
+function renderSystem(){
+  var ids=Object.keys(STATE.traders);
+  $('systemContent').innerHTML=`<div class="sh"><span class="sh-label">System Status</span><span class="sh-line"></span></div>
+    <div class="conn">${ids.map(function(id){
+      var t=STATE.traders[id],a=t.account;
+      return`<div class="conn-item"><span class="cl">${a.name||a.login}</span><span class="cv ${a.connectionStatus==='CONNECTED'?'up':'dn'}">${a.connectionStatus}</span></div>`;
+    }).join('')}
+      <div class="conn-item"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div>
+      <div class="conn-item"><span class="cl">Refresh</span><span class="cv">20s</span></div>
+      <div class="conn-item"><span class="cl">Region</span><span class="cv">${STATE.accounts[0]?.region||'—'}</span></div>
+    </div>
+    <div class="sh"><span class="sh-label">Connected Accounts</span><span class="sh-line"></span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>Type</th><th>State</th><th>Connection</th></tr></thead>
+      <tbody>${ids.map(function(id){
+        var a=STATE.traders[id].account;
+        return`<tr><td class="sym">${a.name||'—'}</td><td>${a.login||'—'}</td><td>${a.server||'—'}</td><td>${a.platform||'MT5'}</td><td>${a.type||'—'}</td><td class="cv up">${a.state}</td><td class="cv ${a.connectionStatus==='CONNECTED'?'up':'dn'}">${a.connectionStatus}</td></tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
 }
 </script>
 </body>
