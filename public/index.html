@@ -658,14 +658,58 @@ function rRo(){var ids=allIds();E('rost').innerHTML='<div class="sh"><span class
   return'<tr class="'+rowClass+'"><td><span class="eye-btn" onclick="event.stopPropagation();viewTrader(\''+id+'\')" title="View details">👁</span></td><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><span class="sh-btn" onclick="event.stopPropagation();editTrader(\''+id+'\')">Edit</span></td><td>'+(t.isM?'<span style="color:var(--dn);cursor:pointer" onclick="event.stopPropagation();rmM(\''+id+'\')">✕</span>':'')+'</td></tr>'
 }).join('')+'</tbody></table></div>'}
 function showAdd(){E('addC').innerHTML='<div class="fp">'+
+'<div style="display:flex;gap:0;margin-bottom:1rem"><button class="btn btn-s" id="tab-mt5" onclick="showMT5Tab()">Connect MT5 Account</button><button class="btn" id="tab-manual" onclick="showManualTab()">Add Manual Trader</button></div>'+
+'<div id="addTab"></div></div>';showMT5Tab()}
+
+function showMT5Tab(){E('tab-mt5').className='btn btn-s';E('tab-manual').className='btn';
+E('addTab').innerHTML=
+'<div class="sh" style="margin-top:0"><span class="sh-t">MT5 Account Credentials</span><span class="sh-l"></span></div>'+
+'<div class="fg"><div><div class="fl">Account Name</div><input class="fi" id="mt-name" placeholder="e.g. Trader - John"></div><div><div class="fl">MT5 Login</div><input class="fi" id="mt-login" placeholder="e.g. 10539503"></div><div><div class="fl">MT5 Password (Investor)</div><input class="fi" id="mt-pass" type="password" placeholder="Investor/read-only password"></div></div>'+
+'<div class="fg"><div><div class="fl">MT5 Server</div><input class="fi" id="mt-server" placeholder="e.g. ICMarketsSC-Demo"></div><div><div class="fl">Platform</div><select class="fi" id="mt-platform"><option value="mt5">MT5</option><option value="mt4">MT4</option></select></div></div>'+
+'<div class="sh"><span class="sh-t">Trader Config</span><span class="sh-l"></span></div>'+
+'<div class="fg"><div><div class="fl">Salary ($/mo)</div><input class="fi" id="mt-sal" type="number" value="3000"></div><div><div class="fl">First Trade Date</div><input class="fi" id="mt-start" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><div class="fl">Instruments</div><select class="fi" id="mt-inst"><option value="fx_majors">FX Majors</option><option value="indices">Indices</option><option value="commodities">Commodities</option><option value="mixed_cfd" selected>Mixed CFDs</option><option value="fx_minors">FX Minors</option><option value="fx_exotics">FX Exotics</option><option value="crypto_cfd">Crypto CFDs</option></select></div></div>'+
+'<div class="fg"><div><div class="fl">Holding Time</div><select class="fi" id="mt-hold"><option value="intraday_long">Intraday Long</option><option value="intraday_short">Intraday Short</option><option value="swing">Swing</option></select></div></div>'+
+'<div class="sh"><span class="sh-t">Evaluation Data</span><span class="sh-l"></span><span style="font-size:.54rem;color:var(--w4)">Optional</span></div>'+
+'<div class="fg"><div><div class="fl">P1 Days</div><input class="fi" id="mt-p1d" type="number" placeholder="e.g. 12"></div><div><div class="fl">P1 Profit (%)</div><input class="fi" id="mt-p1p" type="number" step=".1" placeholder="e.g. 11.2"></div><div><div class="fl">P1 Max DD (%)</div><input class="fi" id="mt-p1dd" type="number" step=".1" placeholder="e.g. 4.5"></div></div>'+
+'<div class="fg"><div><div class="fl">P2 Days</div><input class="fi" id="mt-p2d" type="number" placeholder="e.g. 18"></div><div><div class="fl">P2 Profit (%)</div><input class="fi" id="mt-p2p" type="number" step=".1" placeholder="e.g. 7.8"></div><div><div class="fl">P2 Max DD (%)</div><input class="fi" id="mt-p2dd" type="number" step=".1" placeholder="e.g. 3.8"></div></div>'+
+'<div id="mt-status" style="margin-top:.6rem"></div>'+
+'<div class="br" style="margin-top:.8rem"><button class="btn btn-s" id="mt-submit" onclick="connectMT5()">Connect & Deploy</button><button class="btn" onclick="E(\'addC\').innerHTML=\'\'">Cancel</button></div>'}
+
+function showManualTab(){E('tab-mt5').className='btn';E('tab-manual').className='btn btn-s';
+E('addTab').innerHTML=
 '<div class="sh" style="margin-top:0"><span class="sh-t">Trader Details</span><span class="sh-l"></span></div>'+
 '<div class="fg"><div><div class="fl">Name</div><input class="fi" id="qn" placeholder="Trader name"><div style="margin-top:.5rem"><div class="fl">Account Number</div><input class="fi" id="qlogin" placeholder="e.g. 10539503"></div></div><div><div class="fl">Allocation ($)</div><input class="fi" id="qa" type="number" value="30000"><div style="margin-top:.5rem"><div class="fl">Salary ($/mo)</div><input class="fi" id="qs" type="number" value="3000"></div></div><div><div class="fl">First Trade Date</div><input class="fi" id="qsd" type="date" value="'+new Date().toISOString().slice(0,10)+'"><div style="margin-top:.5rem"><div class="fl">Instruments</div><select class="fi" id="qi"><option value="fx_majors">FX Majors</option><option value="indices">Indices</option><option value="commodities">Commodities</option><option value="mixed_cfd" selected>Mixed CFDs</option><option value="fx_minors">FX Minors</option><option value="fx_exotics">FX Exotics</option><option value="crypto_cfd">Crypto CFDs</option></select></div></div></div>'+
 '<div class="fg"><div><div class="fl">Holding Time</div><select class="fi" id="qhold"><option value="intraday_long">Intraday Long</option><option value="intraday_short">Intraday Short</option><option value="swing">Swing</option></select></div></div>'+
-'<div class="sh"><span class="sh-t">Evaluation Data</span><span class="sh-l"></span><span style="font-size:.54rem;color:var(--w4)">Optional — leave blank if no eval</span></div>'+
-'<div class="fg"><div><div class="fl">P1 Days to Pass</div><input class="fi" id="qp1d" type="number" placeholder="e.g. 12"><div style="margin-top:.5rem"><div class="fl">P1 Profit (%)</div><input class="fi" id="qp1p" type="number" step=".1" placeholder="e.g. 11.2"></div></div><div><div class="fl">P1 Max DD (%)</div><input class="fi" id="qp1dd" type="number" step=".1" placeholder="e.g. 4.5"><div style="margin-top:.5rem"><div class="fl">P2 Days to Pass</div><input class="fi" id="qp2d" type="number" placeholder="e.g. 18"></div></div><div><div class="fl">P2 Profit (%)</div><input class="fi" id="qp2p" type="number" step=".1" placeholder="e.g. 7.8"><div style="margin-top:.5rem"><div class="fl">P2 Max DD (%)</div><input class="fi" id="qp2dd" type="number" step=".1" placeholder="e.g. 3.8"></div></div></div>'+
+'<div class="sh"><span class="sh-t">Evaluation Data</span><span class="sh-l"></span><span style="font-size:.54rem;color:var(--w4)">Optional</span></div>'+
+'<div class="fg"><div><div class="fl">P1 Days</div><input class="fi" id="qp1d" type="number" placeholder="e.g. 12"><div style="margin-top:.5rem"><div class="fl">P1 Profit (%)</div><input class="fi" id="qp1p" type="number" step=".1" placeholder="e.g. 11.2"></div></div><div><div class="fl">P1 Max DD (%)</div><input class="fi" id="qp1dd" type="number" step=".1" placeholder="e.g. 4.5"><div style="margin-top:.5rem"><div class="fl">P2 Days</div><input class="fi" id="qp2d" type="number" placeholder="e.g. 18"></div></div><div><div class="fl">P2 Profit (%)</div><input class="fi" id="qp2p" type="number" step=".1" placeholder="e.g. 7.8"><div style="margin-top:.5rem"><div class="fl">P2 Max DD (%)</div><input class="fi" id="qp2dd" type="number" step=".1" placeholder="e.g. 3.8"></div></div></div>'+
 '<div class="sh"><span class="sh-t">Notes</span><span class="sh-l"></span></div>'+
 '<div><textarea class="fi" id="qno" rows="2" placeholder="Context, observations, strategy notes..."></textarea></div>'+
-'<div class="br" style="margin-top:.8rem"><button class="btn btn-s" onclick="addM()">Add to Roster</button><button class="btn" onclick="E(\'addC\').innerHTML=\'\'">Cancel</button></div></div>'}
+'<div class="br" style="margin-top:.8rem"><button class="btn btn-s" onclick="addM()">Add to Roster</button><button class="btn" onclick="E(\'addC\').innerHTML=\'\'">Cancel</button></div>'}
+
+async function connectMT5(){
+  var name=E('mt-name').value.trim(),login=E('mt-login').value.trim(),pass=E('mt-pass').value,server=E('mt-server').value.trim(),platform=E('mt-platform').value;
+  if(!name||!login||!pass||!server){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">All credential fields required</span>';return}
+  E('mt-submit').disabled=true;E('mt-submit').textContent='Connecting...';
+  E('mt-status').innerHTML='<span style="color:var(--accent);font-size:.7rem">Creating account on MetaAPI...</span>';
+  try{
+    var r=await fetch('/api/metaapi?action=create-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,login:login,password:pass,server:server,platform:platform})});
+    var d=await r.json();
+    if(!r.ok||d.error){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Error: '+(d.error||'Unknown')+'</span>';E('mt-submit').disabled=false;E('mt-submit').textContent='Connect & Deploy';return}
+    E('mt-status').innerHTML='<span style="color:var(--up);font-size:.7rem">Account created'+(d.deployed?' & deployed':'')+' (ID: '+d.id.slice(0,8)+'...)</span>';
+    // Save salary/eval config for this account
+    var sd=E('mt-start').value||new Date().toISOString().slice(0,10);
+    var salObj={amt:parseInt(E('mt-sal').value)||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:sd,split:50,inst:E('mt-inst').value,hold:E('mt-hold').value};
+    var p1d=E('mt-p1d').value;if(p1d)salObj.p1d=parseFloat(p1d);
+    var p1p=E('mt-p1p').value;if(p1p)salObj.p1p=parseFloat(p1p);
+    var p1dd=E('mt-p1dd').value;if(p1dd)salObj.p1dd=parseFloat(p1dd);
+    var p2d=E('mt-p2d').value;if(p2d)salObj.p2d=parseFloat(p2d);
+    var p2p=E('mt-p2p').value;if(p2p)salObj.p2p=parseFloat(p2p);
+    var p2dd=E('mt-p2dd').value;if(p2dd)salObj.p2dd=parseFloat(p2dd);
+    S.sal[d.id]=salObj;sS();
+    // Wait a moment then reload to pick up the new account
+    setTimeout(function(){location.reload()},2000);
+  }catch(e){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Network error: '+e.message+'</span>';E('mt-submit').disabled=false;E('mt-submit').textContent='Connect & Deploy'}
+}
 function addM(){var n=E('qn').value.trim();if(!n){alert('Enter a name');return}if(S.manual.find(function(x){return x.name===n})){alert('Already exists');return}var sd=E('qsd').value||new Date().toISOString().slice(0,10);
 S.manual.push({name:n,alloc:parseInt(E('qa').value)||30000,salary:parseInt(E('qs').value)||3000,split:50,inst:E('qi').value,notes:E('qno').value,score:0,start:sd,login:E('qlogin').value.trim()||''});
 var id='m-'+n;var salObj={amt:parseInt(E('qs').value)||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:sd,split:50,inst:E('qi').value,hold:E('qhold').value};
