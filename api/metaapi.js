@@ -1,72 +1,114 @@
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   const TOKEN = process.env.METAAPI_TOKEN;
   const ACCOUNT_ID = process.env.METAAPI_ACCOUNT_ID;
 
   if (!TOKEN || !ACCOUNT_ID) {
-    return res.status(500).json({ error: 'Missing METAAPI_TOKEN or METAAPI_ACCOUNT_ID environment variables' });
+    return res.status(500).json({ error: 'Missing env vars', hasToken: !!TOKEN, hasAccountId: !!ACCOUNT_ID });
   }
 
   const { endpoint } = req.query;
+  if (!endpoint) {
+    return res.status(400).json({ error: 'Add ?endpoint= parameter. Valid: account, account-info, positions, history, metrics, debug' });
+  }
 
-  // Map endpoint names to MetaAPI URLs
   const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
+  const headers = { 'auth-token': TOKEN };
 
-  // First get the account to determine region
-  let region = 'london';
+  let account;
   try {
-    const acctRes = await fetch(`${MGMT}/users/current/accounts/${ACCOUNT_ID}`, {
-      headers: { 'auth-token': TOKEN }
-    });
-    if (acctRes.ok) {
-      const acct = await acctRes.json();
-      region = acct.region || 'london';
+    const r = await fetch(MGMT + '/users/current/accounts/' + ACCOUNT_ID, { headers });
+    account = await r.json();
+    if (endpoint === 'account') return res.status(200).json(account);
+  } catch (e) {
+    return res.status(502).json({ error: 'Provisioning API failed: ' + e.message });
+  }
 
-      if (endpoint === 'account') {
-        return res.status(200).json(acct);
+  const region = account.region || 'london';
+
+  const clientBases = [
+    'https://mt-client-api-v1.' + region + '.agiliumtrade.agiliumtrade.ai',
+    'https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai',
+    'https://mt-client-api-v1.' + region + '.agiliumtrade.ai',
+  ];
+
+  const metastatsBases = [
+    'https://metastats-api-v1.' + region + '.agiliumtrade.agiliumtrade.ai',
+    'https://metastats-api-v1.agiliumtrade.agiliumtrade.ai',
+  ];
+
+  if (endpoint === 'debug') {
+    var results = [];
+    for (var i = 0; i < clientBases.length; i++) {
+      var url = clientBases[i] + '/users/current/accounts/' + ACCOUNT_ID + '/accountInformation';
+      try {
+        var r = await fetch(url, { headers });
+        var body = await r.text();
+        results.push({ url: url, status: r.status, body: body.slice(0, 500) });
+      } catch (e) {
+        results.push({ url: url, error: e.message });
       }
     }
-  } catch (e) {
-    // Continue with default region
+    for (var j = 0; j < metastatsBases.length; j++) {
+      var murl = metastatsBases[j] + '/users/current/accounts/' + ACCOUNT_ID + '/metrics';
+      try {
+        var mr = await fetch(murl, { headers });
+        var mbody = await mr.text();
+        results.push({ url: murl, status: mr.status, body: mbody.slice(0, 500) });
+      } catch (e) {
+        results.push({ url: murl, error: e.message });
+      }
+    }
+    return res.status(200).json({
+      account: { type: account.type, region: region, state: account.state, conn: account.connectionStatus },
+      results: results
+    });
   }
 
-  const CLIENT = `https://mt-client-api-v1.${region}.agiliumtrade.agiliumtrade.ai`;
-  const METASTATS = `https://metastats-api-v1.${region}.agiliumtrade.agiliumtrade.ai`;
+  if (endpoint === 'metrics') {
+    for (var k = 0; k < metastatsBases.length; k++) {
+      var msurl = metastatsBases[k] + '/users/current/accounts/' + ACCOUNT_ID + '/metrics';
+      try {
+        var msr = await fetch(msurl, { headers });
+        if (msr.ok) {
+          var msdata = await msr.json();
+          return res.status(200).json(msdata);
+        }
+      } catch (e) { /* try next */ }
+    }
+    return res.status(502).json({ error: 'All MetaStats URLs failed' });
+  }
 
-  const endpoints = {
-    'account-info': `${CLIENT}/users/current/accounts/${ACCOUNT_ID}/accountInformation`,
-    'positions': `${CLIENT}/users/current/accounts/${ACCOUNT_ID}/positions`,
-    'history': `${CLIENT}/users/current/accounts/${ACCOUNT_ID}/history-deals/time/${new Date(Date.now() - 30*24*60*60*1000).toISOString()}/${new Date().toISOString()}`,
-    'metrics': `${METASTATS}/users/current/accounts/${ACCOUNT_ID}/metrics`,
+  var paths = {
+    'account-info': '/users/current/accounts/' + ACCOUNT_ID + '/accountInformation',
+    'positions': '/users/current/accounts/' + ACCOUNT_ID + '/positions',
+    'history': '/users/current/accounts/' + ACCOUNT_ID + '/history-deals/time/' + new Date(Date.now() - 30*24*60*60*1000).toISOString() + '/' + new Date().toISOString(),
   };
 
-  const url = endpoints[endpoint];
-  if (!url) {
-    return res.status(400).json({ error: `Unknown endpoint: ${endpoint}. Valid: ${Object.keys(endpoints).join(', ')}` });
+  var path = paths[endpoint];
+  if (!path) {
+    return res.status(400).json({ error: 'Unknown endpoint: ' + endpoint });
   }
 
-  try {
-    const apiRes = await fetch(url, {
-      headers: { 'auth-token': TOKEN }
-    });
-
-    const contentType = apiRes.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await apiRes.json();
-      return res.status(apiRes.status).json(data);
-    } else {
-      const text = await apiRes.text();
-      return res.status(apiRes.status).json({ raw: text });
+  var errors = [];
+  for (var m = 0; m < clientBases.length; m++) {
+    var curl = clientBases[m] + path;
+    try {
+      var cr = await fetch(curl, { headers });
+      if (cr.ok) {
+        var cdata = await cr.json();
+        return res.status(200).json(cdata);
+      } else {
+        var cbody = await cr.text();
+        errors.push({ url: clientBases[m], status: cr.status, body: cbody.slice(0, 300) });
+      }
+    } catch (e) {
+      errors.push({ url: clientBases[m], error: e.message });
     }
-  } catch (e) {
-    return res.status(502).json({ error: e.message });
   }
+
+  return res.status(502).json({ error: 'All URLs failed', attempts: errors });
 }
