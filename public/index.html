@@ -629,10 +629,29 @@ function viewTrader(id){
   // Q-Score hero ring
   var circ=2*Math.PI*48,offset=circ-(( q.score||0)/100)*circ;
   var html='<span class="tp-back" onclick="nav(\'roster\')">← Back to Roster</span>';
-  html+='<div class="tp-hero"><div class="tp-score-ring"><svg viewBox="0 0 120 120"><circle class="tp-ring-bg" cx="60" cy="60" r="48"/><circle class="tp-ring-fg" cx="60" cy="60" r="48" stroke="'+(q.pending?'var(--w4)':tCol(q.score||0))+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+(q.pending?circ:offset)+'"/></svg><div class="tp-score-center"><div class="tp-score-num" style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+'">'+(q.pending?'—':q.score||'—')+'</div><div class="tp-score-label">'+(q.pending?'Score in '+(q.daysUntilScore||0)+'d':'Q-Score')+'</div></div></div>';
-  html+='<div class="tp-info"><div class="tp-name">'+a.name+' <span style="color:'+h.c+';font-size:.8rem">'+h.a+'</span> <span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">FE '+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></div>';
+
+  // Top panel: Q-Score ring + trader info + details + notes
+  html+='<div class="tp-hero" style="align-items:flex-start"><div class="tp-score-ring"><svg viewBox="0 0 120 120"><circle class="tp-ring-bg" cx="60" cy="60" r="48"/><circle class="tp-ring-fg" cx="60" cy="60" r="48" stroke="'+(q.pending?'var(--w4)':tCol(q.score||0))+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+(q.pending?circ:offset)+'"/></svg><div class="tp-score-center"><div class="tp-score-num" style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+'">'+(q.pending?'—':q.score||'—')+'</div><div class="tp-score-label">'+(q.pending?'Score in '+(q.daysUntilScore||0)+'d':'Q-Score')+'</div></div></div>';
+  html+='<div class="tp-info" style="flex:1"><div class="tp-name">'+a.name+' <span style="color:'+h.c+';font-size:.8rem">'+h.a+'</span> <span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">FE '+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></div>';
   html+='<div class="tp-tier-tag">'+trTier+' · '+(q.conf||'—')+' confidence · '+h.l+'</div>';
-  html+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(b)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sharpe</span><span class="tp-meta-val">'+ratios.sharpe+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sortino</span><span class="tp-meta-val">'+ratios.sortino+'</span></div></div></div></div>';
+
+  // Trader details grid
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin:.6rem 0">';
+  html+='<div style="background:var(--b3);padding:.5rem .6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)">Account</div><div style="font-family:var(--mono);font-size:.72rem;font-weight:500;color:var(--w1)">'+(a.login||'—')+'</div></div>';
+  html+='<div style="background:var(--b3);padding:.5rem .6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)">Email</div><div style="font-family:var(--mono);font-size:.68rem;color:var(--w1)">'+(s.email||'—')+'</div></div>';
+  html+='<div style="background:var(--b3);padding:.5rem .6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)">Address</div><div style="font-family:var(--mono);font-size:.68rem;color:var(--w1)">'+(s.address||'—')+'</div></div>';
+  html+='<div style="background:var(--b3);padding:.5rem .6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)">Server</div><div style="font-family:var(--mono);font-size:.68rem;color:var(--w1)">'+(a.server||'—')+'</div></div>';
+  html+='<div style="background:var(--b3);padding:.5rem .6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)">Platform</div><div style="font-family:var(--mono);font-size:.68rem;color:var(--w1)">'+(a.platform||'—')+'</div></div>';
+  html+='<div style="background:var(--b3);padding:.5rem .6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4)">Status</div><div style="font-family:var(--mono);font-size:.68rem" class="cv '+(a.connectionStatus==='CONNECTED'?'up':a.connectionStatus==='MANUAL'?'ac':'dn')+'">'+(a.connectionStatus||'—')+'</div></div>';
+  html+='</div>';
+
+  // Key metrics row
+  html+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(b)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sharpe</span><span class="tp-meta-val">'+ratios.sharpe+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sortino</span><span class="tp-meta-val">'+ratios.sortino+'</span></div></div>';
+
+  // Notes inline
+  html+='<div style="margin-top:.6rem"><div style="font-size:.44rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Notes</div><textarea id="tp-notes-input" style="width:100%;min-height:60px;padding:6px 8px;background:var(--b4);border:1px solid var(--b5);color:var(--w1);font-family:var(--font);font-size:.7rem;resize:vertical" placeholder="Add notes...">'+getNote(id).replace(/</g,'&lt;')+'</textarea><div style="margin-top:.3rem"><button class="btn" style="padding:4px 10px;font-size:.6rem" onclick="saveNote(\''+id+'\')">Save Notes</button></div></div>';
+
+  html+='</div></div>';
 
   // Equity curve chart
   html+=buildEquityCurve(q.dailyPnl||{},b);
@@ -676,9 +695,6 @@ function viewTrader(id){
   html+='<div class="td-cell"><div class="td-cell-label">Next Due</div><div class="td-cell-val" style="font-size:.72rem">'+di.dueDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+'</div></div>';
   html+='</div></div>';
 
-  // Notes
-  html+='<div class="td-section"><div class="td-section-title">Notes</div><div class="tp-notes"><textarea id="tp-notes-input" placeholder="Add notes about this trader...">'+getNote(id).replace(/</g,'&lt;')+'</textarea><div style="margin-top:.4rem"><button class="btn btn-s" onclick="saveNote(\''+id+'\')">Save Notes</button></div></div></div>';
-
   // Open positions
   var pos=(t.pos||[]);
   if(pos.length){
@@ -694,23 +710,6 @@ function viewTrader(id){
     trades.forEach(function(tr){var pn=tr.profit||0;var d=new Date(tr.time);var buy=tr.type==='DEAL_TYPE_BUY';html+='<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td>'+tr.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(tr.volume||'—')+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});
     html+='</tbody></table></div></div>';
   }
-
-  // Connection
-  // Contact details (profile only, not shown on roster)
-  var trEmail=s.email||'';var trAddr=s.address||'';
-  if(trEmail||trAddr){
-    html+='<div class="td-section"><div class="td-section-title">Contact Details</div><div class="td-grid">';
-    if(trEmail)html+='<div class="td-cell"><div class="td-cell-label">Email</div><div class="td-cell-val" style="font-size:.72rem">'+trEmail+'</div></div>';
-    if(trAddr)html+='<div class="td-cell"><div class="td-cell-label">Address</div><div class="td-cell-val" style="font-size:.72rem">'+trAddr+'</div></div>';
-    html+='</div></div>';
-  }
-
-  html+='<div class="td-section"><div class="td-section-title">Connection</div><div class="td-grid">';
-  html+='<div class="td-cell"><div class="td-cell-label">Status</div><div class="td-cell-val cv '+(a.connectionStatus==='CONNECTED'?'up':a.connectionStatus==='MANUAL'?'ac':'dn')+'" style="font-size:.72rem">'+(a.connectionStatus||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Server</div><div class="td-cell-val" style="font-size:.68rem">'+(a.server||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Login</div><div class="td-cell-val" style="font-size:.68rem">'+(a.login||'—')+'</div></div>';
-  html+='<div class="td-cell"><div class="td-cell-label">Platform</div><div class="td-cell-val" style="font-size:.68rem">'+(a.platform||'—')+'</div></div>';
-  html+='</div></div>';
 
   // Trader Calendar
   html+=buildTraderCal(id,q.dailyPnl||{},s,t.hist||[]);
