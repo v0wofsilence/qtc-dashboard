@@ -3,281 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QT Capital — Live Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>QT Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0B0E14;--bg2:#111620;--bg3:#161B26;--bg4:#1C2233;--bdr:#1E2536;--t1:#E8ECF4;--t2:#8892A6;--t3:#555F73;--blue:#2E75B6;--orange:#ED8936;--green:#38A169;--red:#E53E3E;--purple:#8B5CF6;--cyan:#06B6D4;--grad:linear-gradient(135deg,#2E75B6,#ED8936)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;min-height:100vh}
-.app{max-width:1200px;margin:0 auto;padding:2rem 1.5rem 4rem}
-.hdr{text-align:center;margin-bottom:2rem}
-.hdr-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);background:rgba(237,137,54,.1);border:1px solid rgba(237,137,54,.2);padding:3px 14px;border-radius:100px;margin-bottom:.8rem}
-.hdr h1{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.2rem}
-.hdr p{color:var(--t2);font-size:.8rem}
-.status-bar{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.5rem;padding:.6rem 1rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;font-size:.78rem}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot.ok{background:var(--green);box-shadow:0 0 6px rgba(56,161,105,.5)}
-.dot.err{background:var(--red);box-shadow:0 0 6px rgba(229,62,62,.5)}
-.dot.load{background:var(--orange);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-#statusText{color:var(--t2)}
-.log{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-height:200px;overflow-y:auto;font-family:'DM Mono',monospace;font-size:.7rem;line-height:1.8;color:var(--t3)}
-.log-ok{color:var(--green)}.log-err{color:var(--red)}.log-info{color:var(--cyan)}.log-warn{color:var(--orange)}
-.card{background:var(--bg3);border:1px solid var(--bdr);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.card.c-blue::before{background:var(--blue)}.card.c-green::before{background:var(--green)}.card.c-orange::before{background:var(--orange)}.card.c-purple::before{background:var(--purple)}.card.c-red::before{background:var(--red)}
-.card h3{font-size:.88rem;font-weight:600;margin-bottom:1rem}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
-.kpi{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:.9rem;text-align:center}
-.kpi-label{font-size:.58rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:.25rem}
-.kpi-val{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:700}
-.kpi-sub{font-size:.62rem;color:var(--t3);margin-top:.1rem}
-table{width:100%;border-collapse:collapse;font-size:.76rem}
-th{text-align:left;padding:7px 10px;background:var(--bg2);color:var(--t3);font-weight:600;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
-td{padding:7px 10px;border-bottom:1px solid var(--bdr);color:var(--t2)}
-tr:hover td{background:var(--bg4)}
-.dir{font-weight:600;font-size:.7rem;padding:2px 8px;border-radius:3px}
-.dir-buy{color:var(--green);background:rgba(56,161,105,.1)}.dir-sell{color:var(--red);background:rgba(229,62,62,.1)}
-.empty{text-align:center;padding:2rem;color:var(--t3);font-size:.8rem}
-.btn{display:block;width:100%;max-width:320px;margin:0 auto 1.5rem;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--blue),#3d88c9);border:none;border-radius:10px;cursor:pointer;transition:all .15s}
-.btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(46,117,182,.3)}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.ts{font-size:.68rem;color:var(--t3);font-family:'DM Mono',monospace;margin-left:.5rem}
-.mr{display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bdr);font-size:.82rem}
-.mr:last-child{border-bottom:none}.ml{color:var(--t2)}.mv{font-family:'DM Mono',monospace;font-weight:600}
-@media(max-width:768px){.app{padding:1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+:root{--black:#000;--b1:#050505;--b2:#0A0A0A;--b3:#0F0F0F;--b4:#141414;--b5:#1A1A1A;--b6:#222;--w:#FFF;--w1:#E5E5E5;--w2:#999;--w3:#666;--w4:#444;--w5:#2A2A2A;--up:#00DC82;--dn:#FF4D4D;--accent:#8CB1F6;--accent2:#6B93D9;--font:'Outfit',sans-serif;--mono:'IBM Plex Mono',monospace}
+body{font-family:var(--font);background:var(--black);color:var(--w1);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:48px;background:var(--b2);border-bottom:1px solid var(--b5)}
+.topbar-left{display:flex;align-items:center;gap:1.5rem}
+.logo{font-weight:700;font-size:.85rem;letter-spacing:.08em;color:var(--accent)}
+.logo span{color:var(--w3);font-weight:400;margin-left:.4rem;letter-spacing:.02em}
+.topbar-status{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.68rem;color:var(--w3)}
+.topbar-status .pulse{width:6px;height:6px;border-radius:50%;background:var(--up);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{font-family:var(--mono);font-size:.7rem;color:var(--w3)}
+.main{padding:1.5rem 2rem 4rem;max-width:1400px;margin:0 auto}
+.syslog{background:var(--b1);border:1px solid var(--b5);font-family:var(--mono);font-size:.65rem;line-height:1.9;padding:.8rem 1rem;margin-bottom:1.5rem;max-height:140px;overflow-y:auto;color:var(--w3)}
+.syslog .ok{color:var(--up)}.syslog .er{color:var(--dn)}.syslog .inf{color:var(--accent)}.syslog .wrn{color:#E5C07B}
+.sh{display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem;margin-top:1.8rem}
+.sh:first-child{margin-top:0}
+.sh-line{flex:1;height:1px;background:var(--b5)}
+.sh-label{font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--w3);white-space:nowrap}
+.sh-ts{font-family:var(--mono);font-size:.6rem;color:var(--w4)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
+.kpi{background:var(--b2);padding:1.1rem 1.2rem}
+.kpi-l{font-size:.58rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.4rem}
+.kpi-v{font-family:var(--mono);font-size:1.4rem;font-weight:600;color:var(--w);letter-spacing:-.02em}
+.kpi-s{font-family:var(--mono);font-size:.6rem;color:var(--w4);margin-top:.2rem}
+.tbl-wrap{border:1px solid var(--b5);background:var(--b2);margin-bottom:1.5rem;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.75rem}
+th{text-align:left;padding:9px 14px;font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);background:var(--b3);border-bottom:1px solid var(--b5)}
+td{padding:9px 14px;border-bottom:1px solid var(--b4);color:var(--w2);font-family:var(--mono);font-size:.72rem}
+tr:hover td{background:var(--b3)}
+.sym{color:var(--w);font-weight:600;font-family:var(--font)}
+.tag{display:inline-block;padding:1px 6px;font-size:.6rem;font-weight:600;letter-spacing:.04em;border:1px solid}
+.tag-buy{color:var(--up);border-color:rgba(0,220,130,.25);background:rgba(0,220,130,.06)}
+.tag-sell{color:var(--dn);border-color:rgba(255,77,77,.25);background:rgba(255,77,77,.06)}
+.conn{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
+.conn-item{background:var(--b2);padding:.7rem 1.2rem;display:flex;justify-content:space-between;align-items:center}
+.conn-item .cl{font-size:.72rem;color:var(--w3)}.conn-item .cv{font-family:var(--mono);font-size:.72rem;font-weight:500;color:var(--w1)}
+.conn-item .cv.up{color:var(--up)}.conn-item .cv.dn{color:var(--dn)}
+.nil{text-align:center;padding:2.5rem;color:var(--w4);font-size:.78rem;font-style:italic}
+@media(max-width:768px){.topbar{padding:0 1rem}.main{padding:1rem 1rem 3rem}.kpis{grid-template-columns:repeat(2,1fr)}.conn{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="app">
-
-<div class="hdr">
-  <div class="hdr-badge">QT Capital</div>
-  <h1>Live Trading Dashboard</h1>
-  <p>Real-time MT5 data via MetaAPI</p>
-</div>
-
-<div class="status-bar">
-  <div class="dot load" id="dot"></div>
-  <span id="statusText">Loading...</span>
-</div>
-
-<div class="log" id="log"></div>
-
+<div class="topbar"><div class="topbar-left"><div class="logo">QT CAPITAL<span>Terminal</span></div><div class="topbar-status"><div class="pulse" id="dot"></div><span id="statusText">Connecting</span></div></div><div class="topbar-right" id="clock"></div></div>
+<div class="main">
+<div class="syslog" id="log"></div>
 <div id="accountPanel"></div>
 <div id="posPanel"></div>
 <div id="histPanel"></div>
 <div id="metricsPanel"></div>
 <div id="connPanel"></div>
-
 </div>
-
 <script>
-const $ = id => document.getElementById(id);
-const fmt = (n,d=2) => n!=null ? Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
-const ts = () => new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-
-function log(msg,cls=''){const el=$('log');el.innerHTML+=`<div class="${cls}">[${ts()}] ${msg}</div>`;el.scrollTop=el.scrollHeight;}
-function setStatus(s,m){$('dot').className='dot '+s;$('statusText').textContent=m;}
-
-async function proxy(endpoint) {
-  const res = await fetch(`/api/metaapi?endpoint=${endpoint}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `${res.status}`);
-  return data;
-}
-
-// Auto-connect on load
-(async function init() {
-  log('Connecting via server-side proxy...','log-info');
-
-  const status = { account: false, live: false, positions: false, history: false, metrics: false };
-
-  // 1. Account metadata
-  try {
-    log('Fetching account...','log-info');
-    const account = await proxy('account');
-    log(`Account: ${account.name||account.login} @ ${account.server} [${account.state}, ${account.connectionStatus}]`,'log-ok');
-    status.account = account;
-  } catch(e) {
-    log('Account fetch failed: '+e.message,'log-err');
-    setStatus('err','Failed to connect — check environment variables');
-    return;
-  }
-
-  // 2. Live account info (balance, equity, margin)
-  try {
-    log('Fetching live account data...','log-info');
-    const info = await proxy('account-info');
-    log(`Balance: $${fmt(info.balance)} | Equity: $${fmt(info.equity)}`,'log-ok');
-    status.live = info;
-  } catch(e) {
-    log('Live data: '+e.message,'log-warn');
-  }
-
-  // 3. Open positions
-  try {
-    log('Fetching open positions...','log-info');
-    const positions = await proxy('positions');
-    log(`Positions: ${Array.isArray(positions)?positions.length:0} open`,'log-ok');
-    status.positions = positions;
-  } catch(e) {
-    log('Positions: '+e.message,'log-warn');
-  }
-
-  // 4. Trade history
-  try {
-    log('Fetching trade history (30 days)...','log-info');
-    const deals = await proxy('history');
-    const trades = Array.isArray(deals) ? deals.filter(d=>d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL') : [];
-    log(`Trade history: ${trades.length} trades in last 30 days`,'log-ok');
-    status.history = trades;
-  } catch(e) {
-    log('History: '+e.message,'log-warn');
-  }
-
-  // 5. MetaStats metrics
-  try {
-    log('Fetching MetaStats metrics...','log-info');
-    const metrics = await proxy('metrics');
-    log('MetaStats loaded','log-ok');
-    status.metrics = metrics;
-  } catch(e) {
-    log('MetaStats: '+e.message,'log-warn');
-  }
-
-  // Render
-  setStatus('ok','Connected — Live data streaming');
-  log('All data loaded. Dashboard ready.','log-ok');
-
-  renderAccount(status.account, status.live);
-  renderPositions(status.positions);
-  renderHistory(status.history);
-  renderMetrics(status.metrics);
-  renderConnection(status);
-
-  // Auto-refresh live data every 15s
-  setInterval(async () => {
-    try {
-      const info = await proxy('account-info');
-      const pos = await proxy('positions');
-      renderAccount(status.account, info);
-      renderPositions(pos);
-    } catch(e) {}
-  }, 15000);
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>n!=null?Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const ts=()=>new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+setInterval(()=>{const n=new Date();$('clock').textContent=n.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})+'  '+n.toLocaleTimeString('en-GB')},1000);
+function log(m,c=''){const e=$('log');e.innerHTML+=`<span class="${c}">[${ts()}] ${m}</span>\n`;e.scrollTop=e.scrollHeight}
+function setStatus(s,m){const d=$('dot');d.style.background=s==='ok'?'var(--up)':s==='err'?'var(--dn)':'var(--accent)';d.style.animation=s==='ok'?'none':'blink 2s infinite';$('statusText').textContent=m}
+async function proxy(e){const r=await fetch('/api/metaapi?endpoint='+e);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
+(async function(){
+  log('Initialising connection...','inf');
+  const s={account:false,live:false,positions:false,history:false,metrics:false};
+  try{log('Resolving account...','inf');s.account=await proxy('account');log('Account: '+(s.account.name||s.account.login)+' ['+s.account.state+']','ok')}catch(e){log('Account failed: '+e.message,'er');setStatus('err','Disconnected');return}
+  try{log('Fetching market data...','inf');s.live=await proxy('account-info');log('Balance: $'+fmt(s.live.balance)+' | Equity: $'+fmt(s.live.equity),'ok')}catch(e){log('Market data: '+e.message,'wrn')}
+  try{s.positions=await proxy('positions');log('Positions: '+(Array.isArray(s.positions)?s.positions.length:0)+' open','ok')}catch(e){log('Positions: '+e.message,'wrn')}
+  try{const d=await proxy('history');s.history=Array.isArray(d)?d.filter(x=>x.type==='DEAL_TYPE_BUY'||x.type==='DEAL_TYPE_SELL'):[];log('History: '+s.history.length+' deals (30d)','ok')}catch(e){log('History: '+e.message,'wrn')}
+  try{s.metrics=await proxy('metrics');log('Analytics loaded','ok')}catch(e){log('Analytics: '+e.message,'wrn')}
+  setStatus('ok','Live');log('All systems operational','ok');
+  renderAll(s);
+  setInterval(async()=>{try{s.live=await proxy('account-info');s.positions=await proxy('positions');renderAccount(s.account,s.live);renderPositions(s.positions)}catch(e){}},15000);
 })();
-
-function renderAccount(acct, live) {
-  const bal = live?.balance, eq = live?.equity, upl = (eq&&bal) ? eq-bal : null;
-  const margin = live?.margin, free = live?.freeMargin, lev = live?.leverage||acct?.leverage;
-
-  $('accountPanel').innerHTML = `<div class="card c-blue">
-    <h3>Account: ${acct?.name||acct?.login||'—'}<span class="ts">${ts()}</span></h3>
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Balance</div><div class="kpi-val">${bal!=null?'$'+fmt(bal):'—'}</div><div class="kpi-sub">${live?.currency||acct?.baseCurrency||'USD'}</div></div>
-      <div class="kpi"><div class="kpi-label">Equity</div><div class="kpi-val" style="color:${eq>=bal?'var(--green)':'var(--red)'}">${eq!=null?'$'+fmt(eq):'—'}</div></div>
-      ${upl!=null?`<div class="kpi"><div class="kpi-label">Unrealised P&L</div><div class="kpi-val" style="color:${upl>=0?'var(--green)':'var(--red)'}">$${fmt(upl)}</div><div class="kpi-sub">${bal?(upl/bal*100).toFixed(2)+'%':''}</div></div>`:''}
-      ${margin?`<div class="kpi"><div class="kpi-label">Margin</div><div class="kpi-val">$${fmt(margin)}</div></div>`:''}
-      ${free?`<div class="kpi"><div class="kpi-label">Free Margin</div><div class="kpi-val">$${fmt(free)}</div></div>`:''}
-      <div class="kpi"><div class="kpi-label">Leverage</div><div class="kpi-val">${lev?'1:'+lev:'—'}</div></div>
-    </div>
+function renderAll(s){renderAccount(s.account,s.live);renderPositions(s.positions);renderHistory(s.history);renderMetrics(s.metrics);renderConnection(s)}
+function renderAccount(a,l){
+  const bal=l?.balance,eq=l?.equity,upl=(eq!=null&&bal!=null)?eq-bal:null,margin=l?.margin,free=l?.freeMargin,lev=l?.leverage||a?.leverage,name=l?.name||a?.name||a?.login||'—';
+  $('accountPanel').innerHTML=`<div class="sh"><span class="sh-label">${name}</span><span class="sh-line"></span><span class="sh-ts">${ts()}</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v">${bal!=null?'$'+fmt(bal):'—'}</div><div class="kpi-s">${l?.currency||a?.baseCurrency||'USD'}</div></div>
+    <div class="kpi"><div class="kpi-l">Equity</div><div class="kpi-v" style="color:${eq>=bal?'var(--up)':'var(--dn)'}">${eq!=null?'$'+fmt(eq):'—'}</div></div>
+    ${upl!=null?`<div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:${upl>=0?'var(--up)':'var(--dn)'}">${upl>=0?'+':''}$${fmt(upl)}</div><div class="kpi-s">${bal?(upl/bal*100).toFixed(3)+'%':''}</div></div>`:''}
+    ${margin!=null?`<div class="kpi"><div class="kpi-l">Margin Used</div><div class="kpi-v">$${fmt(margin)}</div></div>`:''}
+    ${free!=null?`<div class="kpi"><div class="kpi-l">Free Margin</div><div class="kpi-v">$${fmt(free)}</div></div>`:''}
+    <div class="kpi"><div class="kpi-l">Leverage</div><div class="kpi-v">${lev?'1:'+lev:'—'}</div></div>
   </div>`;
 }
-
-function renderPositions(positions) {
-  if (!positions || !Array.isArray(positions) || !positions.length) {
-    $('posPanel').innerHTML = `<div class="card c-green"><h3>Open Positions</h3><div class="empty">No open positions</div></div>`;
-    return;
-  }
-  $('posPanel').innerHTML = `<div class="card c-green"><h3>Open Positions (${positions.length})<span class="ts">${ts()}</span></h3>
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th>Symbol</th><th>Dir</th><th>Volume</th><th>Entry</th><th>Current</th><th>P&L</th><th>Swap</th><th>SL</th><th>TP</th></tr></thead>
-      <tbody>${positions.map(p=>{
-        const pnl=p.profit||p.unrealizedProfit||0;
-        const buy=p.type&&p.type.includes('BUY');
-        return`<tr>
-          <td style="color:var(--t1);font-weight:600">${p.symbol}</td>
-          <td><span class="dir dir-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td>
-          <td>${p.volume??p.currentVolume??'—'}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:.7rem">${fmt(p.openPrice,5)}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:.7rem">${fmt(p.currentPrice,5)}</td>
-          <td style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:600">$${fmt(pnl)}</td>
-          <td style="font-size:.7rem">${fmt(p.swap||0)}</td>
-          <td style="font-size:.7rem;color:var(--t3)">${p.stopLoss?fmt(p.stopLoss,5):'—'}</td>
-          <td style="font-size:.7rem;color:var(--t3)">${p.takeProfit?fmt(p.takeProfit,5):'—'}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div></div>`;
+function renderPositions(pos){
+  const h=`<div class="sh"><span class="sh-label">Open Positions</span><span class="sh-line"></span><span class="sh-ts">${ts()}</span></div>`;
+  if(!pos||!Array.isArray(pos)||!pos.length){$('posPanel').innerHTML=h+`<div class="tbl-wrap"><div class="nil">No open positions</div></div>`;return}
+  $('posPanel').innerHTML=h+`<div class="tbl-wrap"><table><thead><tr><th>Symbol</th><th>Side</th><th>Volume</th><th>Entry</th><th>Current</th><th>P&L</th><th>Swap</th><th>SL</th><th>TP</th></tr></thead><tbody>${pos.map(p=>{const pnl=p.profit||p.unrealizedProfit||0;const buy=p.type&&p.type.includes('BUY');return`<tr><td class="sym">${p.symbol}</td><td><span class="tag tag-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td><td>${p.volume??p.currentVolume??'—'}</td><td>${fmt(p.openPrice,5)}</td><td>${fmt(p.currentPrice,5)}</td><td style="color:${pnl>=0?'var(--up)':'var(--dn)'};font-weight:600">${pnl>=0?'+':''}$${fmt(pnl)}</td><td style="color:var(--w4)">${fmt(p.swap||0)}</td><td style="color:var(--w4)">${p.stopLoss?fmt(p.stopLoss,5):'—'}</td><td style="color:var(--w4)">${p.takeProfit?fmt(p.takeProfit,5):'—'}</td></tr>`}).join('')}</tbody></table></div>`;
 }
-
-function renderHistory(trades) {
-  if (!trades || !trades.length) {
-    $('histPanel').innerHTML = `<div class="card c-orange"><h3>Trade History</h3><div class="empty">No trades in the last 30 days</div></div>`;
-    return;
-  }
-  trades.sort((a,b)=>new Date(b.time)-new Date(a.time));
-  const show = trades.slice(0,30);
-  const totalPnl = trades.reduce((s,t)=>s+(t.profit||0),0);
-  const wins = trades.filter(t=>(t.profit||0)>0).length;
-  const losses = trades.filter(t=>(t.profit||0)<0).length;
-  const wr = trades.length>0?(wins/trades.length*100).toFixed(1):'0';
-  const gw = trades.filter(t=>t.profit>0).reduce((s,t)=>s+t.profit,0);
-  const gl = Math.abs(trades.filter(t=>t.profit<0).reduce((s,t)=>s+t.profit,0));
-  const pf = gl>0?(gw/gl).toFixed(2):gw>0?'∞':'0';
-
-  $('histPanel').innerHTML = `<div class="card c-orange"><h3>Trade History (Last 30 Days)<span class="ts">${ts()}</span></h3>
-    <div class="kpi-grid" style="margin-bottom:1rem">
-      <div class="kpi"><div class="kpi-label">Trades</div><div class="kpi-val">${trades.length}</div></div>
-      <div class="kpi"><div class="kpi-label">Net P&L</div><div class="kpi-val" style="color:${totalPnl>=0?'var(--green)':'var(--red)'}">$${fmt(totalPnl)}</div></div>
-      <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-val">${wr}%</div><div class="kpi-sub">${wins}W / ${losses}L</div></div>
-      <div class="kpi"><div class="kpi-label">Profit Factor</div><div class="kpi-val">${pf}</div></div>
-    </div>
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th>Time</th><th>Symbol</th><th>Type</th><th>Vol</th><th>Price</th><th>P&L</th><th>Comm.</th></tr></thead>
-      <tbody>${show.map(t=>{
-        const pnl=t.profit||0; const d=new Date(t.time); const buy=t.type==='DEAL_TYPE_BUY';
-        return`<tr>
-          <td style="font-family:'DM Mono',monospace;font-size:.66rem;white-space:nowrap">${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
-          <td style="color:var(--t1);font-weight:600">${t.symbol}</td>
-          <td><span class="dir dir-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td>
-          <td>${t.volume??'—'}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:.7rem">${fmt(t.price,5)}</td>
-          <td style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:600">$${fmt(pnl)}</td>
-          <td style="font-size:.7rem;color:var(--t3)">${fmt(t.commission||0)}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div></div>`;
+function renderHistory(trades){
+  const h=`<div class="sh"><span class="sh-label">Trade History</span><span class="sh-line"></span><span class="sh-label">30 Days</span></div>`;
+  if(!trades||!trades.length){$('histPanel').innerHTML=h+`<div class="tbl-wrap"><div class="nil">No closed trades</div></div>`;return}
+  trades.sort((a,b)=>new Date(b.time)-new Date(a.time));const show=trades.slice(0,30);
+  const totalPnl=trades.reduce((s,t)=>s+(t.profit||0),0),wins=trades.filter(t=>(t.profit||0)>0).length,losses=trades.filter(t=>(t.profit||0)<0).length;
+  const wr=trades.length>0?(wins/trades.length*100).toFixed(1):'0';
+  const gw=trades.filter(t=>t.profit>0).reduce((s,t)=>s+t.profit,0),gl=Math.abs(trades.filter(t=>t.profit<0).reduce((s,t)=>s+t.profit,0)),pf=gl>0?(gw/gl).toFixed(2):gw>0?'∞':'—';
+  $('histPanel').innerHTML=h+`<div class="kpis"><div class="kpi"><div class="kpi-l">Trades</div><div class="kpi-v">${trades.length}</div></div><div class="kpi"><div class="kpi-l">Net P&L</div><div class="kpi-v" style="color:${totalPnl>=0?'var(--up)':'var(--dn)'}">${totalPnl>=0?'+':''}$${fmt(totalPnl)}</div></div><div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v">${wr}%</div><div class="kpi-s">${wins}W ${losses}L</div></div><div class="kpi"><div class="kpi-l">Profit Factor</div><div class="kpi-v">${pf}</div></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Volume</th><th>Price</th><th>P&L</th><th>Comm</th></tr></thead><tbody>${show.map(t=>{const pnl=t.profit||0;const d=new Date(t.time);const buy=t.type==='DEAL_TYPE_BUY';return`<tr><td>${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td><td class="sym">${t.symbol}</td><td><span class="tag tag-${buy?'buy':'sell'}">${buy?'BUY':'SELL'}</span></td><td>${t.volume??'—'}</td><td>${fmt(t.price,5)}</td><td style="color:${pnl>=0?'var(--up)':'var(--dn)'};font-weight:600">${pnl>=0?'+':''}$${fmt(pnl)}</td><td style="color:var(--w4)">${fmt(t.commission||0)}</td></tr>`}).join('')}</tbody></table></div>`;
 }
-
-function renderMetrics(m) {
-  if (!m) { $('metricsPanel').innerHTML=''; return; }
-  $('metricsPanel').innerHTML = `<div class="card c-purple"><h3>MetaStats Metrics</h3>
-    <div class="kpi-grid">
-      ${m.trades!=null?`<div class="kpi"><div class="kpi-label">Total Trades</div><div class="kpi-val">${m.trades}</div></div>`:''}
-      ${m.profit!=null?`<div class="kpi"><div class="kpi-label">Net Profit</div><div class="kpi-val" style="color:${m.profit>=0?'var(--green)':'var(--red)'}">$${fmt(m.profit)}</div></div>`:''}
-      ${m.profitFactor!=null?`<div class="kpi"><div class="kpi-label">Profit Factor</div><div class="kpi-val">${fmt(m.profitFactor)}</div></div>`:''}
-      ${m.maxDrawdown!=null?`<div class="kpi"><div class="kpi-label">Max DD</div><div class="kpi-val" style="color:var(--red)">${fmt(m.maxDrawdown)}%</div></div>`:''}
-      ${m.sharpeRatio!=null?`<div class="kpi"><div class="kpi-label">Sharpe</div><div class="kpi-val">${fmt(m.sharpeRatio)}</div></div>`:''}
-      ${m.sortinoRatio!=null?`<div class="kpi"><div class="kpi-label">Sortino</div><div class="kpi-val">${fmt(m.sortinoRatio)}</div></div>`:''}
-      ${m.expectancy!=null?`<div class="kpi"><div class="kpi-label">Expectancy</div><div class="kpi-val">$${fmt(m.expectancy)}</div></div>`:''}
-    </div>
+function renderMetrics(m){
+  if(!m||(!m.trades&&!m.profit)){$('metricsPanel').innerHTML='';return}
+  $('metricsPanel').innerHTML=`<div class="sh"><span class="sh-label">Analytics</span><span class="sh-line"></span></div><div class="kpis">
+    ${m.trades!=null?`<div class="kpi"><div class="kpi-l">Total Trades</div><div class="kpi-v">${m.trades}</div></div>`:''}
+    ${m.profit!=null?`<div class="kpi"><div class="kpi-l">Cumulative P&L</div><div class="kpi-v" style="color:${m.profit>=0?'var(--up)':'var(--dn)'}">${m.profit>=0?'+':''}$${fmt(m.profit)}</div></div>`:''}
+    ${m.profitFactor!=null?`<div class="kpi"><div class="kpi-l">Profit Factor</div><div class="kpi-v">${fmt(m.profitFactor)}</div></div>`:''}
+    ${m.maxDrawdown!=null?`<div class="kpi"><div class="kpi-l">Max Drawdown</div><div class="kpi-v" style="color:var(--dn)">${fmt(m.maxDrawdown)}%</div></div>`:''}
+    ${m.sharpeRatio!=null?`<div class="kpi"><div class="kpi-l">Sharpe</div><div class="kpi-v">${fmt(m.sharpeRatio)}</div></div>`:''}
+    ${m.sortinoRatio!=null?`<div class="kpi"><div class="kpi-l">Sortino</div><div class="kpi-v">${fmt(m.sortinoRatio)}</div></div>`:''}
+    ${m.expectancy!=null?`<div class="kpi"><div class="kpi-l">Expectancy</div><div class="kpi-v">$${fmt(m.expectancy)}</div></div>`:''}
   </div>`;
 }
-
-function renderConnection(s) {
-  const a = s.account;
-  $('connPanel').innerHTML = `<div class="card c-blue"><h3>Connection</h3>
-    <div class="mr"><span class="ml">Account</span><span class="mv">${a?.name||'—'}</span></div>
-    <div class="mr"><span class="ml">Server</span><span class="mv">${a?.server||'—'}</span></div>
-    <div class="mr"><span class="ml">Platform</span><span class="mv">${a?.platform||'MT5'}</span></div>
-    <div class="mr"><span class="ml">Region</span><span class="mv">${a?.region||'—'}</span></div>
-    <div class="mr"><span class="ml">State</span><span class="mv" style="color:var(--green)">${a?.state}</span></div>
-    <div class="mr"><span class="ml">Connection</span><span class="mv" style="color:var(--green)">${a?.connectionStatus}</span></div>
-    <div class="mr"><span class="ml">Account Info</span><span class="mv" style="color:${s.live?'var(--green)':'var(--red)'}">● ${s.live?'Live':'Unavailable'}</span></div>
-    <div class="mr"><span class="ml">Positions</span><span class="mv" style="color:${s.positions?'var(--green)':'var(--red)'}">● ${s.positions?'Live':'Unavailable'}</span></div>
-    <div class="mr"><span class="ml">Trade History</span><span class="mv" style="color:${s.history?'var(--green)':'var(--red)'}">● ${s.history?s.history.length+' trades':'Unavailable'}</span></div>
-    <div class="mr"><span class="ml">MetaStats</span><span class="mv" style="color:${s.metrics?'var(--green)':'var(--red)'}">● ${s.metrics?'Loaded':'Unavailable'}</span></div>
-    <div class="mr"><span class="ml">Auto-Refresh</span><span class="mv">Every 15s</span></div>
+function renderConnection(s){
+  const a=s.account;
+  $('connPanel').innerHTML=`<div class="sh"><span class="sh-label">System</span><span class="sh-line"></span></div><div class="conn">
+    <div class="conn-item"><span class="cl">Account</span><span class="cv">${a?.name||'—'}</span></div>
+    <div class="conn-item"><span class="cl">Server</span><span class="cv">${a?.server||'—'}</span></div>
+    <div class="conn-item"><span class="cl">Platform</span><span class="cv">${a?.platform||'MT5'}</span></div>
+    <div class="conn-item"><span class="cl">Region</span><span class="cv">${a?.region||'—'}</span></div>
+    <div class="conn-item"><span class="cl">State</span><span class="cv up">${a?.state||'—'}</span></div>
+    <div class="conn-item"><span class="cl">Link</span><span class="cv up">${a?.connectionStatus||'—'}</span></div>
+    <div class="conn-item"><span class="cl">Market Data</span><span class="cv ${s.live?'up':'dn'}">${s.live?'LIVE':'OFF'}</span></div>
+    <div class="conn-item"><span class="cl">Positions</span><span class="cv ${s.positions?'up':'dn'}">${s.positions?'LIVE':'OFF'}</span></div>
+    <div class="conn-item"><span class="cl">History</span><span class="cv ${s.history?'up':'dn'}">${s.history?s.history.length+' DEALS':'OFF'}</span></div>
+    <div class="conn-item"><span class="cl">Analytics</span><span class="cv ${s.metrics?'up':'dn'}">${s.metrics?'LOADED':'OFF'}</span></div>
+    <div class="conn-item"><span class="cl">Refresh</span><span class="cv">15s</span></div>
+    <div class="conn-item"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div>
   </div>`;
 }
 </script>
