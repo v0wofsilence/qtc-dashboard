@@ -8,7 +8,8 @@ export default async function handler(req, res) {
   if (!TOKEN) return res.status(500).json({ error: 'Missing METAAPI_TOKEN' });
 
   const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
-  const headers = { 'auth-token': TOKEN, 'Content-Type': 'application/json' };
+  const authHeaders = { 'auth-token': TOKEN };
+  const postHeaders = { 'auth-token': TOKEN, 'Content-Type': 'application/json' };
 
   // POST: create-account
   if (req.method === 'POST') {
@@ -26,13 +27,13 @@ export default async function handler(req, res) {
           magic: 0
         };
         var r = await fetch(MGMT + '/users/current/accounts', {
-          method: 'POST', headers: headers, body: JSON.stringify(payload)
+          method: 'POST', headers: postHeaders, body: JSON.stringify(payload)
         });
         var data = await r.json();
         if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
         // Auto-deploy the account
         var deployR = await fetch(MGMT + '/users/current/accounts/' + data.id + '/deploy', {
-          method: 'POST', headers: headers
+          method: 'POST', headers: postHeaders
         });
         if (!deployR.ok) {
           var dd = await deployR.json().catch(function(){ return {} });
@@ -49,13 +50,10 @@ export default async function handler(req, res) {
   const { endpoint, accountId } = req.query;
   if (!endpoint) return res.status(400).json({ error: 'Missing ?endpoint=' });
 
-  const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
-  const headers = { 'auth-token': TOKEN };
-
   // List all connected accounts
   if (endpoint === 'list-accounts') {
     try {
-      var r = await fetch(MGMT + '/users/current/accounts', { headers });
+      var r = await fetch(MGMT + '/users/current/accounts', { headers: authHeaders });
       if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
       var accounts = await r.json();
       // Return simplified list
@@ -78,7 +76,7 @@ export default async function handler(req, res) {
   // Get account details to determine region
   var account;
   try {
-    var ar = await fetch(MGMT + '/users/current/accounts/' + accountId, { headers });
+    var ar = await fetch(MGMT + '/users/current/accounts/' + accountId, { headers: authHeaders });
     account = await ar.json();
     if (endpoint === 'account') return res.status(200).json(account);
   } catch (e) {
@@ -101,7 +99,7 @@ export default async function handler(req, res) {
   if (endpoint === 'metrics') {
     for (var k = 0; k < metastatsBases.length; k++) {
       try {
-        var mr = await fetch(metastatsBases[k] + '/users/current/accounts/' + accountId + '/metrics', { headers });
+        var mr = await fetch(metastatsBases[k] + '/users/current/accounts/' + accountId + '/metrics', { headers: authHeaders });
         if (mr.ok) return res.status(200).json(await mr.json());
       } catch (e) { /* next */ }
     }
@@ -125,7 +123,7 @@ export default async function handler(req, res) {
 
   for (var i = 0; i < clientBases.length; i++) {
     try {
-      var cr = await fetch(clientBases[i] + path, { headers });
+      var cr = await fetch(clientBases[i] + path, { headers: authHeaders });
       if (cr.ok) return res.status(200).json(await cr.json());
     } catch (e) { /* next */ }
   }
