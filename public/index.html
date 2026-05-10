@@ -133,7 +133,7 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .eye-btn{color:var(--accent);cursor:pointer;font-size:.82rem;opacity:.6;transition:opacity .1s}.eye-btn:hover{opacity:1}
 .gear-wrap{position:relative;display:inline-block}
 .gear-btn{color:var(--w3);cursor:pointer;font-size:.9rem;padding:2px 4px;transition:color .1s}.gear-btn:hover{color:var(--w1)}
-.gear-menu{position:absolute;right:0;top:100%;background:var(--b2);border:1px solid var(--b5);z-index:999;min-width:130px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.6)}
+.gear-menu{position:fixed;background:var(--b1);border:1px solid var(--b5);z-index:9999;min-width:150px;display:none;box-shadow:0 6px 20px rgba(0,0,0,.7)}
 .gear-menu.open{display:block}
 .gear-item{display:flex;align-items:center;gap:.5rem;padding:7px 12px;font-family:var(--font);font-size:.68rem;font-weight:500;color:var(--w2);cursor:pointer;transition:background .08s;border:none;background:none;width:100%;text-align:left}
 .gear-item:hover{background:var(--b3);color:var(--w1)}
@@ -660,7 +660,7 @@ function viewTrader(id){
 }
 
 // ── GEAR MENU ──
-function toggleGear(id){var el=E(id);var open=el.classList.contains('open');closeGears();if(!open)el.classList.add('open')}
+function toggleGear(id,ev){var el=E(id);var open=el.classList.contains('open');closeGears();if(!open){var btn=ev.target;var rect=btn.getBoundingClientRect();el.style.top=rect.bottom+2+'px';el.style.left=(rect.right-150)+'px';el.classList.add('open')}}
 function closeGears(){document.querySelectorAll('.gear-menu.open').forEach(function(m){m.classList.remove('open')})}
 document.addEventListener('click',function(e){if(!e.target.closest('.gear-wrap'))closeGears()});
 
@@ -671,7 +671,7 @@ E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><spa
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
   var rowClass=metQuota?'row-met':'row-below';
-  return'<tr class="'+rowClass+'"><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><div class="gear-wrap"><span class="gear-btn" onclick="event.stopPropagation();toggleGear(\'gm-'+id+'\')">⚙</span><div class="gear-menu" id="gm-'+id+'"><button class="gear-item" onclick="closeGears();viewTrader(\''+id+'\')"><span class="gear-icon">👁</span>View Profile</button><button class="gear-item" onclick="closeGears();editTrader(\''+id+'\')"><span class="gear-icon">✎</span>Edit</button><button class="gear-item warn" onclick="closeGears();archiveTrader(\''+id+'\')"><span class="gear-icon">▣</span>Archive</button><button class="gear-item danger" onclick="closeGears();deleteTrader(\''+id+'\')"><span class="gear-icon">✕</span>Delete</button></div></div></td></tr>'
+  return'<tr class="'+rowClass+'"><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><div class="gear-wrap"><span class="gear-btn" onclick="event.stopPropagation();toggleGear(\'gm-'+id+'\',event)">⚙</span><div class="gear-menu" id="gm-'+id+'"><button class="gear-item" onclick="closeGears();viewTrader(\''+id+'\')"><span class="gear-icon">👁</span>View Profile</button><button class="gear-item" onclick="closeGears();editTrader(\''+id+'\')"><span class="gear-icon">✎</span>Edit</button><button class="gear-item warn" onclick="closeGears();archiveTrader(\''+id+'\')"><span class="gear-icon">▣</span>Archive</button><button class="gear-item danger" onclick="closeGears();deleteTrader(\''+id+'\')"><span class="gear-icon">✕</span>Delete</button></div></div></td></tr>'
 }).join('')+'</tbody></table></div>'+
 (archivedIds.length?'<div class="sh"><span class="sh-t">Archived Traders</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>P&L</th><th>Salary Paid</th><th>FE</th><th>Archived</th><th>Actions</th></tr></thead><tbody>'+archivedIds.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,q=t.q||{},s=S.sal[id]||{},np=netPosition(id);
