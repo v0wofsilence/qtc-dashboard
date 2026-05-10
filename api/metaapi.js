@@ -30,12 +30,13 @@ export default async function handler(req, res) {
   const region = account.region || 'london';
 
   const clientBases = [
+    'https://mt-client-api-v1.' + region + '.agiliumtrade.ai',
     'https://mt-client-api-v1.' + region + '.agiliumtrade.agiliumtrade.ai',
     'https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai',
-    'https://mt-client-api-v1.' + region + '.agiliumtrade.ai',
   ];
 
   const metastatsBases = [
+    'https://metastats-api-v1.' + region + '.agiliumtrade.ai',
     'https://metastats-api-v1.' + region + '.agiliumtrade.agiliumtrade.ai',
     'https://metastats-api-v1.agiliumtrade.agiliumtrade.ai',
   ];
