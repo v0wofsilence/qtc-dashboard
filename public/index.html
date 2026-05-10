@@ -206,8 +206,58 @@ function sRc(d1,d2,d3){var w=Math.max(d1,d2,d3),a=(d1+d2+d3)/3;return clamp(R((w
 function sFp(ret,dd,pf,dy,tc){var rd=dd>0?ret/dd:0;return clamp(R((rd>=4?lerp(rd,4,8,80,100):rd>=2.5?lerp(rd,2.5,4,50,80):rd>=1.5?lerp(rd,1.5,2.5,20,50):lerp(rd,0,1.5,0,20))*.35+(pf>=2?lerp(pf,2,3.5,80,100):pf>=1.5?lerp(pf,1.5,2,50,80):pf>=1.2?lerp(pf,1.2,1.5,20,50):lerp(pf,0,1.2,0,20))*.25+(dy>=60?lerp(dy,60,120,80,100):dy>=30?lerp(dy,30,60,50,80):dy>=15?lerp(dy,15,30,20,50):lerp(dy,0,15,0,20))*.2+(tc>=300?lerp(tc,300,800,80,100):tc>=150?lerp(tc,150,300,50,80):tc>=50?lerp(tc,50,150,20,50):lerp(tc,0,50,0,20))*.2),0,100)}
 function sCs(pw,bd,pf){return clamp(R((pw>=75?lerp(pw,75,95,80,100):pw>=60?lerp(pw,60,75,50,80):pw>=45?lerp(pw,45,60,20,50):lerp(pw,0,45,0,20))*.4+(bd<=8?iLerp(bd,0,8,100,80):bd<=18?iLerp(bd,8,18,80,50):bd<=35?iLerp(bd,18,35,50,20):iLerp(bd,35,70,20,0))*.35+(pf>=2?lerp(pf,2,3.5,80,100):pf>=1.5?lerp(pf,1.5,2,50,80):pf>=1.2?lerp(pf,1.2,1.5,20,50):lerp(pf,0,1.2,0,20))*.25),0,100)}
 function sDr(dd,ret){var rr=dd>0?ret/dd:0;return clamp(R((rr>=4?lerp(rr,4,8,80,100):rr>=2?lerp(rr,2,4,50,80):rr>=1?lerp(rr,1,2,20,50):lerp(rr,0,1,0,20))*.6+(dd<=3?iLerp(dd,0,3,100,85):dd<=5?iLerp(dd,3,5,85,55):dd<=8?iLerp(dd,5,8,55,20):iLerp(dd,8,10,20,0))*.4),0,100)}
-function sDp(sp,vi){return clamp(R((sp<=2?iLerp(sp,1,2,100,75):sp<=3?iLerp(sp,2,3,75,45):sp<=4?iLerp(sp,3,4,45,15):5)*.5+(vi===0?100:vi===1?40:vi===2?15:0)*.5),0,100)}
-function compQ(trades,bal){if(!trades||trades.length<3)return{score:0,conf:'Low',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}};var w=0,l=0,gw=0,gl=0,tp=0,pk=0,eq=0,md=0,lots=[],dm={},wm={};trades.forEach(function(t){var p=t.profit||0;tp+=p;if(p>0){w++;gw+=p}else if(p<0){l++;gl+=Math.abs(p)}eq+=p;if(eq>pk)pk=eq;var dd=pk-eq;if(dd>md)md=dd;if(t.volume)lots.push(t.volume);var dt=t.time?new Date(t.time).toISOString().slice(0,10):'';if(dt){dm[dt]=(dm[dt]||0)+p;var d=new Date(t.time),wk=d.getFullYear()+'-W'+Math.ceil((d.getDate()+new Date(d.getFullYear(),d.getMonth(),1).getDay())/7);wm[wk]=(wm[wk]||0)+p}});var tc=trades.length,dy=Object.keys(dm).length,ddP=bal>0?md/bal*100:0,retP=bal>0?tp/bal*100:0,pf=gl>0?gw/gl:gw>0?99:0;var wks=Object.values(wm),pw=wks.length>0?wks.filter(function(x){return x>0}).length/wks.length*100:50;var dps=Object.values(dm),bd=dps.length>0?Math.max.apply(null,dps):0,bdP=tp>0?bd/tp*100:0;var aL=lots.length>0?lots.reduce(function(a,b){return a+b},0)/lots.length:1,mL=lots.length>0?Math.max.apply(null,lots):1,sp=aL>0?mL/aL:1;var rc=sRc(ddP,ddP*.8,ddP),fp=sFp(retP,ddP,pf,dy,tc),cs=sCs(pw,bdP,pf),dr=sDr(ddP,retP),dp=sDp(sp,0);var score=clamp(R(fp*.205+rc*.25+cs*.205+dr*.114+dp*.114+60*.114),0,100);return{score:score,conf:dy>=60&&tc>=300?'High':dy>=30&&tc>=100?'Medium':'Low',trades:tc,days:dy,pnl:R(tp),ret:retP.toFixed(2),dd:ddP.toFixed(2),pf:pf.toFixed(2),wr:tc>0?(w/tc*100).toFixed(1):'0',at:{rc:rc,fp:fp,cs:cs,dr:dr,dp:dp,eq:60},dailyPnl:dm}}
+// Discipline with instrument + holding style
+function sDpFull(sp,vi,inst,hold){
+  var instS={fx_majors:95,indices:90,mixed_cfd:88,commodities:72,fx_minors:60,crypto_cfd:35,fx_exotics:20};
+  var holdS={swing:95,intraday_long:75,intraday_short:45,scalp:18};
+  var spS=sp<=2?iLerp(sp,1,2,100,75):sp<=3?iLerp(sp,2,3,75,45):sp<=4?iLerp(sp,3,4,45,15):5;
+  var viS=vi===0?100:vi===1?40:vi===2?15:0;
+  return clamp(R(spS*.3+viS*.3+(instS[inst]||50)*.2+(holdS[hold]||50)*.2),0,100)
+}
+// Eval Quality
+function sEq(p1d,p1p,p1dd,p2d,p2p,p2dd){
+  if(!p1d&&!p1p)return 60; // No eval data = default 60
+  var sp1=p1d<=10?lerp(p1d,5,10,100,80):p1d<=20?lerp(p1d,10,20,80,50):p1d<=30?lerp(p1d,20,30,50,20):iLerp(p1d,30,60,20,0);
+  var sp2=p2d<=12?lerp(p2d,5,12,100,80):p2d<=25?lerp(p2d,12,25,80,50):p2d<=40?lerp(p2d,25,40,50,20):iLerp(p2d,40,70,20,0);
+  var o1=p1p-8,o2=p2p-5;
+  var pp1=o1>=6?100:o1>=3?lerp(o1,3,6,70,100):o1>=0?lerp(o1,0,3,40,70):lerp(o1,-3,0,10,40);
+  var pp2=o2>=6?100:o2>=3?lerp(o2,3,6,70,100):o2>=0?lerp(o2,0,3,40,70):lerp(o2,-3,0,10,40);
+  var dd1=p1dd<=3?iLerp(p1dd,0,3,100,80):p1dd<=5?iLerp(p1dd,3,5,80,50):p1dd<=8?iLerp(p1dd,5,8,50,20):iLerp(p1dd,8,10,20,0);
+  var dd2=p2dd<=3?iLerp(p2dd,0,3,100,80):p2dd<=5?iLerp(p2dd,3,5,80,50):p2dd<=8?iLerp(p2dd,5,8,50,20):iLerp(p2dd,8,10,20,0);
+  return clamp(R(sp1*.15+sp2*.15+pp1*.15+pp2*.15+dd1*.2+dd2*.2),0,100)
+}
+// Capital Efficiency
+function sCe(pnl,splitPct,alloc,sal){
+  if(!alloc||!sal)return 50;var ti=pnl*(splitPct/100),ef=ti/(alloc*0.01),su=sal>0?ti/sal:0;
+  if(su>=3&&ef>=2)return clamp(R(lerp(su,3,6,80,100)),80,100);if(su>=2&&ef>=1)return clamp(R(lerp(su,2,3,50,80)),50,79);
+  if(su>=1)return clamp(R(lerp(su,1,2,20,50)),20,49);return clamp(R(lerp(su,0,1,0,20)),0,19)
+}
+// Full Q-Score: opts = {p1d,p1p,p1dd,p2d,p2p,p2dd,inst,hold,violations,monthlyPnl,split,salary,alloc}
+function compQ(trades,bal,opts){
+  opts=opts||{};
+  if(!trades||trades.length<3)return{score:0,conf:'Low',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}};
+  var w=0,l=0,gw=0,gl=0,tp=0,pk=0,eq=0,md=0,lots=[],dm={},wm={};
+  trades.forEach(function(t){var p=t.profit||0;tp+=p;if(p>0){w++;gw+=p}else if(p<0){l++;gl+=Math.abs(p)}eq+=p;if(eq>pk)pk=eq;var dd=pk-eq;if(dd>md)md=dd;if(t.volume)lots.push(t.volume);var dt=t.time?new Date(t.time).toISOString().slice(0,10):'';if(dt){dm[dt]=(dm[dt]||0)+p;var d=new Date(t.time),wk=d.getFullYear()+'-W'+Math.ceil((d.getDate()+new Date(d.getFullYear(),d.getMonth(),1).getDay())/7);wm[wk]=(wm[wk]||0)+p}});
+  var tc=trades.length,dy=Object.keys(dm).length,ddP=bal>0?md/bal*100:0,retP=bal>0?tp/bal*100:0,pf=gl>0?gw/gl:gw>0?99:0;
+  var wks=Object.values(wm),pw=wks.length>0?wks.filter(function(x){return x>0}).length/wks.length*100:50;
+  var dps=Object.values(dm),bd=dps.length>0?Math.max.apply(null,dps):0,bdP=tp>0?bd/tp*100:0;
+  var aL=lots.length>0?lots.reduce(function(a,b){return a+b},0)/lots.length:1,mL=lots.length>0?Math.max.apply(null,lots):1,sp=aL>0?mL/aL:1;
+  var vi=opts.violations||0;
+  var rc=sRc(ddP,opts.p1dd||ddP,opts.p2dd||ddP);
+  var fp=sFp(retP,ddP,pf,dy,tc);
+  var cs=sCs(pw,bdP,pf);
+  var dr=sDr(ddP,retP);
+  var dp=sDpFull(sp,vi,opts.inst||'mixed_cfd',opts.hold||'intraday_long');
+  var eqS=sEq(opts.p1d||0,opts.p1p||0,opts.p1dd||0,opts.p2d||0,opts.p2p||0,opts.p2dd||0);
+  var ce=sCe(opts.monthlyPnl||tp,opts.split||50,opts.alloc||bal,opts.salary||0);
+  // Use full weights if we have eval data, entry weights if not
+  var hasEval=opts.p1d>0;var hasCe=opts.monthlyPnl!==undefined;
+  var score;
+  if(hasEval&&hasCe){score=clamp(R(eqS*.10+fp*.18+rc*.22+cs*.18+dr*.10+dp*.10+ce*.12),0,100)}
+  else if(hasEval){score=clamp(R(eqS*.114+fp*.205+rc*.25+cs*.205+dr*.114+dp*.114),0,100)}
+  else{score=clamp(R(fp*.205+rc*.25+cs*.205+dr*.114+dp*.114+eqS*.114),0,100)}
+  return{score:score,conf:dy>=60&&tc>=300?'High':dy>=30&&tc>=100?'Medium':'Low',trades:tc,days:dy,pnl:R(tp),ret:retP.toFixed(2),dd:ddP.toFixed(2),pf:pf.toFixed(2),wr:tc>0?(w/tc*100).toFixed(1):'0',at:{rc:rc,fp:fp,cs:cs,dr:dr,dp:dp,eq:eqS,ce:ce},dailyPnl:dm}
+}
 function tier(s,id){if(id&&S.sal[id]&&S.sal[id].tier)return S.sal[id].tier;return s>=65?'Senior Analyst':s>=50?'Analyst':'Junior Analyst'}
 function tierQuota(t){return t==='Senior Analyst'?65:t==='Analyst'?50:35}
 function tCol(s){return s>=65?'var(--up)':s>=50?'var(--accent)':'var(--w2)'}
@@ -230,7 +280,7 @@ for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac
   try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
   try{var p=await px('positions',id);S.traders[id].pos=Array.isArray(p)?p:[]}catch(e){}
   try{var h=await px('history',id);S.traders[id].hist=Array.isArray(h)?h.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[]}catch(e){}
-  S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0);
+  S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]||{});
   if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);sH()}
   if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50}}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
@@ -255,7 +305,21 @@ function editTrader(id){
     h+='<div class="mf-group"><div class="mf-label">Q-Score (0–100)</div><input class="mf-input" id="ed-score" type="number" value="'+(t.m.score||0)+'" min="0" max="100"></div></div>';
   }
   var currentFE=netPosition(id);var hasOverride=s.feOverride!==undefined&&s.feOverride!==null;
-  h+='<div class="mf-group" style="margin-top:.3rem;padding-top:.8rem;border-top:1px solid var(--b5)"><div class="mf-label">Firm Economics (FE) Override</div><div class="mf-row"><div><input class="mf-input" id="ed-fe" type="number" value="'+(hasOverride?s.feOverride:'')+'" placeholder="'+R(currentFE)+'"><div class="mf-hint">Leave empty for auto-calc (revenue − salary paid). Current: '+(currentFE>=0?'+$':'−$')+R(Math.abs(currentFE)).toLocaleString()+'</div></div><div><button class="btn" style="margin-top:0;width:100%;padding:8px" onclick="E(\'ed-fe\').value=\'\';E(\'ed-fe\').placeholder=\'Auto\'">Reset to Auto</button></div></div></div>';
+  // Eval & Style section
+  h+='<div class="mf-group" style="margin-top:.3rem;padding-top:.8rem;border-top:1px solid var(--b5)"><div class="mf-label" style="color:var(--accent);margin-bottom:.5rem">Evaluation Data</div></div>';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">P1 Days to Pass</div><input class="mf-input" id="ed-p1d" type="number" value="'+(s.p1d||'')+'" placeholder="e.g. 12"></div>';
+  h+='<div class="mf-group"><div class="mf-label">P1 Profit (%)</div><input class="mf-input" id="ed-p1p" type="number" step=".1" value="'+(s.p1p||'')+'" placeholder="e.g. 11.2"></div></div>';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">P1 Max DD (%)</div><input class="mf-input" id="ed-p1dd" type="number" step=".1" value="'+(s.p1dd||'')+'" placeholder="e.g. 4.5"></div>';
+  h+='<div class="mf-group"><div class="mf-label">P2 Days to Pass</div><input class="mf-input" id="ed-p2d" type="number" value="'+(s.p2d||'')+'" placeholder="e.g. 18"></div></div>';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">P2 Profit (%)</div><input class="mf-input" id="ed-p2p" type="number" step=".1" value="'+(s.p2p||'')+'" placeholder="e.g. 7.8"></div>';
+  h+='<div class="mf-group"><div class="mf-label">P2 Max DD (%)</div><input class="mf-input" id="ed-p2dd" type="number" step=".1" value="'+(s.p2dd||'')+'" placeholder="e.g. 3.8"></div></div>';
+  h+='<div class="mf-group" style="margin-top:.3rem;padding-top:.8rem;border-top:1px solid var(--b5)"><div class="mf-label" style="color:var(--accent);margin-bottom:.5rem">Trading Style</div></div>';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">Instruments</div><select class="mf-input" id="ed-inst"><option value="fx_majors"'+(s.inst==='fx_majors'?' selected':'')+'>FX Majors</option><option value="indices"'+(s.inst==='indices'?' selected':'')+'>Indices</option><option value="commodities"'+(s.inst==='commodities'?' selected':'')+'>Commodities</option><option value="mixed_cfd"'+(!s.inst||s.inst==='mixed_cfd'?' selected':'')+'>Mixed CFDs</option><option value="fx_minors"'+(s.inst==='fx_minors'?' selected':'')+'>FX Minors</option><option value="fx_exotics"'+(s.inst==='fx_exotics'?' selected':'')+'>FX Exotics</option><option value="crypto_cfd"'+(s.inst==='crypto_cfd'?' selected':'')+'>Crypto CFDs</option></select></div>';
+  h+='<div class="mf-group"><div class="mf-label">Holding Time</div><select class="mf-input" id="ed-hold"><option value="intraday_long"'+(!s.hold||s.hold==='intraday_long'?' selected':'')+'>Intraday Long</option><option value="intraday_short"'+(s.hold==='intraday_short'?' selected':'')+'>Intraday Short</option><option value="swing"'+(s.hold==='swing'?' selected':'')+'>Swing</option></select></div></div>';
+  h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">Rule Violations</div><input class="mf-input" id="ed-viol" type="number" value="'+(s.violations||0)+'" min="0"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Monthly P&L ($)</div><input class="mf-input" id="ed-mpnl" type="number" value="'+(s.monthlyPnl||'')+'" placeholder="For Capital Efficiency"><div class="mf-hint">Used to calculate Ce attribute</div></div></div>';
+  // FE Override
+  h+='<div class="mf-group" style="margin-top:.3rem;padding-top:.8rem;border-top:1px solid var(--b5)"><div class="mf-label">Firm Economics (FE) Override</div><div class="mf-row"><div><input class="mf-input" id="ed-fe" type="number" value="'+(hasOverride?s.feOverride:'')+'" placeholder="'+R(currentFE)+'"><div class="mf-hint">Leave empty for auto-calc. Current: '+(currentFE>=0?'+$':'−$')+R(Math.abs(currentFE)).toLocaleString()+'</div></div><div><button class="btn" style="margin-top:0;width:100%;padding:8px" onclick="E(\'ed-fe\').value=\'\';E(\'ed-fe\').placeholder=\'Auto\'">Reset to Auto</button></div></div></div>';
   h+='</div><div class="modal-footer"><button class="btn btn-s" onclick="saveEdit()">Save Changes</button><button class="btn" onclick="closeEdit()">Cancel</button></div>';
   E('editModalContent').innerHTML=h;E('editModal').classList.add('open');
 }
@@ -266,8 +330,23 @@ function saveEdit(){
   s.tier=E('ed-tier').value;
   s.cycle=parseInt(E('ed-cycle').value)||30;
   var sd=E('ed-start').value;if(sd&&sd.match(/^\d{4}-\d{2}-\d{2}$/))s.start=sd;
+  // Eval data
+  var p1d=E('ed-p1d');if(p1d&&p1d.value)s.p1d=parseFloat(p1d.value);
+  var p1p=E('ed-p1p');if(p1p&&p1p.value)s.p1p=parseFloat(p1p.value);
+  var p1dd=E('ed-p1dd');if(p1dd&&p1dd.value)s.p1dd=parseFloat(p1dd.value);
+  var p2d=E('ed-p2d');if(p2d&&p2d.value)s.p2d=parseFloat(p2d.value);
+  var p2p=E('ed-p2p');if(p2p&&p2p.value)s.p2p=parseFloat(p2p.value);
+  var p2dd=E('ed-p2dd');if(p2dd&&p2dd.value)s.p2dd=parseFloat(p2dd.value);
+  // Style
+  var inst=E('ed-inst');if(inst)s.inst=inst.value;
+  var hold=E('ed-hold');if(hold)s.hold=hold.value;
+  var viol=E('ed-viol');if(viol)s.violations=parseInt(viol.value)||0;
+  var mpnl=E('ed-mpnl');if(mpnl&&mpnl.value)s.monthlyPnl=parseFloat(mpnl.value);else delete s.monthlyPnl;
+  // FE
   var feVal=E('ed-fe').value.trim();if(feVal===''){delete s.feOverride}else{s.feOverride=parseInt(feVal)}
   S.sal[editId]=s;sS();
+  // Recalc Q-Score with new opts
+  if(S.traders[editId]){S.traders[editId].q=compQ(S.traders[editId].hist,S.traders[editId].l?.balance||0,s)}
   if(t.isM&&t.m){
     var al=E('ed-alloc');if(al)t.m.alloc=parseInt(al.value)||t.m.alloc;
     var sc=E('ed-score');if(sc)t.m.score=parseInt(sc.value)||0;
@@ -480,7 +559,7 @@ function viewTrader(id){
   // Q-Score breakdown
   if(q.at&&q.at.rc!==undefined){
     html+='<div class="td-section"><div class="td-section-title">Q-Score Attributes</div><div class="td-grid">';
-    [{n:'Risk Control',s:q.at.rc,w:25},{n:'Performance',s:q.at.fp,w:20.5},{n:'Consistency',s:q.at.cs,w:20.5},{n:'DD Recovery',s:q.at.dr,w:11.4},{n:'Discipline',s:q.at.dp,w:11.4},{n:'Eval Quality',s:q.at.eq,w:11.4}].forEach(function(at){html+='<div class="td-cell"><div class="td-cell-label">'+at.n+' ('+at.w+'%)</div><div class="td-cell-val" style="color:'+tCol(at.s||0)+'">'+(at.s||'—')+'</div><div class="td-bar"><div class="td-bar-fill" style="width:'+(at.s||0)+'%;background:var(--accent)"></div></div></div>'});
+    [{n:'Risk Control',s:q.at.rc,w:22},{n:'Performance',s:q.at.fp,w:18},{n:'Consistency',s:q.at.cs,w:18},{n:'Capital Efficiency',s:q.at.ce,w:12},{n:'Eval Quality',s:q.at.eq,w:10},{n:'DD Recovery',s:q.at.dr,w:10},{n:'Discipline',s:q.at.dp,w:10}].forEach(function(at){html+='<div class="td-cell"><div class="td-cell-label">'+at.n+' ('+at.w+'%)</div><div class="td-cell-val" style="color:'+tCol(at.s||0)+'">'+(at.s||'—')+'</div><div class="td-bar"><div class="td-bar-fill" style="width:'+(at.s||0)+'%;background:var(--accent)"></div></div></div>'});
     html+='</div></div>';
   }
 
