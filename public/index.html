@@ -104,6 +104,22 @@ tr{cursor:pointer;transition:background .08s}tr:hover td{background:var(--b3)}
 .cal-event{display:inline-block;font-family:var(--mono);font-size:.44rem;font-weight:600;padding:1px 4px;margin-top:3px;border:1px solid}
 .cal-event.sal{color:var(--accent);border-color:rgba(140,177,246,.3);background:rgba(140,177,246,.08)}
 .cal-event.rev{color:var(--warn);border-color:rgba(229,192,123,.3);background:rgba(229,192,123,.08)}
+.cal-day.clickable{cursor:pointer}
+.cal-day.selected{background:var(--b3);outline:1px solid var(--accent)}
+
+/* ── Day detail popout ── */
+.day-panel{background:var(--b2);border:1px solid var(--b5);padding:1.2rem;margin-bottom:1.5rem;display:none}
+.day-panel.open{display:block}
+.dp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem}
+.dp-title{font-family:var(--mono);font-size:.82rem;font-weight:600;color:var(--w1)}
+.dp-close{font-size:.8rem;color:var(--w3);cursor:pointer;padding:2px 6px;background:var(--b4);border:1px solid var(--b5)}
+.dp-close:hover{color:var(--w1);border-color:var(--accent)}
+.dp-section{margin-bottom:.8rem}
+.dp-section-title{font-size:.52rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--w3);margin-bottom:.4rem}
+.dp-row{display:flex;justify-content:space-between;align-items:center;padding:.25rem 0;font-size:.7rem;border-bottom:1px solid var(--b4)}
+.dp-row:last-child{border-bottom:none}
+.dp-row .dl{color:var(--w3)}.dp-row .dv{font-family:var(--mono);font-weight:600}
+.dp-trades{max-height:200px;overflow-y:auto}
 .cal-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
 .cal-sum-cell{background:var(--b2);padding:.8rem}
 .cal-sum-label{font-size:.5rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.2rem}
@@ -174,7 +190,7 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 <!-- CONTENT -->
 <div class="content">
 <div id="v-overview" class="vw active"><div class="syslog" id="log"></div><div id="fk"></div><div id="cards"></div><div id="fpos"></div></div>
-<div id="v-calendar" class="vw"><div id="calc"></div></div>
+<div id="v-calendar" class="vw"><div id="dayPanel" class="day-panel"></div><div id="calc"></div></div>
 <div id="v-roster" class="vw"><div id="rost"></div></div>
 <div id="v-salary" class="vw"><div id="salc"></div></div>
 <div id="v-detail" class="vw"><div id="detc"><div class="nil">Select a trader from Overview or Roster</div></div></div>
@@ -236,62 +252,77 @@ var ap=[];ids.forEach(function(id){var t=gt(id);if(!t)return;(t.pos||[]).forEach
 E('fpos').innerHTML=ap.length?'<div class="sh"><span class="sh-t">All Positions</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead><tbody>'+ap.map(function(p){var pn=p.profit||0,buy=p.type&&p.type.includes('BUY');return'<tr><td class="sym">'+p._t+'</td><td>'+p.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(p.volume||'—')+'</td><td>'+F(p.openPrice,5)+'</td><td>'+F(p.currentPrice,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':''}
 
 // ── CALENDAR ──
+var CAL={dayPnl:{},dayTraders:{},salaryEvents:{},tradesByDay:{}};
 function rCa(){
   var yr=S.calYear,mo=S.calMonth,ids=allIds();
   var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var daysInMonth=new Date(yr,mo+1,0).getDate();
-  var firstDay=new Date(yr,mo,1).getDay(); // 0=Sun
+  var firstDay=new Date(yr,mo,1).getDay();
   var today=new Date();var todayStr=today.toISOString().slice(0,10);
+  var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
 
-  // Aggregate daily P&L from all traders
-  var dayPnl={},dayTraders={};
-  ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){if(dt.slice(0,7)===yr+'-'+(mo<9?'0':'')+(mo+1)){dayPnl[dt]=(dayPnl[dt]||0)+dp[dt];if(!dayTraders[dt])dayTraders[dt]=[];dayTraders[dt].push({name:t.a.name,pnl:dp[dt]})}})});
+  CAL.dayPnl={};CAL.dayTraders={};CAL.salaryEvents={};CAL.tradesByDay={};
+  ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){if(dt.slice(0,7)===moKey){CAL.dayPnl[dt]=(CAL.dayPnl[dt]||0)+dp[dt];if(!CAL.dayTraders[dt])CAL.dayTraders[dt]=[];CAL.dayTraders[dt].push({name:t.a.name,pnl:dp[dt],id:id})}});
+    (t.hist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt&&dt.slice(0,7)===moKey){if(!CAL.tradesByDay[dt])CAL.tradesByDay[dt]=[];CAL.tradesByDay[dt].push({sym:tr.symbol,type:tr.type,vol:tr.volume,profit:tr.profit,time:tr.time,trader:t.a.name})}})});
+  ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!CAL.salaryEvents[ds])CAL.salaryEvents[ds]=[];CAL.salaryEvents[ds].push({name:t.a.name,amt:s.amt||0,id:id});nx.setDate(nx.getDate()+cy)}});
 
-  // Salary events for this month
-  var salaryEvents={};
-  ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!salaryEvents[ds])salaryEvents[ds]=[];salaryEvents[ds].push({name:t.a.name,amt:s.amt||0});nx.setDate(nx.getDate()+cy)}});
-
-  // Monthly totals
   var totalPnl=0,winDays=0,lossDays=0,tradingDays=0;
-  Object.keys(dayPnl).forEach(function(dt){var p=dayPnl[dt];totalPnl+=p;tradingDays++;if(p>0)winDays++;else if(p<0)lossDays++});
+  Object.keys(CAL.dayPnl).forEach(function(dt){var p=CAL.dayPnl[dt];totalPnl+=p;tradingDays++;if(p>0)winDays++;else if(p<0)lossDays++});
 
-  // Build calendar HTML
-  var html='<div class="cal-header"><button class="cal-nav" onclick="S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}rCa()">←</button><div class="cal-title">'+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}rCa()">→</button></div>';
-
-  // Summary KPIs
+  var html='<div class="cal-header"><button class="cal-nav" onclick="S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}closeDay();rCa()">←</button><div class="cal-title">'+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}closeDay();rCa()">→</button></div>';
   html+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Month P&L</div><div class="cal-sum-val" style="color:'+(totalPnl>=0?'var(--up)':'var(--dn)')+'">'+(totalPnl>=0?'+':'')+'$'+F(totalPnl)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trading Days</div><div class="cal-sum-val">'+tradingDays+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Win Days</div><div class="cal-sum-val" style="color:var(--up)">'+winDays+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Loss Days</div><div class="cal-sum-val" style="color:var(--dn)">'+lossDays+'</div></div></div>';
 
-  // Grid
-  html+='<div class="cal-grid">';
-  var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];
-  for(var i=0;i<7;i++)html+='<div class="cal-dow">'+dows[i]+'</div>';
-
-  // Adjust firstDay to Monday start (0=Mon)
-  var startOffset=(firstDay+6)%7;
-  for(var i=0;i<startOffset;i++)html+='<div class="cal-day empty"></div>';
-
+  html+='<div class="cal-grid">';var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];for(var i=0;i<7;i++)html+='<div class="cal-dow">'+dows[i]+'</div>';
+  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)html+='<div class="cal-day empty"></div>';
   for(var d=1;d<=daysInMonth;d++){
-    var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;
-    var isToday=ds===todayStr;
-    var pnl=dayPnl[ds];
-    var traders=dayTraders[ds]||[];
-    var salEvts=salaryEvents[ds]||[];
-
-    html+='<div class="cal-day'+(isToday?' today':'')+'">';
+    var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var pnl=CAL.dayPnl[ds];var traders=CAL.dayTraders[ds]||[];var salEvts=CAL.salaryEvents[ds]||[];
+    html+='<div class="cal-day clickable'+(isToday?' today':'')+'" onclick="openDay(\''+ds+'\')">';
     html+='<div class="cal-date">'+d+'</div>';
-    if(pnl!==undefined){
-      html+='<div class="cal-pnl" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</div>';
-      if(traders.length){html+='<div class="cal-detail">';traders.forEach(function(t){html+=t.name.slice(0,8)+': '+(t.pnl>=0?'+':'')+'$'+R(t.pnl)+'<br>'});html+='</div>'}
-    }
-    salEvts.forEach(function(e){html+='<div class="cal-event sal">$ '+e.name.slice(0,10)+' $'+e.amt.toLocaleString()+'</div>'});
+    if(pnl!==undefined){html+='<div class="cal-pnl" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</div>';if(traders.length){html+='<div class="cal-detail">';traders.forEach(function(t){html+=t.name.slice(0,8)+': '+(t.pnl>=0?'+':'')+'$'+R(t.pnl)+'<br>'});html+='</div>'}}
+    salEvts.forEach(function(e){html+='<div class="cal-event sal">$ '+e.name.slice(0,10)+'</div>'});
     html+='</div>';
   }
-  // Fill remaining cells
   var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)html+='<div class="cal-day empty"></div>';
   html+='</div>';
-
   E('calc').innerHTML=html;
 }
+
+function openDay(ds){
+  var panel=E('dayPanel');var d=new Date(ds);
+  var moNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var label=dayNames[d.getUTCDay()]+' '+d.getUTCDate()+' '+moNames[d.getUTCMonth()]+' '+d.getUTCFullYear();
+  var pnl=CAL.dayPnl[ds];var traders=CAL.dayTraders[ds]||[];var salEvts=CAL.salaryEvents[ds]||[];var trades=CAL.tradesByDay[ds]||[];
+
+  var h='<div class="dp-header"><div class="dp-title">'+label+'</div><div class="dp-close" onclick="closeDay()">✕</div></div>';
+
+  // P&L summary
+  if(pnl!==undefined){
+    h+='<div class="dp-section"><div class="dp-section-title">Daily P&L</div>';
+    h+='<div class="dp-row"><span class="dl">Aggregate</span><span class="dv" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</span></div>';
+    traders.forEach(function(t){h+='<div class="dp-row"><span class="dl">'+t.name+'</span><span class="dv" style="color:'+(t.pnl>=0?'var(--up)':'var(--dn)')+'">'+(t.pnl>=0?'+':'')+'$'+F(t.pnl)+'</span></div>'});
+    h+='</div>';
+  }else{h+='<div class="dp-section"><div class="dp-section-title">Daily P&L</div><div style="font-size:.7rem;color:var(--w4)">No trading activity</div></div>'}
+
+  // Salary events
+  if(salEvts.length){
+    h+='<div class="dp-section"><div class="dp-section-title">Salary Due</div>';
+    salEvts.forEach(function(e){h+='<div class="dp-row"><span class="dl">'+e.name+'</span><span class="dv" style="color:var(--accent)">$'+e.amt.toLocaleString()+'</span></div>'});
+    h+='</div>';
+  }
+
+  // Individual trades
+  if(trades.length){
+    h+='<div class="dp-section"><div class="dp-section-title">Trades ('+trades.length+')</div><div class="dp-trades"><table style="width:100%"><thead><tr><th>Time</th><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>P&L</th></tr></thead><tbody>';
+    trades.forEach(function(tr){var pn=tr.profit||0;var tm=new Date(tr.time);var buy=tr.type&&tr.type.includes('BUY');h+='<tr><td>'+tm.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+tr.trader+'</td><td>'+tr.sym+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(tr.vol||'—')+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});
+    h+='</tbody></table></div></div>';
+  }
+
+  if(!pnl&&!salEvts.length&&!trades.length){h+='<div style="text-align:center;padding:1rem;color:var(--w4);font-size:.74rem">No events on this day</div>'}
+
+  panel.innerHTML=h;panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeDay(){E('dayPanel').classList.remove('open');E('dayPanel').innerHTML=''}
 
 // ── ROSTER ──
 function rRo(){var ids=allIds();E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th>Name</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>Equity</th><th>Trades</th><th>WR</th><th>PF</th><th>DD</th><th>Salary</th><th>Net Firm</th><th>Status</th><th></th></tr></thead><tbody>'+ids.map(function(id){var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,f=fees(q.pnl||0,s.split||55,s.amt||0,b);return'<tr onclick="openD(\''+id+'\')"><td class="sym">'+a.name+'</td><td style="color:'+tCol(q.score||0)+';font-weight:700">'+(q.score||'—')+'</td><td><span class="tag tag-t">'+tier(q.score||0)+'</span></td><td>$'+F(b)+'</td><td style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</td><td>'+(q.trades||0)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:var(--dn)">'+(q.dd||'—')+'%</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</td><td><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':a.connectionStatus==='MANUAL'?'ac':'dn')+'">'+(a.connectionStatus==='MANUAL'?'MANUAL':'LIVE')+'</span></td><td>'+(t.isM?'<span style="color:var(--dn);cursor:pointer" onclick="event.stopPropagation();rmM(\''+id+'\')">✕</span>':'')+'</td></tr>'}).join('')+'</tbody></table></div>'}
@@ -307,7 +338,36 @@ function skipPay(id){var s=S.sal[id];if(!s)return;s.payments=s.payments||[];s.pa
 
 // ── DETAIL ──
 function openD(id){nav('detail');var t=gt(id);if(!t){E('detc').innerHTML='<div class="nil">Not found</div>';return}var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,u=e-b,h=hlth(S.hist[id]||[]),f=fees(q.pnl||0,s.split||55,s.amt||0,b);var trades=t.hist||[];trades.sort(function(a,b){return new Date(b.time)-new Date(a.time)});var sh=trades.slice(0,50);var atH='';if(q.at&&q.at.rc!==undefined){var ats=[{n:'Risk Control',s:q.at.rc,w:25},{n:'Performance',s:q.at.fp,w:20.5},{n:'Consistency',s:q.at.cs,w:20.5},{n:'DD Recovery',s:q.at.dr,w:11.4},{n:'Discipline',s:q.at.dp,w:11.4},{n:'Eval Quality',s:q.at.eq,w:11.4}];atH='<div class="sh"><span class="sh-t">Q-Score Breakdown</span><span class="sh-l"></span></div><div class="kpis">'+ats.map(function(a){return'<div class="kpi"><div class="kpi-l">'+a.n+' ('+a.w+'%)</div><div class="kpi-v" style="color:'+tCol(a.s||0)+'">'+(a.s||'—')+'</div></div>'}).join('')+'</div>'}
-E('detc').innerHTML='<span class="db" onclick="nav(\'overview\')">← Back</span><div class="sh"><span class="sh-t">'+a.name+'</span><span class="sh-l"></span><span class="sh-ts">'+(a.server||'')+'</span>'+(t.isM?'<span class="sh-btn" onclick="edManual(\''+id+'\')">Edit</span>':'')+'</div><div class="kpis"><div class="kpi"><div class="kpi-l">Q-Score</div><div class="kpi-v" style="color:'+tCol(q.score||0)+';font-size:1.6rem">'+(q.score||'—')+'</div><div class="kpi-s">'+tier(q.score||0)+' · '+(q.conf||'—')+' · <span style="color:'+h.c+'">'+h.a+' '+h.l+'</span></div></div><div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v">$'+F(b)+'</div></div><div class="kpi"><div class="kpi-l">Equity</div><div class="kpi-v" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</div></div><div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</div></div><div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v">'+(q.wr||'—')+'%</div></div><div class="kpi"><div class="kpi-l">PF</div><div class="kpi-v">'+(q.pf||'—')+'</div></div><div class="kpi"><div class="kpi-l">Max DD</div><div class="kpi-v" style="color:var(--dn)">'+(q.dd||'—')+'%</div></div><div class="kpi"><div class="kpi-l">Trades</div><div class="kpi-v">'+(q.trades||0)+'</div></div></div>'+atH+'<div class="sh"><span class="sh-t">Firm Economics</span><span class="sh-l"></span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Firm Share</div><div class="kpi-v">$'+f.fs.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Net Firm</div><div class="kpi-v" style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Breakeven</div><div class="kpi-v">$'+f.be.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Salary</div><div class="kpi-v">$'+(s.amt||0).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Lifetime Paid</div><div class="kpi-v">$'+(s.paid||0).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">ROIC</div><div class="kpi-v">'+f.roic+'%</div></div></div>'+(sh.length?'<div class="sh"><span class="sh-t">Trades</span><span class="sh-l"></span><span class="sh-t">'+trades.length+'</span></div><div class="tw"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th>P&L</th></tr></thead><tbody>'+sh.map(function(t){var pn=t.profit||0,d=new Date(t.time),buy=t.type==='DEAL_TYPE_BUY';return'<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+t.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(t.volume||'—')+'</td><td>'+F(t.price,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'')}
+E('detc').innerHTML='<span class="db" onclick="nav(\'overview\')">← Back</span><div class="sh"><span class="sh-t">'+a.name+'</span><span class="sh-l"></span><span class="sh-ts">'+(a.server||'')+'</span>'+(t.isM?'<span class="sh-btn" onclick="edManual(\''+id+'\')">Edit</span>':'')+'</div><div class="kpis"><div class="kpi"><div class="kpi-l">Q-Score</div><div class="kpi-v" style="color:'+tCol(q.score||0)+';font-size:1.6rem">'+(q.score||'—')+'</div><div class="kpi-s">'+tier(q.score||0)+' · '+(q.conf||'—')+' · <span style="color:'+h.c+'">'+h.a+' '+h.l+'</span></div></div><div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v">$'+F(b)+'</div></div><div class="kpi"><div class="kpi-l">Equity</div><div class="kpi-v" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</div></div><div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</div></div><div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v">'+(q.wr||'—')+'%</div></div><div class="kpi"><div class="kpi-l">PF</div><div class="kpi-v">'+(q.pf||'—')+'</div></div><div class="kpi"><div class="kpi-l">Max DD</div><div class="kpi-v" style="color:var(--dn)">'+(q.dd||'—')+'%</div></div><div class="kpi"><div class="kpi-l">Trades</div><div class="kpi-v">'+(q.trades||0)+'</div></div></div>'+atH+'<div class="sh"><span class="sh-t">Firm Economics</span><span class="sh-l"></span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Firm Share</div><div class="kpi-v">$'+f.fs.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Net Firm</div><div class="kpi-v" style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Breakeven</div><div class="kpi-v">$'+f.be.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Salary</div><div class="kpi-v">$'+(s.amt||0).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Lifetime Paid</div><div class="kpi-v">$'+(s.paid||0).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">ROIC</div><div class="kpi-v">'+f.roic+'%</div></div></div>'+buildTraderCal(id,q.dailyPnl||{},s)+(sh.length?'<div class="sh"><span class="sh-t">Trades</span><span class="sh-l"></span><span class="sh-t">'+trades.length+'</span></div><div class="tw"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th>P&L</th></tr></thead><tbody>'+sh.map(function(t){var pn=t.profit||0,d=new Date(t.time),buy=t.type==='DEAL_TYPE_BUY';return'<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+t.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(t.volume||'—')+'</td><td>'+F(t.price,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'')}
+function buildTraderCal(id,dailyPnl,sal){
+  var now=new Date(),yr=now.getFullYear(),mo=now.getMonth();
+  var moNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();
+  var todayStr=now.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+
+  // Salary due dates for this trader
+  var salDates={};var st=sal.start?new Date(sal.start):now;var cy=sal.cycle||30;var nx=new Date(st);
+  while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);
+  while(nx<=new Date(yr,mo+1,0)){salDates[nx.toISOString().slice(0,10)]=sal.amt||0;nx.setDate(nx.getDate()+cy)}
+
+  var totalPnl=0,winD=0,lossD=0,tradD=0;
+  Object.keys(dailyPnl).forEach(function(dt){if(dt.slice(0,7)===moKey){var p=dailyPnl[dt];totalPnl+=p;tradD++;if(p>0)winD++;else if(p<0)lossD++}});
+
+  var h='<div class="sh"><span class="sh-t">Calendar — '+moNames[mo]+' '+yr+'</span><span class="sh-l"></span></div>';
+  h+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Month P&L</div><div class="cal-sum-val" style="color:'+(totalPnl>=0?'var(--up)':'var(--dn)')+'">'+(totalPnl>=0?'+':'')+'$'+F(totalPnl)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trading Days</div><div class="cal-sum-val">'+tradD+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Win</div><div class="cal-sum-val" style="color:var(--up)">'+winD+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Loss</div><div class="cal-sum-val" style="color:var(--dn)">'+lossD+'</div></div></div>';
+  h+='<div class="cal-grid">';var dows=['M','T','W','T','F','S','S'];for(var i=0;i<7;i++)h+='<div class="cal-dow">'+dows[i]+'</div>';
+  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)h+='<div class="cal-day empty" style="min-height:50px"></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var pnl=dailyPnl[ds];var hasSal=salDates[ds]!==undefined;
+    h+='<div class="cal-day'+(isToday?' today':'')+'" style="min-height:50px;padding:4px 5px">';
+    h+='<div class="cal-date" style="font-size:.56rem">'+d+'</div>';
+    if(pnl!==undefined)h+='<div style="font-family:var(--mono);font-size:.6rem;font-weight:700;color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+R(pnl)+'</div>';
+    if(hasSal)h+='<div class="cal-event sal" style="font-size:.4rem">SAL $'+salDates[ds].toLocaleString()+'</div>';
+    h+='</div>';
+  }
+  var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)h+='<div class="cal-day empty" style="min-height:50px"></div>';
+  h+='</div>';return h;
+}
 function edManual(id){var m=S.manual.find(function(x){return'm-'+x.name===id});if(!m)return;var a=prompt('Allocation:',m.alloc);if(a!==null)m.alloc=parseInt(a)||m.alloc;var sa=prompt('Score (0-100):',m.score||0);if(sa!==null)m.score=parseInt(sa)||0;sM();var s=S.sal[id]||{};var sal=prompt('Salary:',s.amt);if(sal!==null){s.amt=parseInt(sal)||s.amt;S.sal[id]=s;sS()}openD(id);renderAll()}
 
 // ── SYSTEM ──
