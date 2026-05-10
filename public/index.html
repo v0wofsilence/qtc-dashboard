@@ -187,7 +187,7 @@ function hlth(h){if(!h||h.length<2)return{a:'',c:'var(--w4)',l:'—'};var r=h.sl
 function fees(pnl,sp,sal,alloc,salPaid){var ts=pnl*(sp/100),fs=pnl*(1-sp/100),cost=salPaid?sal:0,n=fs-cost,be=sal>0?R(sal/(1-sp/100)):0;return{ts:R(ts),fs:R(fs),n:R(n),be:be,roic:alloc>0?((fs-cost)/alloc*100).toFixed(2):'0',ok:n>0,cost:cost}}
 function salDueInfo(s){var now=new Date(),st=s.start?new Date(s.start):now,cy=s.cycle||30;var nx=new Date(st);while(nx<=now)nx.setDate(nx.getDate()+cy);var prev=new Date(nx);prev.setDate(prev.getDate()-cy);var daysSince=R((now-prev)/864e5);var lastPay=(s.payments&&s.payments.length)?s.payments[s.payments.length-1]:null;var paidThisCycle=lastPay&&lastPay.type==='paid'&&new Date(lastPay.date)>=prev;return{daysSince:daysSince,daysLeft:cy-daysSince,dueDate:nx,paidThisCycle:paidThisCycle,cycle:cy}}
 // Net position: lifetime firm revenue vs lifetime salary paid
-function netPosition(id){var t=gt(id);if(!t)return 0;var s=S.sal[id]||{};var pnl=t.q?.pnl||0;var fs=pnl*(1-(s.split||50)/100);return fs-(s.paid||0)}
+function netPosition(id){var t=gt(id);if(!t)return 0;var s=S.sal[id]||{};if(s.feOverride!==undefined&&s.feOverride!==null)return s.feOverride;var pnl=t.q?.pnl||0;var fs=pnl*(1-(s.split||50)/100);return fs-(s.paid||0)}
 
 // ── State ──
 var S={accts:[],traders:{},manual:JSON.parse(localStorage.getItem('qtc_m')||'[]'),sal:JSON.parse(localStorage.getItem('qtc_s')||'{}'),hist:JSON.parse(localStorage.getItem('qtc_h')||'{}'),calMonth:new Date().getMonth(),calYear:new Date().getFullYear()};
@@ -226,6 +226,8 @@ function editTrader(id){
     h+='<div class="mf-row"><div class="mf-group"><div class="mf-label">Allocation ($)</div><input class="mf-input" id="ed-alloc" type="number" value="'+(t.m.alloc||30000)+'"></div>';
     h+='<div class="mf-group"><div class="mf-label">Q-Score (0–100)</div><input class="mf-input" id="ed-score" type="number" value="'+(t.m.score||0)+'" min="0" max="100"></div></div>';
   }
+  var currentFE=netPosition(id);var hasOverride=s.feOverride!==undefined&&s.feOverride!==null;
+  h+='<div class="mf-group" style="margin-top:.3rem;padding-top:.8rem;border-top:1px solid var(--b5)"><div class="mf-label">Firm Economics (FE) Override</div><div class="mf-row"><div><input class="mf-input" id="ed-fe" type="number" value="'+(hasOverride?s.feOverride:'')+'" placeholder="'+R(currentFE)+'"><div class="mf-hint">Leave empty for auto-calc (revenue − salary paid). Current: '+(currentFE>=0?'+$':'−$')+R(Math.abs(currentFE)).toLocaleString()+'</div></div><div><button class="btn" style="margin-top:0;width:100%;padding:8px" onclick="E(\'ed-fe\').value=\'\';E(\'ed-fe\').placeholder=\'Auto\'">Reset to Auto</button></div></div></div>';
   h+='</div><div class="modal-footer"><button class="btn btn-s" onclick="saveEdit()">Save Changes</button><button class="btn" onclick="closeEdit()">Cancel</button></div>';
   E('editModalContent').innerHTML=h;E('editModal').classList.add('open');
 }
@@ -236,6 +238,7 @@ function saveEdit(){
   s.tier=E('ed-tier').value;
   s.cycle=parseInt(E('ed-cycle').value)||30;
   var sd=E('ed-start').value;if(sd&&sd.match(/^\d{4}-\d{2}-\d{2}$/))s.start=sd;
+  var feVal=E('ed-fe').value.trim();if(feVal===''){delete s.feOverride}else{s.feOverride=parseInt(feVal)}
   S.sal[editId]=s;sS();
   if(t.isM&&t.m){
     var al=E('ed-alloc');if(al)t.m.alloc=parseInt(al.value)||t.m.alloc;
