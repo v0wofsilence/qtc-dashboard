@@ -315,7 +315,7 @@ function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(functi
 
 // ── Init ──
 (async function(){log('Initialising...','inf');
-try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');ss('err','Disconnected')}
+try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');S.accts=[]}
 for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
   try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
   try{var p=await px('positions',id);S.traders[id].pos=Array.isArray(p)?p:[]}catch(e){}
@@ -324,8 +324,8 @@ for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac
   S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
   if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);sH()}}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
-sS();var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Refresh: 20s';
-ss('ok','Live');log('All systems operational','ok');renderAll();
+try{sS()}catch(e){}var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Refresh: 20s';
+ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');renderAll();
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo()},20000)})();
 function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rSy()}
 
