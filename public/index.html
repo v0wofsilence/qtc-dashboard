@@ -9,8 +9,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--black:#000;--b1:#050505;--b2:#0A0A0A;--b3:#0F0F0F;--b4:#141414;--b5:#1A1A1A;--b6:#222;--w:#FFF;--w1:#E5E5E5;--w2:#999;--w3:#666;--w4:#444;--w5:#2A2A2A;--up:#00DC82;--dn:#FF4D4D;--accent:#8CB1F6;--accent2:#6B93D9;--warn:#E5C07B;--font:'Outfit',sans-serif;--mono:'IBM Plex Mono',monospace}
 body{font-family:var(--font);background:var(--black);color:var(--w1);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
-
-/* ── Topbar ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:44px;background:var(--b2);border-bottom:1px solid var(--b5);flex-shrink:0}
 .topbar-left{display:flex;align-items:center;gap:1.2rem}
 .logo{font-weight:700;font-size:.82rem;letter-spacing:.08em;color:var(--accent);cursor:pointer}
@@ -19,40 +17,27 @@ body{font-family:var(--font);background:var(--black);color:var(--w1);line-height
 .ts-s .pulse{width:6px;height:6px;border-radius:50%;background:var(--up);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .topbar-right{display:flex;align-items:center;gap:1.2rem;font-family:var(--mono);font-size:.66rem;color:var(--w4)}
-
-/* ── Layout: sidebar + content ── */
 .layout{display:flex;flex:1;overflow:hidden}
-
-/* ── Sidebar ── */
 .sidebar{width:200px;background:var(--b1);border-right:1px solid var(--b5);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .sidebar-section{padding:1rem 0 .5rem;border-bottom:1px solid var(--b5)}
 .sidebar-label{font-size:.5rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--w4);padding:0 1.2rem .5rem}
 .sb{display:flex;align-items:center;gap:.6rem;padding:8px 1.2rem;font-family:var(--font);font-size:.74rem;font-weight:500;color:var(--w3);background:none;border:none;cursor:pointer;transition:all .1s;width:100%;text-align:left}
-.sb:hover{color:var(--w1);background:var(--b3)}
-.sb.active{color:var(--accent);background:rgba(140,177,246,.06);border-right:2px solid var(--accent)}
+.sb:hover{color:var(--w1);background:var(--b3)}.sb.active{color:var(--accent);background:rgba(140,177,246,.06);border-right:2px solid var(--accent)}
 .sb-icon{font-size:.8rem;width:18px;text-align:center;flex-shrink:0}
 .sidebar-footer{margin-top:auto;padding:1rem 1.2rem;border-top:1px solid var(--b5);font-family:var(--mono);font-size:.58rem;color:var(--w4);line-height:1.8}
-
-/* ── Content ── */
 .content{flex:1;overflow-y:auto;padding:1.5rem 2rem 4rem}
 .vw{display:none}.vw.active{display:block}
-
-/* ── Section headers ── */
 .sh{display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem;margin-top:1.6rem}.sh:first-child{margin-top:0}
 .sh-l{flex:1;height:1px;background:var(--b5)}
 .sh-t{font-size:.58rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--w3);white-space:nowrap}
 .sh-ts{font-family:var(--mono);font-size:.58rem;color:var(--w4)}
 .sh-btn{font-family:var(--font);font-size:.62rem;font-weight:500;color:var(--accent);background:rgba(140,177,246,.08);border:1px solid rgba(140,177,246,.2);padding:3px 10px;cursor:pointer}
 .sh-btn:hover{background:rgba(140,177,246,.15)}
-
-/* ── KPIs ── */
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
 .kpi{background:var(--b2);padding:.9rem 1rem}
 .kpi-l{font-size:.52rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.3rem}
 .kpi-v{font-family:var(--mono);font-size:1.15rem;font-weight:600;color:var(--w);letter-spacing:-.02em}
 .kpi-s{font-family:var(--mono);font-size:.54rem;color:var(--w4);margin-top:.12rem}
-
-/* ── Tables ── */
 .tw{border:1px solid var(--b5);background:var(--b2);margin-bottom:1.5rem;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:.7rem}
 th{text-align:left;padding:7px 10px;font-family:var(--mono);font-size:.52rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);background:var(--b3);border-bottom:1px solid var(--b5)}
@@ -64,11 +49,8 @@ tr{cursor:pointer;transition:background .08s}tr:hover td{background:var(--b3)}
 .tag-sell{color:var(--dn);border-color:rgba(255,77,77,.25);background:rgba(255,77,77,.06)}
 .tag-t{color:var(--accent);border-color:rgba(140,177,246,.25);background:rgba(140,177,246,.06)}
 .cv.up{color:var(--up)}.cv.dn{color:var(--dn)}.cv.ac{color:var(--accent)}
-
-/* ── Trader cards ── */
 .tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
-.tc{background:var(--b2);padding:1rem;cursor:pointer;transition:background .1s;position:relative}
-.tc:hover{background:var(--b3)}
+.tc{background:var(--b2);padding:1rem;cursor:pointer;transition:background .1s;position:relative}.tc:hover{background:var(--b3)}
 .tc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem}
 .tc-nm{font-weight:600;font-size:.8rem;color:var(--w)}
 .tc-ti{font-family:var(--mono);font-size:.5rem;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
@@ -77,16 +59,12 @@ tr{cursor:pointer;transition:background .08s}tr:hover td{background:var(--b3)}
 .tc-sc{font-family:var(--mono);font-size:1.5rem;font-weight:700;line-height:1}
 .tc-sl{font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;color:var(--w4);margin-top:.08rem}
 .tc-dot{position:absolute;top:.9rem;right:.9rem;width:6px;height:6px;border-radius:50%}
-
-/* ── Salary cards ── */
 .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
 .sc{background:var(--b2);padding:.9rem 1rem}
 .sc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem}
 .sc-nm{font-weight:600;font-size:.78rem}.sc-am{font-family:var(--mono);font-weight:700;font-size:.95rem}
 .sc-r{display:flex;justify-content:space-between;font-size:.64rem;padding:.12rem 0}
 .sc-r .sl{color:var(--w3)}.sc-r .sv{font-family:var(--mono);font-weight:500}
-
-/* ── Calendar grid ── */
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .cal-title{font-family:var(--mono);font-size:.9rem;font-weight:600;color:var(--w1)}
 .cal-nav{display:flex;gap:.4rem}
@@ -94,20 +72,14 @@ tr{cursor:pointer;transition:background .08s}tr:hover td{background:var(--b3)}
 .cal-nav button:hover{color:var(--w1);border-color:var(--accent)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
 .cal-dow{background:var(--b3);padding:6px;text-align:center;font-family:var(--mono);font-size:.52rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--w3)}
-.cal-day{background:var(--b2);min-height:90px;padding:6px 8px;position:relative;transition:background .1s}
-.cal-day:hover{background:var(--b3)}
-.cal-day.empty{background:var(--b1);min-height:40px}
-.cal-day.today{border:1px solid var(--accent)}
+.cal-day{background:var(--b2);min-height:90px;padding:6px 8px;position:relative;transition:background .1s;cursor:pointer}
+.cal-day:hover{background:var(--b3)}.cal-day.empty{background:var(--b1);min-height:40px;cursor:default}
+.cal-day.today{border:1px solid var(--accent)}.cal-day.selected{background:var(--b3);outline:1px solid var(--accent)}
 .cal-date{font-family:var(--mono);font-size:.62rem;font-weight:600;color:var(--w3);margin-bottom:4px}
 .cal-pnl{font-family:var(--mono);font-size:.72rem;font-weight:700}
 .cal-detail{font-family:var(--mono);font-size:.48rem;color:var(--w4);line-height:1.5;margin-top:3px}
 .cal-event{display:inline-block;font-family:var(--mono);font-size:.44rem;font-weight:600;padding:1px 4px;margin-top:3px;border:1px solid}
 .cal-event.sal{color:var(--accent);border-color:rgba(140,177,246,.3);background:rgba(140,177,246,.08)}
-.cal-event.rev{color:var(--warn);border-color:rgba(229,192,123,.3);background:rgba(229,192,123,.08)}
-.cal-day.clickable{cursor:pointer}
-.cal-day.selected{background:var(--b3);outline:1px solid var(--accent)}
-
-/* ── Day detail popout ── */
 .day-panel{background:var(--b2);border:1px solid var(--b5);padding:1.2rem;margin-bottom:1.5rem;display:none}
 .day-panel.open{display:block}
 .dp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem}
@@ -119,13 +91,10 @@ tr{cursor:pointer;transition:background .08s}tr:hover td{background:var(--b3)}
 .dp-row{display:flex;justify-content:space-between;align-items:center;padding:.25rem 0;font-size:.7rem;border-bottom:1px solid var(--b4)}
 .dp-row:last-child{border-bottom:none}
 .dp-row .dl{color:var(--w3)}.dp-row .dv{font-family:var(--mono);font-weight:600}
-.dp-trades{max-height:200px;overflow-y:auto}
 .cal-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
 .cal-sum-cell{background:var(--b2);padding:.8rem}
 .cal-sum-label{font-size:.5rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w3);margin-bottom:.2rem}
 .cal-sum-val{font-family:var(--mono);font-size:1rem;font-weight:600}
-
-/* ── Forms ── */
 .fp{background:var(--b2);border:1px solid var(--b5);padding:1.2rem;margin-bottom:1.5rem}
 .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.8rem;margin-bottom:.8rem}
 .fl{font-size:.64rem;color:var(--w3);margin-bottom:.2rem}
@@ -135,69 +104,48 @@ select.fi{cursor:pointer;appearance:none;padding-right:22px;background-image:url
 textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .btn{padding:6px 14px;font-family:var(--font);font-size:.68rem;font-weight:600;color:var(--accent);background:rgba(140,177,246,.08);border:1px solid rgba(140,177,246,.2);cursor:pointer}
 .btn:hover{background:rgba(140,177,246,.18)}
-.btn-s{color:var(--black);background:var(--accent);border-color:var(--accent)}
-.btn-s:hover{background:var(--accent2)}
+.btn-s{color:var(--black);background:var(--accent);border-color:var(--accent)}.btn-s:hover{background:var(--accent2)}
+.btn-paid{color:var(--up);background:rgba(0,220,130,.08);border:1px solid rgba(0,220,130,.25)}.btn-paid:hover{background:rgba(0,220,130,.15)}
+.btn-due{color:var(--warn);background:rgba(229,192,123,.08);border:1px solid rgba(229,192,123,.25)}
 .br{display:flex;gap:5px;flex-wrap:wrap}
-
-/* ── Misc ── */
 .conn{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1px;background:var(--b5);border:1px solid var(--b5);margin-bottom:1.5rem}
 .ci{background:var(--b2);padding:.55rem .9rem;display:flex;justify-content:space-between;align-items:center;font-size:.66rem}
 .ci .cl{color:var(--w3)}.ci .cv{font-family:var(--mono);font-weight:500;color:var(--w1)}
-.db{font-size:.7rem;color:var(--accent);cursor:pointer;margin-bottom:.8rem;display:inline-block}.db:hover{text-decoration:underline}
 .nil{text-align:center;padding:2rem;color:var(--w4);font-size:.74rem}
 .syslog{background:var(--b1);border:1px solid var(--b5);font-family:var(--mono);font-size:.6rem;line-height:1.8;padding:.5rem .8rem;margin-bottom:1.2rem;max-height:100px;overflow-y:auto;color:var(--w3)}
 .syslog .ok{color:var(--up)}.syslog .er{color:var(--dn)}.syslog .inf{color:var(--accent)}.syslog .wrn{color:var(--warn)}
 .ph{font-family:var(--mono);font-size:.56rem;color:var(--w4);margin-top:.3rem;line-height:1.6}
-
-@media(max-width:900px){
-  .sidebar{display:none}
-  .layout{flex-direction:column}
-  .content{padding:1rem}
-  .kpis,.cal-summary{grid-template-columns:repeat(2,1fr)}
-  .tg,.sg{grid-template-columns:1fr}
-  .cal-grid{grid-template-columns:repeat(7,1fr)}
-  .cal-day{min-height:60px;padding:4px}
-}
+.sal-due{display:inline-block;font-family:var(--mono);font-size:.56rem;padding:2px 6px;margin-left:.4rem}
+@media(max-width:900px){.sidebar{display:none}.layout{flex-direction:column}.content{padding:1rem}.kpis,.cal-summary{grid-template-columns:repeat(2,1fr)}.tg,.sg{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="topbar"><div class="topbar-left"><div class="logo" onclick="nav('overview')">QT CAPITAL<span>Terminal</span></div><div class="ts-s"><div class="pulse" id="dot"></div><span id="st">Connecting</span></div></div><div class="topbar-right"><span id="tc"></span><span id="ck"></span></div></div>
-
 <div class="layout">
-<!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sidebar-section">
-    <div class="sidebar-label">Dashboard</div>
+  <div class="sidebar-section"><div class="sidebar-label">Dashboard</div>
     <button class="sb active" onclick="nav('overview')"><span class="sb-icon">◈</span>Overview</button>
+    <button class="sb" onclick="nav('positions')"><span class="sb-icon">⇄</span>Positions</button>
     <button class="sb" onclick="nav('calendar')"><span class="sb-icon">▦</span>Calendar</button>
   </div>
-  <div class="sidebar-section">
-    <div class="sidebar-label">Management</div>
+  <div class="sidebar-section"><div class="sidebar-label">Management</div>
     <button class="sb" onclick="nav('roster')"><span class="sb-icon">≡</span>Roster</button>
     <button class="sb" onclick="nav('salary')"><span class="sb-icon">$</span>Salary</button>
-    <button class="sb" onclick="nav('detail')"><span class="sb-icon">◎</span>Trader</button>
   </div>
-  <div class="sidebar-section">
-    <div class="sidebar-label">System</div>
+  <div class="sidebar-section"><div class="sidebar-label">System</div>
     <button class="sb" onclick="nav('system')"><span class="sb-icon">⚙</span>System</button>
   </div>
-  <div class="sidebar-footer">
-    <div id="sf-traders"></div>
-    <div id="sf-status"></div>
-  </div>
+  <div class="sidebar-footer"><div id="sf-traders"></div><div id="sf-status"></div></div>
 </div>
-
-<!-- CONTENT -->
 <div class="content">
 <div id="v-overview" class="vw active"><div class="syslog" id="log"></div><div id="fk"></div><div id="cards"></div><div id="fpos"></div></div>
+<div id="v-positions" class="vw"><div id="posc"></div></div>
 <div id="v-calendar" class="vw"><div id="dayPanel" class="day-panel"></div><div id="calc"></div></div>
 <div id="v-roster" class="vw"><div id="rost"></div></div>
 <div id="v-salary" class="vw"><div id="salc"></div></div>
-<div id="v-detail" class="vw"><div id="detc"><div class="nil">Select a trader from Overview or Roster</div></div></div>
 <div id="v-system" class="vw"><div id="sysc"></div></div>
 </div>
 </div>
-
 <script>
 var E=function(id){return document.getElementById(id)},F=function(n,d){d=d||2;return n!=null?Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—'},T=function(){return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})},R=Math.round;
 setInterval(function(){E('ck').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})+' '+new Date().toLocaleTimeString('en-GB')},1000);
@@ -213,17 +161,21 @@ function sFp(ret,dd,pf,dy,tc){var rd=dd>0?ret/dd:0;return clamp(R((rd>=4?lerp(rd
 function sCs(pw,bd,pf){return clamp(R((pw>=75?lerp(pw,75,95,80,100):pw>=60?lerp(pw,60,75,50,80):pw>=45?lerp(pw,45,60,20,50):lerp(pw,0,45,0,20))*.4+(bd<=8?iLerp(bd,0,8,100,80):bd<=18?iLerp(bd,8,18,80,50):bd<=35?iLerp(bd,18,35,50,20):iLerp(bd,35,70,20,0))*.35+(pf>=2?lerp(pf,2,3.5,80,100):pf>=1.5?lerp(pf,1.5,2,50,80):pf>=1.2?lerp(pf,1.2,1.5,20,50):lerp(pf,0,1.2,0,20))*.25),0,100)}
 function sDr(dd,ret){var rr=dd>0?ret/dd:0;return clamp(R((rr>=4?lerp(rr,4,8,80,100):rr>=2?lerp(rr,2,4,50,80):rr>=1?lerp(rr,1,2,20,50):lerp(rr,0,1,0,20))*.6+(dd<=3?iLerp(dd,0,3,100,85):dd<=5?iLerp(dd,3,5,85,55):dd<=8?iLerp(dd,5,8,55,20):iLerp(dd,8,10,20,0))*.4),0,100)}
 function sDp(sp,vi){return clamp(R((sp<=2?iLerp(sp,1,2,100,75):sp<=3?iLerp(sp,2,3,75,45):sp<=4?iLerp(sp,3,4,45,15):5)*.5+(vi===0?100:vi===1?40:vi===2?15:0)*.5),0,100)}
-function compQ(trades,bal){if(!trades||trades.length<3)return{score:0,conf:'Low',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{}};var w=0,l=0,gw=0,gl=0,tp=0,pk=0,eq=0,md=0,lots=[],dm={},wm={};trades.forEach(function(t){var p=t.profit||0;tp+=p;if(p>0){w++;gw+=p}else if(p<0){l++;gl+=Math.abs(p)}eq+=p;if(eq>pk)pk=eq;var dd=pk-eq;if(dd>md)md=dd;if(t.volume)lots.push(t.volume);var dt=t.time?new Date(t.time).toISOString().slice(0,10):'';if(dt){dm[dt]=(dm[dt]||0)+p;var d=new Date(t.time),wk=d.getFullYear()+'-W'+Math.ceil((d.getDate()+new Date(d.getFullYear(),d.getMonth(),1).getDay())/7);wm[wk]=(wm[wk]||0)+p}});var tc=trades.length,dy=Object.keys(dm).length,ddP=bal>0?md/bal*100:0,retP=bal>0?tp/bal*100:0,pf=gl>0?gw/gl:gw>0?99:0;var wks=Object.values(wm),pw=wks.length>0?wks.filter(function(x){return x>0}).length/wks.length*100:50;var dps=Object.values(dm),bd=dps.length>0?Math.max.apply(null,dps):0,bdP=tp>0?bd/tp*100:0;var aL=lots.length>0?lots.reduce(function(a,b){return a+b},0)/lots.length:1,mL=lots.length>0?Math.max.apply(null,lots):1,sp=aL>0?mL/aL:1;var rc=sRc(ddP,ddP*.8,ddP),fp=sFp(retP,ddP,pf,dy,tc),cs=sCs(pw,bdP,pf),dr=sDr(ddP,retP),dp=sDp(sp,0);var score=clamp(R(fp*.205+rc*.25+cs*.205+dr*.114+dp*.114+60*.114),0,100);return{score:score,conf:dy>=60&&tc>=300?'High':dy>=30&&tc>=100?'Medium':'Low',trades:tc,days:dy,pnl:R(tp),ret:retP.toFixed(2),dd:ddP.toFixed(2),pf:pf.toFixed(2),wr:tc>0?(w/tc*100).toFixed(1):'0',at:{rc:rc,fp:fp,cs:cs,dr:dr,dp:dp,eq:60},dailyPnl:dm}}
+function compQ(trades,bal){if(!trades||trades.length<3)return{score:0,conf:'Low',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}};var w=0,l=0,gw=0,gl=0,tp=0,pk=0,eq=0,md=0,lots=[],dm={},wm={};trades.forEach(function(t){var p=t.profit||0;tp+=p;if(p>0){w++;gw+=p}else if(p<0){l++;gl+=Math.abs(p)}eq+=p;if(eq>pk)pk=eq;var dd=pk-eq;if(dd>md)md=dd;if(t.volume)lots.push(t.volume);var dt=t.time?new Date(t.time).toISOString().slice(0,10):'';if(dt){dm[dt]=(dm[dt]||0)+p;var d=new Date(t.time),wk=d.getFullYear()+'-W'+Math.ceil((d.getDate()+new Date(d.getFullYear(),d.getMonth(),1).getDay())/7);wm[wk]=(wm[wk]||0)+p}});var tc=trades.length,dy=Object.keys(dm).length,ddP=bal>0?md/bal*100:0,retP=bal>0?tp/bal*100:0,pf=gl>0?gw/gl:gw>0?99:0;var wks=Object.values(wm),pw=wks.length>0?wks.filter(function(x){return x>0}).length/wks.length*100:50;var dps=Object.values(dm),bd=dps.length>0?Math.max.apply(null,dps):0,bdP=tp>0?bd/tp*100:0;var aL=lots.length>0?lots.reduce(function(a,b){return a+b},0)/lots.length:1,mL=lots.length>0?Math.max.apply(null,lots):1,sp=aL>0?mL/aL:1;var rc=sRc(ddP,ddP*.8,ddP),fp=sFp(retP,ddP,pf,dy,tc),cs=sCs(pw,bdP,pf),dr=sDr(ddP,retP),dp=sDp(sp,0);var score=clamp(R(fp*.205+rc*.25+cs*.205+dr*.114+dp*.114+60*.114),0,100);return{score:score,conf:dy>=60&&tc>=300?'High':dy>=30&&tc>=100?'Medium':'Low',trades:tc,days:dy,pnl:R(tp),ret:retP.toFixed(2),dd:ddP.toFixed(2),pf:pf.toFixed(2),wr:tc>0?(w/tc*100).toFixed(1):'0',at:{rc:rc,fp:fp,cs:cs,dr:dr,dp:dp,eq:60},dailyPnl:dm}}
 function tier(s){return s>=65?'Senior Analyst':s>=50?'Analyst':'Junior Analyst'}
 function tCol(s){return s>=65?'var(--up)':s>=50?'var(--accent)':'var(--w2)'}
 function hlth(h){if(!h||h.length<2)return{a:'',c:'var(--w4)',l:'—'};var r=h.slice(-3),d=r[r.length-1]-r[0];return d>=5?{a:'↑',c:'var(--up)',l:'Rising'}:d<=-5?{a:'↓',c:'var(--dn)',l:'Declining'}:{a:'→',c:'var(--warn)',l:'Stable'}}
-function fees(pnl,sp,sal,alloc){var ts=pnl*(sp/100),fs=pnl*(1-sp/100),n=fs-sal,be=sal>0?R(sal/(1-sp/100)):0;return{ts:R(ts),fs:R(fs),n:R(n),be:be,roic:alloc>0?((fs-sal)/alloc*100).toFixed(2):'0',ok:n>0}}
+// Fees: salary only counts if it has been paid (salPaid flag)
+function fees(pnl,sp,sal,alloc,salPaid){var ts=pnl*(sp/100),fs=pnl*(1-sp/100),cost=salPaid?sal:0,n=fs-cost,be=sal>0?R(sal/(1-sp/100)):0;return{ts:R(ts),fs:R(fs),n:R(n),be:be,roic:alloc>0?((fs-cost)/alloc*100).toFixed(2):'0',ok:n>0,cost:cost}}
+
+// Salary due calculation: is salary due for current cycle?
+function salDueInfo(s){var now=new Date(),st=s.start?new Date(s.start):now,cy=s.cycle||30;var nx=new Date(st);while(nx<=now)nx.setDate(nx.getDate()+cy);var prev=new Date(nx);prev.setDate(prev.getDate()-cy);var daysSince=R((now-prev)/864e5);var daysLeft=cy-daysSince;var lastPay=(s.payments&&s.payments.length)?s.payments[s.payments.length-1]:null;var paidThisCycle=lastPay&&lastPay.type==='paid'&&new Date(lastPay.date)>=prev;return{daysSince:daysSince,daysLeft:daysLeft,dueDate:nx,paidThisCycle:paidThisCycle,cycle:cy}}
 
 // ── State ──
 var S={accts:[],traders:{},manual:JSON.parse(localStorage.getItem('qtc_m')||'[]'),sal:JSON.parse(localStorage.getItem('qtc_s')||'{}'),hist:JSON.parse(localStorage.getItem('qtc_h')||'{}'),calMonth:new Date().getMonth(),calYear:new Date().getFullYear()};
 function sM(){localStorage.setItem('qtc_m',JSON.stringify(S.manual))}function sS(){localStorage.setItem('qtc_s',JSON.stringify(S.sal))}function sH(){localStorage.setItem('qtc_h',JSON.stringify(S.hist))}
 function allIds(){var ids=Object.keys(S.traders);S.manual.forEach(function(m){var id='m-'+m.name;if(ids.indexOf(id)<0)ids.push(id)});return ids}
-function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(function(x){return'm-'+x.name===id});if(m)return{a:{name:m.name,login:'',server:'—',platform:'—',connectionStatus:'MANUAL'},l:{balance:m.alloc||0,equity:m.alloc||0,currency:'USD',leverage:100},pos:[],hist:[],q:{score:m.score||0,conf:'—',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}},isM:true,m:m};return null}
+function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(function(x){return'm-'+x.name===id});if(m)return{a:{name:m.name,login:'',server:'—',platform:'—',connectionStatus:'MANUAL'},l:{balance:m.alloc||0,equity:m.alloc||0},pos:[],hist:[],q:{score:m.score||0,conf:'—',trades:0,days:0,pnl:0,ret:'0',dd:'0',pf:'0',wr:'0',at:{},dailyPnl:{}},isM:true,m:m};return null}
 
 // ── Init ──
 (async function(){
@@ -237,138 +189,76 @@ function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(functi
     if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);sH()}
     if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:55}}
   S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||55}});
-  sS();var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Auto-refresh: 20s';
+  sS();var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Refresh: 20s';
   ss('ok','Live');log('All systems operational','ok');renderAll();
-  setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv()},20000);
+  setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo()},20000);
 })();
-
-function renderAll(){rOv();rCa();rRo();rSa();rSy()}
+function renderAll(){rOv();rPo();rCa();rRo();rSa();rSy()}
 
 // ── OVERVIEW ──
-function rOv(){var ids=allIds();if(!ids.length){E('fk').innerHTML='';E('cards').innerHTML='<div class="nil">No traders — add via Roster</div>';E('fpos').innerHTML='';return}var tb=0,te=0,tu=0,tp=0,tt=0,as=0,sc=0,ts=0;ids.forEach(function(id){var t=gt(id);if(!t)return;var l=t.l;if(l){tb+=l.balance||0;te+=l.equity||0;tu+=(l.equity||0)-(l.balance||0)}tp+=(t.pos||[]).length;tt+=(t.hist||[]).length;if(t.q&&t.q.score>0){as+=t.q.score;sc++}ts+=(S.sal[id]?.amt||0)});if(sc>0)as=R(as/sc);
-E('fk').innerHTML='<div class="sh"><span class="sh-t">Firm Overview</span><span class="sh-l"></span><span class="sh-ts">'+T()+'</span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">'+ids.length+'</div></div><div class="kpi"><div class="kpi-l">Total Balance</div><div class="kpi-v">$'+F(tb)+'</div></div><div class="kpi"><div class="kpi-l">Total Equity</div><div class="kpi-v" style="color:'+(te>=tb?'var(--up)':'var(--dn)')+'">$'+F(te)+'</div></div><div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:'+(tu>=0?'var(--up)':'var(--dn)')+'">'+(tu>=0?'+':'')+'$'+F(tu)+'</div></div><div class="kpi"><div class="kpi-l">Positions</div><div class="kpi-v">'+tp+'</div></div><div class="kpi"><div class="kpi-l">Trades 30d</div><div class="kpi-v">'+tt+'</div></div><div class="kpi"><div class="kpi-l">Avg Q-Score</div><div class="kpi-v" style="color:'+tCol(as)+'">'+(as||'—')+'</div></div><div class="kpi"><div class="kpi-l">Salary/mo</div><div class="kpi-v">$'+ts.toLocaleString()+'</div></div></div>';
-E('cards').innerHTML='<div class="sh"><span class="sh-t">Traders</span><span class="sh-l"></span></div><div class="tg">'+ids.map(function(id){var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{score:0},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,u=e-b,h=hlth(S.hist[id]||[]),cn=a.connectionStatus==='CONNECTED'||a.connectionStatus==='MANUAL';return'<div class="tc" onclick="openD(\''+id+'\')"><div class="tc-dot" style="background:'+(cn?'var(--up)':'var(--dn)')+'"></div><div class="tc-top"><div><div class="tc-nm">'+a.name+' <span style="color:'+h.c+';font-size:.72rem">'+h.a+'</span></div><div class="tc-ti">'+tier(q.score)+'</div></div><div style="text-align:right"><div class="tc-sc" style="color:'+tCol(q.score)+'">'+(q.score||'—')+'</div><div class="tc-sl">Q-Score</div></div></div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(b)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tc-r"><span class="tc-rl">Salary</span><span class="tc-rv">$'+(s.amt||0).toLocaleString()+'/mo</span></div></div>'}).join('')+'</div>';
-var ap=[];ids.forEach(function(id){var t=gt(id);if(!t)return;(t.pos||[]).forEach(function(p){p._t=(t.a||{}).name;ap.push(p)})});
-E('fpos').innerHTML=ap.length?'<div class="sh"><span class="sh-t">All Positions</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead><tbody>'+ap.map(function(p){var pn=p.profit||0,buy=p.type&&p.type.includes('BUY');return'<tr><td class="sym">'+p._t+'</td><td>'+p.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(p.volume||'—')+'</td><td>'+F(p.openPrice,5)+'</td><td>'+F(p.currentPrice,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':''}
+function rOv(){var ids=allIds();if(!ids.length){E('fk').innerHTML='';E('cards').innerHTML='<div class="nil">No traders — add via Roster</div>';E('fpos').innerHTML='';return}var tb=0,te=0,tu=0,tp=0,tt=0,as=0,sc=0,ts=0,paidSal=0;ids.forEach(function(id){var t=gt(id);if(!t)return;var l=t.l;if(l){tb+=l.balance||0;te+=l.equity||0;tu+=(l.equity||0)-(l.balance||0)}tp+=(t.pos||[]).length;tt+=(t.hist||[]).length;if(t.q&&t.q.score>0){as+=t.q.score;sc++}var s=S.sal[id]||{};ts+=s.amt||0;var di=salDueInfo(s);if(di.paidThisCycle)paidSal+=s.amt||0});if(sc>0)as=R(as/sc);
+var firmRev=0;ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var di=salDueInfo(s);firmRev+=fees(t.q?.pnl||0,s.split||55,s.amt||0,t.l?.balance||0,di.paidThisCycle).n});
+E('fk').innerHTML='<div class="sh"><span class="sh-t">Firm Overview</span><span class="sh-l"></span><span class="sh-ts">'+T()+'</span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">'+ids.length+'</div></div><div class="kpi"><div class="kpi-l">Total Balance</div><div class="kpi-v">$'+F(tb)+'</div></div><div class="kpi"><div class="kpi-l">Total Equity</div><div class="kpi-v" style="color:'+(te>=tb?'var(--up)':'var(--dn)')+'">$'+F(te)+'</div></div><div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:'+(tu>=0?'var(--up)':'var(--dn)')+'">'+(tu>=0?'+':'')+'$'+F(tu)+'</div></div><div class="kpi"><div class="kpi-l">Positions</div><div class="kpi-v">'+tp+'</div></div><div class="kpi"><div class="kpi-l">Avg Q-Score</div><div class="kpi-v" style="color:'+tCol(as)+'">'+(as||'—')+'</div></div><div class="kpi"><div class="kpi-l">Salary Paid</div><div class="kpi-v">$'+paidSal.toLocaleString()+'</div><div class="kpi-s">of $'+ts.toLocaleString()+' due</div></div><div class="kpi"><div class="kpi-l">Net Firm</div><div class="kpi-v" style="color:'+(firmRev>=0?'var(--up)':'var(--dn)')+'">$'+R(firmRev).toLocaleString()+'</div></div></div>';
+E('cards').innerHTML='<div class="sh"><span class="sh-t">Traders</span><span class="sh-l"></span></div><div class="tg">'+ids.map(function(id){var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{score:0},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,u=e-b,h=hlth(S.hist[id]||[]),cn=a.connectionStatus==='CONNECTED'||a.connectionStatus==='MANUAL',di=salDueInfo(s);return'<div class="tc" onclick="nav(\'positions\')"><div class="tc-dot" style="background:'+(cn?'var(--up)':'var(--dn)')+'"></div><div class="tc-top"><div><div class="tc-nm">'+a.name+' <span style="color:'+h.c+';font-size:.72rem">'+h.a+'</span></div><div class="tc-ti">'+tier(q.score)+'</div></div><div style="text-align:right"><div class="tc-sc" style="color:'+tCol(q.score)+'">'+(q.score||'—')+'</div><div class="tc-sl">Q-Score</div></div></div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(b)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tc-r"><span class="tc-rl">Salary</span><span class="tc-rv">$'+(s.amt||0).toLocaleString()+'/mo <span class="sal-due" style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</span></span></div></div>'}).join('')+'</div>';
+E('fpos').innerHTML=''}
+
+// ── POSITIONS VIEW (replaces Trader tab) ──
+function rPo(){
+  var ids=allIds(),now=new Date(),todayStr=now.toISOString().slice(0,10);
+  var d7=new Date(now);d7.setDate(d7.getDate()-7);var d30=new Date(now);d30.setDate(d30.getDate()-30);
+  var allOpen=[],allClosed=[],dayPnl=0,weekPnl=0,monthPnl=0;
+  ids.forEach(function(id){var t=gt(id);if(!t)return;
+    (t.pos||[]).forEach(function(p){p._t=t.a.name;allOpen.push(p)});
+    (t.hist||[]).forEach(function(tr){tr._t=t.a.name;var dt=tr.time?new Date(tr.time):null;if(!dt)return;var p=tr.profit||0;if(dt.toISOString().slice(0,10)===todayStr)dayPnl+=p;if(dt>=d7)weekPnl+=p;if(dt>=d30){monthPnl+=p;allClosed.push(tr)}})});
+  allClosed.sort(function(a,b){return new Date(b.time)-new Date(a.time)});var recent=allClosed.slice(0,30);
+
+  E('posc').innerHTML='<div class="sh"><span class="sh-t">Positions & P&L</span><span class="sh-l"></span><span class="sh-ts">'+T()+'</span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Open Positions</div><div class="kpi-v">'+allOpen.length+'</div></div><div class="kpi"><div class="kpi-l">Today P&L</div><div class="kpi-v" style="color:'+(dayPnl>=0?'var(--up)':'var(--dn)')+'">'+(dayPnl>=0?'+':'')+'$'+F(dayPnl)+'</div></div><div class="kpi"><div class="kpi-l">Week P&L</div><div class="kpi-v" style="color:'+(weekPnl>=0?'var(--up)':'var(--dn)')+'">'+(weekPnl>=0?'+':'')+'$'+F(weekPnl)+'</div></div><div class="kpi"><div class="kpi-l">Month P&L</div><div class="kpi-v" style="color:'+(monthPnl>=0?'var(--up)':'var(--dn)')+'">'+(monthPnl>=0?'+':'')+'$'+F(monthPnl)+'</div></div><div class="kpi"><div class="kpi-l">Closed 30d</div><div class="kpi-v">'+allClosed.length+'</div></div></div>'
+  +(allOpen.length?'<div class="sh"><span class="sh-t">Open Positions</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead><tbody>'+allOpen.map(function(p){var pn=p.profit||0,buy=p.type&&p.type.includes('BUY');return'<tr><td class="sym">'+p._t+'</td><td>'+p.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(p.volume||'—')+'</td><td>'+F(p.openPrice,5)+'</td><td>'+F(p.currentPrice,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="nil">No open positions</div>')
+  +(recent.length?'<div class="sh"><span class="sh-t">Recent Closed</span><span class="sh-l"></span><span class="sh-t">Last 30</span></div><div class="tw"><table><thead><tr><th>Time</th><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th>P&L</th></tr></thead><tbody>'+recent.map(function(t){var pn=t.profit||0,d=new Date(t.time),buy=t.type==='DEAL_TYPE_BUY';return'<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+t._t+'</td><td>'+t.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(t.volume||'—')+'</td><td>'+F(t.price,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'');
+}
 
 // ── CALENDAR ──
 var CAL={dayPnl:{},dayTraders:{},salaryEvents:{},tradesByDay:{}};
-function rCa(){
-  var yr=S.calYear,mo=S.calMonth,ids=allIds();
-  var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var daysInMonth=new Date(yr,mo+1,0).getDate();
-  var firstDay=new Date(yr,mo,1).getDay();
-  var today=new Date();var todayStr=today.toISOString().slice(0,10);
-  var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+function rCa(){var yr=S.calYear,mo=S.calMonth,ids=allIds();var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();var today=new Date();var todayStr=today.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+CAL.dayPnl={};CAL.dayTraders={};CAL.salaryEvents={};CAL.tradesByDay={};
+ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){if(dt.slice(0,7)===moKey){CAL.dayPnl[dt]=(CAL.dayPnl[dt]||0)+dp[dt];if(!CAL.dayTraders[dt])CAL.dayTraders[dt]=[];CAL.dayTraders[dt].push({name:t.a.name,pnl:dp[dt]})}});(t.hist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt&&dt.slice(0,7)===moKey){if(!CAL.tradesByDay[dt])CAL.tradesByDay[dt]=[];CAL.tradesByDay[dt].push({sym:tr.symbol,type:tr.type,vol:tr.volume,profit:tr.profit,time:tr.time,trader:t.a.name})}})});
+ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!CAL.salaryEvents[ds])CAL.salaryEvents[ds]=[];CAL.salaryEvents[ds].push({name:t.a.name,amt:s.amt||0});nx.setDate(nx.getDate()+cy)}});
+var totalPnl=0,winDays=0,lossDays=0,tradingDays=0;Object.keys(CAL.dayPnl).forEach(function(dt){var p=CAL.dayPnl[dt];totalPnl+=p;tradingDays++;if(p>0)winDays++;else if(p<0)lossDays++});
+var html='<div class="cal-header"><button class="cal-nav" onclick="S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}closeDay();rCa()">←</button><div class="cal-title">'+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}closeDay();rCa()">→</button></div>';
+html+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Month P&L</div><div class="cal-sum-val" style="color:'+(totalPnl>=0?'var(--up)':'var(--dn)')+'">'+(totalPnl>=0?'+':'')+'$'+F(totalPnl)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trading Days</div><div class="cal-sum-val">'+tradingDays+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Win Days</div><div class="cal-sum-val" style="color:var(--up)">'+winDays+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Loss Days</div><div class="cal-sum-val" style="color:var(--dn)">'+lossDays+'</div></div></div>';
+html+='<div class="cal-grid">';var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];for(var i=0;i<7;i++)html+='<div class="cal-dow">'+dows[i]+'</div>';
+var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)html+='<div class="cal-day empty"></div>';
+for(var d=1;d<=daysInMonth;d++){var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var pnl=CAL.dayPnl[ds];var traders=CAL.dayTraders[ds]||[];var salEvts=CAL.salaryEvents[ds]||[];
+html+='<div class="cal-day'+(isToday?' today':'')+'" onclick="openDay(\''+ds+'\')">';html+='<div class="cal-date">'+d+'</div>';
+if(pnl!==undefined){html+='<div class="cal-pnl" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</div>';if(traders.length){html+='<div class="cal-detail">';traders.forEach(function(t){html+=t.name.slice(0,8)+': '+(t.pnl>=0?'+':'')+'$'+R(t.pnl)+'<br>'});html+='</div>'}}
+salEvts.forEach(function(e){html+='<div class="cal-event sal">$ '+e.name.slice(0,10)+'</div>'});html+='</div>'}
+var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)html+='<div class="cal-day empty"></div>';html+='</div>';E('calc').innerHTML=html}
 
-  CAL.dayPnl={};CAL.dayTraders={};CAL.salaryEvents={};CAL.tradesByDay={};
-  ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){if(dt.slice(0,7)===moKey){CAL.dayPnl[dt]=(CAL.dayPnl[dt]||0)+dp[dt];if(!CAL.dayTraders[dt])CAL.dayTraders[dt]=[];CAL.dayTraders[dt].push({name:t.a.name,pnl:dp[dt],id:id})}});
-    (t.hist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt&&dt.slice(0,7)===moKey){if(!CAL.tradesByDay[dt])CAL.tradesByDay[dt]=[];CAL.tradesByDay[dt].push({sym:tr.symbol,type:tr.type,vol:tr.volume,profit:tr.profit,time:tr.time,trader:t.a.name})}})});
-  ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!CAL.salaryEvents[ds])CAL.salaryEvents[ds]=[];CAL.salaryEvents[ds].push({name:t.a.name,amt:s.amt||0,id:id});nx.setDate(nx.getDate()+cy)}});
-
-  var totalPnl=0,winDays=0,lossDays=0,tradingDays=0;
-  Object.keys(CAL.dayPnl).forEach(function(dt){var p=CAL.dayPnl[dt];totalPnl+=p;tradingDays++;if(p>0)winDays++;else if(p<0)lossDays++});
-
-  var html='<div class="cal-header"><button class="cal-nav" onclick="S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}closeDay();rCa()">←</button><div class="cal-title">'+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}closeDay();rCa()">→</button></div>';
-  html+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Month P&L</div><div class="cal-sum-val" style="color:'+(totalPnl>=0?'var(--up)':'var(--dn)')+'">'+(totalPnl>=0?'+':'')+'$'+F(totalPnl)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trading Days</div><div class="cal-sum-val">'+tradingDays+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Win Days</div><div class="cal-sum-val" style="color:var(--up)">'+winDays+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Loss Days</div><div class="cal-sum-val" style="color:var(--dn)">'+lossDays+'</div></div></div>';
-
-  html+='<div class="cal-grid">';var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];for(var i=0;i<7;i++)html+='<div class="cal-dow">'+dows[i]+'</div>';
-  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)html+='<div class="cal-day empty"></div>';
-  for(var d=1;d<=daysInMonth;d++){
-    var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var pnl=CAL.dayPnl[ds];var traders=CAL.dayTraders[ds]||[];var salEvts=CAL.salaryEvents[ds]||[];
-    html+='<div class="cal-day clickable'+(isToday?' today':'')+'" onclick="openDay(\''+ds+'\')">';
-    html+='<div class="cal-date">'+d+'</div>';
-    if(pnl!==undefined){html+='<div class="cal-pnl" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</div>';if(traders.length){html+='<div class="cal-detail">';traders.forEach(function(t){html+=t.name.slice(0,8)+': '+(t.pnl>=0?'+':'')+'$'+R(t.pnl)+'<br>'});html+='</div>'}}
-    salEvts.forEach(function(e){html+='<div class="cal-event sal">$ '+e.name.slice(0,10)+'</div>'});
-    html+='</div>';
-  }
-  var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)html+='<div class="cal-day empty"></div>';
-  html+='</div>';
-  E('calc').innerHTML=html;
-}
-
-function openDay(ds){
-  var panel=E('dayPanel');var d=new Date(ds);
-  var moNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var label=dayNames[d.getUTCDay()]+' '+d.getUTCDate()+' '+moNames[d.getUTCMonth()]+' '+d.getUTCFullYear();
-  var pnl=CAL.dayPnl[ds];var traders=CAL.dayTraders[ds]||[];var salEvts=CAL.salaryEvents[ds]||[];var trades=CAL.tradesByDay[ds]||[];
-
-  var h='<div class="dp-header"><div class="dp-title">'+label+'</div><div class="dp-close" onclick="closeDay()">✕</div></div>';
-
-  // P&L summary
-  if(pnl!==undefined){
-    h+='<div class="dp-section"><div class="dp-section-title">Daily P&L</div>';
-    h+='<div class="dp-row"><span class="dl">Aggregate</span><span class="dv" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</span></div>';
-    traders.forEach(function(t){h+='<div class="dp-row"><span class="dl">'+t.name+'</span><span class="dv" style="color:'+(t.pnl>=0?'var(--up)':'var(--dn)')+'">'+(t.pnl>=0?'+':'')+'$'+F(t.pnl)+'</span></div>'});
-    h+='</div>';
-  }else{h+='<div class="dp-section"><div class="dp-section-title">Daily P&L</div><div style="font-size:.7rem;color:var(--w4)">No trading activity</div></div>'}
-
-  // Salary events
-  if(salEvts.length){
-    h+='<div class="dp-section"><div class="dp-section-title">Salary Due</div>';
-    salEvts.forEach(function(e){h+='<div class="dp-row"><span class="dl">'+e.name+'</span><span class="dv" style="color:var(--accent)">$'+e.amt.toLocaleString()+'</span></div>'});
-    h+='</div>';
-  }
-
-  // Individual trades
-  if(trades.length){
-    h+='<div class="dp-section"><div class="dp-section-title">Trades ('+trades.length+')</div><div class="dp-trades"><table style="width:100%"><thead><tr><th>Time</th><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>P&L</th></tr></thead><tbody>';
-    trades.forEach(function(tr){var pn=tr.profit||0;var tm=new Date(tr.time);var buy=tr.type&&tr.type.includes('BUY');h+='<tr><td>'+tm.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+tr.trader+'</td><td>'+tr.sym+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(tr.vol||'—')+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});
-    h+='</tbody></table></div></div>';
-  }
-
-  if(!pnl&&!salEvts.length&&!trades.length){h+='<div style="text-align:center;padding:1rem;color:var(--w4);font-size:.74rem">No events on this day</div>'}
-
-  panel.innerHTML=h;panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'start'});
-}
+function openDay(ds){var panel=E('dayPanel');var d=new Date(ds);var moN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var dayN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];var label=dayN[d.getUTCDay()]+' '+d.getUTCDate()+' '+moN[d.getUTCMonth()]+' '+d.getUTCFullYear();var pnl=CAL.dayPnl[ds];var traders=CAL.dayTraders[ds]||[];var salEvts=CAL.salaryEvents[ds]||[];var trades=CAL.tradesByDay[ds]||[];
+var h='<div class="dp-header"><div class="dp-title">'+label+'</div><div class="dp-close" onclick="closeDay()">✕</div></div>';
+if(pnl!==undefined){h+='<div class="dp-section"><div class="dp-section-title">Daily P&L</div><div class="dp-row"><span class="dl">Aggregate</span><span class="dv" style="color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+F(pnl)+'</span></div>';traders.forEach(function(t){h+='<div class="dp-row"><span class="dl">'+t.name+'</span><span class="dv" style="color:'+(t.pnl>=0?'var(--up)':'var(--dn)')+'">'+(t.pnl>=0?'+':'')+'$'+F(t.pnl)+'</span></div>'});h+='</div>'}else{h+='<div class="dp-section"><div class="dp-section-title">Daily P&L</div><div style="font-size:.7rem;color:var(--w4)">No trading activity</div></div>'}
+if(salEvts.length){h+='<div class="dp-section"><div class="dp-section-title">Salary Due</div>';salEvts.forEach(function(e){h+='<div class="dp-row"><span class="dl">'+e.name+'</span><span class="dv" style="color:var(--accent)">$'+e.amt.toLocaleString()+'</span></div>'});h+='</div>'}
+if(trades.length){h+='<div class="dp-section"><div class="dp-section-title">Trades ('+trades.length+')</div><table style="width:100%"><thead><tr><th>Time</th><th>Trader</th><th>Symbol</th><th>Side</th><th>P&L</th></tr></thead><tbody>';trades.forEach(function(tr){var pn=tr.profit||0;var tm=new Date(tr.time);var buy=tr.type&&tr.type.includes('BUY');h+='<tr><td>'+tm.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+tr.trader+'</td><td>'+tr.sym+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'});h+='</tbody></table></div>'}
+if(!pnl&&!salEvts.length&&!trades.length)h+='<div style="text-align:center;padding:1rem;color:var(--w4);font-size:.74rem">No events</div>';
+panel.innerHTML=h;panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'start'})}
 function closeDay(){E('dayPanel').classList.remove('open');E('dayPanel').innerHTML=''}
 
 // ── ROSTER ──
-function rRo(){var ids=allIds();E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th>Name</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>Equity</th><th>Trades</th><th>WR</th><th>PF</th><th>DD</th><th>Salary</th><th>Net Firm</th><th>Status</th><th></th></tr></thead><tbody>'+ids.map(function(id){var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,f=fees(q.pnl||0,s.split||55,s.amt||0,b);return'<tr onclick="openD(\''+id+'\')"><td class="sym">'+a.name+'</td><td style="color:'+tCol(q.score||0)+';font-weight:700">'+(q.score||'—')+'</td><td><span class="tag tag-t">'+tier(q.score||0)+'</span></td><td>$'+F(b)+'</td><td style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</td><td>'+(q.trades||0)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:var(--dn)">'+(q.dd||'—')+'%</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</td><td><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':a.connectionStatus==='MANUAL'?'ac':'dn')+'">'+(a.connectionStatus==='MANUAL'?'MANUAL':'LIVE')+'</span></td><td>'+(t.isM?'<span style="color:var(--dn);cursor:pointer" onclick="event.stopPropagation();rmM(\''+id+'\')">✕</span>':'')+'</td></tr>'}).join('')+'</tbody></table></div>'}
+function rRo(){var ids=allIds();E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="tw"><table><thead><tr><th>Name</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>Equity</th><th>Trades</th><th>WR</th><th>PF</th><th>DD</th><th>Salary</th><th>Status</th><th>Net Firm</th><th></th></tr></thead><tbody>'+ids.map(function(id){var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,di=salDueInfo(s),f=fees(q.pnl||0,s.split||55,s.amt||0,b,di.paidThisCycle);return'<tr><td class="sym">'+a.name+'</td><td style="color:'+tCol(q.score||0)+';font-weight:700">'+(q.score||'—')+'</td><td><span class="tag tag-t">'+tier(q.score||0)+'</span></td><td>$'+F(b)+'</td><td style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</td><td>'+(q.trades||0)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:var(--dn)">'+(q.dd||'—')+'%</td><td>$'+(s.amt||0).toLocaleString()+'</td><td><span class="cv '+(di.paidThisCycle?'up':'ac')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</span></td><td style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</td><td>'+(t.isM?'<span style="color:var(--dn);cursor:pointer" onclick="event.stopPropagation();rmM(\''+id+'\')">✕</span>':'')+'</td></tr>'}).join('')+'</tbody></table></div>'}
 function showAdd(){E('addC').innerHTML='<div class="fp"><div class="fg"><div><div class="fl">Name</div><input class="fi" id="qn" placeholder="Trader name"><div style="margin-top:.5rem"><div class="fl">Allocation ($)</div><input class="fi" id="qa" type="number" value="30000"></div></div><div><div class="fl">Salary ($/mo)</div><input class="fi" id="qs" type="number" value="3000"><div style="margin-top:.5rem"><div class="fl">Split (%)</div><input class="fi" id="qsp" type="number" value="55"></div></div><div><div class="fl">Instruments</div><select class="fi" id="qi"><option>FX Majors</option><option>Indices</option><option>Commodities</option><option>Mixed CFDs</option></select><div style="margin-top:.5rem"><div class="fl">Notes</div><textarea class="fi" id="qno" rows="2" placeholder="Context..."></textarea></div></div></div><div class="br"><button class="btn btn-s" onclick="addM()">Add to Roster</button><button class="btn" onclick="E(\'addC\').innerHTML=\'\'">Cancel</button></div></div>'}
 function addM(){var n=E('qn').value.trim();if(!n){alert('Enter a name');return}if(S.manual.find(function(x){return x.name===n})){alert('Already exists');return}S.manual.push({name:n,alloc:parseInt(E('qa').value)||30000,salary:parseInt(E('qs').value)||3000,split:parseInt(E('qsp').value)||55,inst:E('qi').value,notes:E('qno').value,score:0,start:new Date().toISOString().slice(0,10)});var id='m-'+n;S.sal[id]={amt:parseInt(E('qs').value)||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:parseInt(E('qsp').value)||55};sM();sS();E('addC').innerHTML='';E('tc').textContent=(S.accts.length+S.manual.length)+' traders';renderAll()}
 function rmM(id){var n=id.replace('m-','');if(!confirm('Remove '+n+'?'))return;S.manual=S.manual.filter(function(m){return m.name!==n});delete S.sal[id];delete S.hist[id];sM();sS();sH();renderAll()}
 
 // ── SALARY ──
-function rSa(){var ids=allIds(),tot=0,tp=0;ids.forEach(function(id){tot+=(S.sal[id]?.amt||0);tp+=(S.sal[id]?.paid||0)});E('salc').innerHTML='<div class="sh"><span class="sh-t">Salary Management</span><span class="sh-l"></span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Monthly Obligation</div><div class="kpi-v">$'+tot.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">'+ids.length+'</div></div><div class="kpi"><div class="kpi-l">Lifetime Paid</div><div class="kpi-v">$'+tp.toLocaleString()+'</div></div></div><div class="sg">'+ids.map(function(id){var t=gt(id);if(!t)return'';var a=t.a,s=S.sal[id]||{amt:0};var ph=(s.payments||[]).slice(-4).map(function(p){return'<div>'+p.date+' · $'+(p.amt||0).toLocaleString()+' · '+p.type+'</div>'}).join('');return'<div class="sc"><div class="sc-top"><span class="sc-nm">'+a.name+'</span><span class="sc-am" style="color:var(--accent)">$'+(s.amt||0).toLocaleString()+'/mo</span></div><div class="sc-r"><span class="sl">Status</span><span class="sv '+((s.status||'active')==='active'?'up':'dn')+'">'+(s.status||'active').toUpperCase()+'</span></div><div class="sc-r"><span class="sl">Paid</span><span class="sv">$'+(s.paid||0).toLocaleString()+'</span></div><div class="sc-r"><span class="sl">Months</span><span class="sv">'+(s.months||0)+'</span></div>'+(ph?'<div class="ph">'+ph+'</div>':'')+'<div class="br" style="margin-top:.4rem"><button class="btn" onclick="edSal(\''+id+'\')">Edit</button><button class="btn btn-s" onclick="recPay(\''+id+'\')">Pay</button><button class="btn" onclick="skipPay(\''+id+'\')">Skip</button></div></div>'}).join('')+'</div>'}
-function edSal(id){var s=S.sal[id]||{};var a=prompt('Salary ($/mo):',s.amt||3000);if(a===null)return;s.amt=parseInt(a)||3000;var st=prompt('Status (active/paused/held):',s.status||'active');if(st)s.status=st;S.sal[id]=s;sS();rSa();rCa()}
-function recPay(id){var s=S.sal[id];if(!s)return;var t=gt(id);if(!confirm('Record $'+s.amt.toLocaleString()+' for '+t.a.name+'?'))return;s.paid=(s.paid||0)+s.amt;s.months=(s.months||0)+1;s.payments=s.payments||[];s.payments.push({date:new Date().toISOString().slice(0,10),amt:s.amt,type:'paid'});S.sal[id]=s;sS();rSa();rCa()}
-function skipPay(id){var s=S.sal[id];if(!s)return;s.payments=s.payments||[];s.payments.push({date:new Date().toISOString().slice(0,10),amt:0,type:'skipped'});S.sal[id]=s;sS();rSa()}
-
-// ── DETAIL ──
-function openD(id){nav('detail');var t=gt(id);if(!t){E('detc').innerHTML='<div class="nil">Not found</div>';return}var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0,e=l?.equity||0,u=e-b,h=hlth(S.hist[id]||[]),f=fees(q.pnl||0,s.split||55,s.amt||0,b);var trades=t.hist||[];trades.sort(function(a,b){return new Date(b.time)-new Date(a.time)});var sh=trades.slice(0,50);var atH='';if(q.at&&q.at.rc!==undefined){var ats=[{n:'Risk Control',s:q.at.rc,w:25},{n:'Performance',s:q.at.fp,w:20.5},{n:'Consistency',s:q.at.cs,w:20.5},{n:'DD Recovery',s:q.at.dr,w:11.4},{n:'Discipline',s:q.at.dp,w:11.4},{n:'Eval Quality',s:q.at.eq,w:11.4}];atH='<div class="sh"><span class="sh-t">Q-Score Breakdown</span><span class="sh-l"></span></div><div class="kpis">'+ats.map(function(a){return'<div class="kpi"><div class="kpi-l">'+a.n+' ('+a.w+'%)</div><div class="kpi-v" style="color:'+tCol(a.s||0)+'">'+(a.s||'—')+'</div></div>'}).join('')+'</div>'}
-E('detc').innerHTML='<span class="db" onclick="nav(\'overview\')">← Back</span><div class="sh"><span class="sh-t">'+a.name+'</span><span class="sh-l"></span><span class="sh-ts">'+(a.server||'')+'</span>'+(t.isM?'<span class="sh-btn" onclick="edManual(\''+id+'\')">Edit</span>':'')+'</div><div class="kpis"><div class="kpi"><div class="kpi-l">Q-Score</div><div class="kpi-v" style="color:'+tCol(q.score||0)+';font-size:1.6rem">'+(q.score||'—')+'</div><div class="kpi-s">'+tier(q.score||0)+' · '+(q.conf||'—')+' · <span style="color:'+h.c+'">'+h.a+' '+h.l+'</span></div></div><div class="kpi"><div class="kpi-l">Balance</div><div class="kpi-v">$'+F(b)+'</div></div><div class="kpi"><div class="kpi-l">Equity</div><div class="kpi-v" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</div></div><div class="kpi"><div class="kpi-l">Open P&L</div><div class="kpi-v" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</div></div><div class="kpi"><div class="kpi-l">Win Rate</div><div class="kpi-v">'+(q.wr||'—')+'%</div></div><div class="kpi"><div class="kpi-l">PF</div><div class="kpi-v">'+(q.pf||'—')+'</div></div><div class="kpi"><div class="kpi-l">Max DD</div><div class="kpi-v" style="color:var(--dn)">'+(q.dd||'—')+'%</div></div><div class="kpi"><div class="kpi-l">Trades</div><div class="kpi-v">'+(q.trades||0)+'</div></div></div>'+atH+'<div class="sh"><span class="sh-t">Firm Economics</span><span class="sh-l"></span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Firm Share</div><div class="kpi-v">$'+f.fs.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Net Firm</div><div class="kpi-v" style="color:'+(f.ok?'var(--up)':'var(--dn)')+'">$'+f.n.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Breakeven</div><div class="kpi-v">$'+f.be.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Salary</div><div class="kpi-v">$'+(s.amt||0).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Lifetime Paid</div><div class="kpi-v">$'+(s.paid||0).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">ROIC</div><div class="kpi-v">'+f.roic+'%</div></div></div>'+buildTraderCal(id,q.dailyPnl||{},s)+(sh.length?'<div class="sh"><span class="sh-t">Trades</span><span class="sh-l"></span><span class="sh-t">'+trades.length+'</span></div><div class="tw"><table><thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th>P&L</th></tr></thead><tbody>'+sh.map(function(t){var pn=t.profit||0,d=new Date(t.time),buy=t.type==='DEAL_TYPE_BUY';return'<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym">'+t.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(t.volume||'—')+'</td><td>'+F(t.price,5)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'')}
-function buildTraderCal(id,dailyPnl,sal){
-  var now=new Date(),yr=now.getFullYear(),mo=now.getMonth();
-  var moNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();
-  var todayStr=now.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
-
-  // Salary due dates for this trader
-  var salDates={};var st=sal.start?new Date(sal.start):now;var cy=sal.cycle||30;var nx=new Date(st);
-  while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);
-  while(nx<=new Date(yr,mo+1,0)){salDates[nx.toISOString().slice(0,10)]=sal.amt||0;nx.setDate(nx.getDate()+cy)}
-
-  var totalPnl=0,winD=0,lossD=0,tradD=0;
-  Object.keys(dailyPnl).forEach(function(dt){if(dt.slice(0,7)===moKey){var p=dailyPnl[dt];totalPnl+=p;tradD++;if(p>0)winD++;else if(p<0)lossD++}});
-
-  var h='<div class="sh"><span class="sh-t">Calendar — '+moNames[mo]+' '+yr+'</span><span class="sh-l"></span></div>';
-  h+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Month P&L</div><div class="cal-sum-val" style="color:'+(totalPnl>=0?'var(--up)':'var(--dn)')+'">'+(totalPnl>=0?'+':'')+'$'+F(totalPnl)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Trading Days</div><div class="cal-sum-val">'+tradD+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Win</div><div class="cal-sum-val" style="color:var(--up)">'+winD+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Loss</div><div class="cal-sum-val" style="color:var(--dn)">'+lossD+'</div></div></div>';
-  h+='<div class="cal-grid">';var dows=['M','T','W','T','F','S','S'];for(var i=0;i<7;i++)h+='<div class="cal-dow">'+dows[i]+'</div>';
-  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)h+='<div class="cal-day empty" style="min-height:50px"></div>';
-  for(var d=1;d<=daysInMonth;d++){
-    var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var pnl=dailyPnl[ds];var hasSal=salDates[ds]!==undefined;
-    h+='<div class="cal-day'+(isToday?' today':'')+'" style="min-height:50px;padding:4px 5px">';
-    h+='<div class="cal-date" style="font-size:.56rem">'+d+'</div>';
-    if(pnl!==undefined)h+='<div style="font-family:var(--mono);font-size:.6rem;font-weight:700;color:'+(pnl>=0?'var(--up)':'var(--dn)')+'">'+(pnl>=0?'+':'')+'$'+R(pnl)+'</div>';
-    if(hasSal)h+='<div class="cal-event sal" style="font-size:.4rem">SAL $'+salDates[ds].toLocaleString()+'</div>';
-    h+='</div>';
-  }
-  var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)h+='<div class="cal-day empty" style="min-height:50px"></div>';
-  h+='</div>';return h;
-}
-function edManual(id){var m=S.manual.find(function(x){return'm-'+x.name===id});if(!m)return;var a=prompt('Allocation:',m.alloc);if(a!==null)m.alloc=parseInt(a)||m.alloc;var sa=prompt('Score (0-100):',m.score||0);if(sa!==null)m.score=parseInt(sa)||0;sM();var s=S.sal[id]||{};var sal=prompt('Salary:',s.amt);if(sal!==null){s.amt=parseInt(sal)||s.amt;S.sal[id]=s;sS()}openD(id);renderAll()}
+function rSa(){var ids=allIds(),tot=0,tp=0;ids.forEach(function(id){tot+=(S.sal[id]?.amt||0);tp+=(S.sal[id]?.paid||0)});
+E('salc').innerHTML='<div class="sh"><span class="sh-t">Salary Management</span><span class="sh-l"></span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Monthly Obligation</div><div class="kpi-v">$'+tot.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">'+ids.length+'</div></div><div class="kpi"><div class="kpi-l">Lifetime Paid</div><div class="kpi-v">$'+tp.toLocaleString()+'</div></div></div><div class="sg">'+ids.map(function(id){
+  var t=gt(id);if(!t)return'';var a=t.a,s=S.sal[id]||{amt:0};var di=salDueInfo(s);
+  var ph=(s.payments||[]).slice(-4).map(function(p){return'<div>'+p.date+' · $'+(p.amt||0).toLocaleString()+' · '+p.type+'</div>'}).join('');
+  return'<div class="sc"><div class="sc-top"><span class="sc-nm">'+a.name+'</span><span class="sc-am" style="color:var(--accent)">$'+(s.amt||0).toLocaleString()+'/mo</span></div><div class="sc-r"><span class="sl">Cycle</span><span class="sv">'+(s.cycle||30)+' days</span></div><div class="sc-r"><span class="sl">Day</span><span class="sv" style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+di.daysSince+' / '+di.cycle+(di.paidThisCycle?' — PAID':'')+'</span></div><div class="sc-r"><span class="sl">Next Due</span><span class="sv">'+di.dueDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+'</span></div><div class="sc-r"><span class="sl">Total Paid</span><span class="sv">$'+(s.paid||0).toLocaleString()+'</span></div><div class="sc-r"><span class="sl">Months</span><span class="sv">'+(s.months||0)+'</span></div>'+(ph?'<div class="ph">'+ph+'</div>':'')+'<div class="br" style="margin-top:.5rem">'+(di.paidThisCycle?'<button class="btn-paid" style="padding:6px 14px;font-family:var(--font);font-size:.68rem;font-weight:600;cursor:default">✓ Salary Paid</button>':'<button class="btn btn-s" onclick="recPay(\''+id+'\')">Mark Salary Paid</button>')+'<button class="btn" onclick="edSal(\''+id+'\')">Edit</button><button class="btn" onclick="skipPay(\''+id+'\')">Skip</button></div></div>'
+}).join('')+'</div>'}
+function edSal(id){var s=S.sal[id]||{};var a=prompt('Salary ($/mo):',s.amt||3000);if(a===null)return;s.amt=parseInt(a)||3000;var cy=prompt('Cycle (days):',s.cycle||30);if(cy)s.cycle=parseInt(cy)||30;var st=prompt('Status (active/paused/held):',s.status||'active');if(st)s.status=st;S.sal[id]=s;sS();renderAll()}
+function recPay(id){var s=S.sal[id];if(!s)return;var t=gt(id);if(!confirm('Record $'+s.amt.toLocaleString()+' salary paid for '+t.a.name+'?'))return;s.paid=(s.paid||0)+s.amt;s.months=(s.months||0)+1;s.payments=s.payments||[];s.payments.push({date:new Date().toISOString().slice(0,10),amt:s.amt,type:'paid'});S.sal[id]=s;sS();renderAll()}
+function skipPay(id){var s=S.sal[id];if(!s)return;s.payments=s.payments||[];s.payments.push({date:new Date().toISOString().slice(0,10),amt:0,type:'skipped'});S.sal[id]=s;sS();renderAll()}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML='<div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div>'}
