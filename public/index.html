@@ -298,9 +298,9 @@ for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac
   try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
   try{var p=await px('positions',id);S.traders[id].pos=Array.isArray(p)?p:[]}catch(e){}
   try{var h=await px('history',id);S.traders[id].hist=Array.isArray(h)?h.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[]}catch(e){}
-  S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]||{});
-  if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);sH()}
-  if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50}}
+  if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
+  S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
+  if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);sH()}}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
 sS();var total=S.accts.length+S.manual.length;E('tc').textContent=total+' traders';E('sf-traders').textContent=total+' traders';E('sf-status').textContent='Refresh: 20s';
 ss('ok','Live');log('All systems operational','ok');renderAll();
@@ -399,11 +399,11 @@ var ranked=ids.map(function(id){var t=gt(id);if(!t)return null;return{id:id,name
 var topWR=ranked.slice().sort(function(a,b){return b.wr-a.wr}).slice(0,3);
 var topPnl=ranked.slice().sort(function(a,b){return b.pnl-a.pnl}).slice(0,3);
 var worst=ranked.slice().sort(function(a,b){return a.np-b.np}).slice(0,3);
-function lb(title,items,valFn,colFn){return'<div class="sh"><span class="sh-t">'+title+'</span><span class="sh-l"></span></div><div class="lb">'+items.map(function(it,i){var v=valFn(it);return'<div class="lb-card"><div class="lb-rank">#'+(i+1)+'</div><div class="lb-name">'+it.name+'</div><div class="lb-val" style="color:'+colFn(it)+'">'+v+'</div><div class="lb-sub">Q-Score: '+it.score+'</div></div>'}).join('')+'</div>'}
-E('leaderboards').innerHTML=(ranked.length>=2?
-  lb('Top Win Rate',topWR,function(it){return it.wr+'%'},function(){return'var(--up)'})+
-  lb('Top Profit',topPnl,function(it){return(it.pnl>=0?'+':'')+'$'+it.pnl.toLocaleString()},function(it){return it.pnl>=0?'var(--up)':'var(--dn)'})+
-  lb('Worst Performers',worst,function(it){return(it.np>=0?'+$':'−$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'}):'')
+function lb(title,items,valFn,colFn){if(!items.length)return'<div class="sh"><span class="sh-t">'+title+'</span><span class="sh-l"></span></div><div class="lb"><div class="lb-card" style="grid-column:1/-1;text-align:center;color:var(--w4);font-size:.7rem;padding:1.2rem">Requires 3+ traders</div></div>';return'<div class="sh"><span class="sh-t">'+title+'</span><span class="sh-l"></span></div><div class="lb">'+items.map(function(it,i){var v=valFn(it);return'<div class="lb-card"><div class="lb-rank">#'+(i+1)+'</div><div class="lb-name">'+it.name+'</div><div class="lb-val" style="color:'+colFn(it)+'">'+v+'</div><div class="lb-sub">Q-Score: '+(it.pending?'Pending':it.score)+'</div></div>'}).join('')+'</div>'}
+E('leaderboards').innerHTML=
+  lb('Top Win Rate',ranked.length>=3?topWR:[],function(it){return it.wr+'%'},function(){return'var(--up)'})+
+  lb('Top Profit',ranked.length>=3?topPnl:[],function(it){return(it.pnl>=0?'+':'')+'$'+it.pnl.toLocaleString()},function(it){return it.pnl>=0?'var(--up)':'var(--dn)'})+
+  lb('Worst Performers',ranked.length>=3?worst:[],function(it){return(it.np>=0?'+$':'−$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'})
 }
 
 // ── POSITIONS ──
