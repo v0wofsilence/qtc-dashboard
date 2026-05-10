@@ -1,13 +1,53 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const TOKEN = process.env.METAAPI_TOKEN;
   if (!TOKEN) return res.status(500).json({ error: 'Missing METAAPI_TOKEN' });
 
+  const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
+  const headers = { 'auth-token': TOKEN, 'Content-Type': 'application/json' };
+
+  // POST: create-account
+  if (req.method === 'POST') {
+    const { action } = req.query;
+    if (action === 'create-account') {
+      try {
+        var body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        var payload = {
+          name: body.name,
+          login: body.login,
+          password: body.password,
+          server: body.server,
+          platform: body.platform || 'mt5',
+          type: 'cloud-g2',
+          magic: 0
+        };
+        var r = await fetch(MGMT + '/users/current/accounts', {
+          method: 'POST', headers: headers, body: JSON.stringify(payload)
+        });
+        var data = await r.json();
+        if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+        // Auto-deploy the account
+        var deployR = await fetch(MGMT + '/users/current/accounts/' + data.id + '/deploy', {
+          method: 'POST', headers: headers
+        });
+        if (!deployR.ok) {
+          var dd = await deployR.json().catch(function(){ return {} });
+          return res.status(200).json({ id: data.id, deployed: false, deployError: dd.message || 'Deploy failed' });
+        }
+        return res.status(200).json({ id: data.id, deployed: true });
+      } catch (e) {
+        return res.status(502).json({ error: 'Create account failed: ' + e.message });
+      }
+    }
+    return res.status(400).json({ error: 'Unknown POST action' });
+  }
+
   const { endpoint, accountId } = req.query;
-  if (!endpoint) return res.status(400).json({ error: 'Missing ?endpoint=. Valid: list-accounts, account, account-info, positions, history, metrics' });
+  if (!endpoint) return res.status(400).json({ error: 'Missing ?endpoint=' });
 
   const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
   const headers = { 'auth-token': TOKEN };
