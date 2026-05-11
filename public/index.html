@@ -401,9 +401,30 @@ try{sS()}catch(e){log('sS error: '+e.message,'er')}
 var total=S.accts.length+S.manual.length;E('sf-traders').textContent=S.accts.length+' accounts · '+total+' traders';E('sf-status').textContent='Refresh: 20s';
 updateTopbarPnl();
 ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
+// Store initial balances for withdrawal detection
+S.lastBal={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastBal[id]=t.l.balance||0});
 try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
-setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;if(S.deleted&&S.deleted.indexOf(id)>=0)continue;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo();updateTopbarPnl()},20000)})();
+setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
+  var prevBal=S.lastBal[id]||0;
+  try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){continue}
+  var newBal=S.traders[id].l?.balance||0;
+  // Detect withdrawal: balance dropped AND equity also dropped by similar amount (not a trade closing)
+  if(prevBal>0&&newBal<prevBal){
+    var drop=prevBal-newBal;var prevEq=S.lastEq&&S.lastEq[id]||prevBal;var newEq=S.traders[id].l?.equity||newBal;
+    var eqDrop=prevEq-newEq;
+    // If balance and equity both dropped by similar amounts (within 20%), it's a withdrawal not a trade
+    if(drop>10&&Math.abs(eqDrop-drop)<drop*0.2){
+      var t=gt(id);var s=S.sal[id]||{};var split=s.split||50;
+      // Check we haven't already logged this exact withdrawal
+      var already=S.payouts.some(function(p){return p.traderId===id&&p.amount===drop&&p.date===new Date().toISOString().slice(0,10)});
+      if(!already){
+        S.payouts.push({traderId:id,traderName:t?t.a.name:'Unknown',account:t?t.a.login||'':'',amount:drop,split:split,postSplit:drop*(split/100),wallet:'',date:new Date().toISOString().slice(0,10),notes:'Auto-detected withdrawal',paid:false,paidDate:null,created:new Date().toISOString()});
+        sP();log('Payout detected: '+((t&&t.a.name)||id)+' — $'+R(drop).toLocaleString(),'wrn');rPay()}}}
+  S.lastBal[id]=newBal}
+// Track equity for next cycle
+S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.l.equity||0});
+rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
 function renderAll(){rOv();rPo();rCa();rRo();rSa();rPay();rRisk();rMatrix();rGr();rAC();rSy();updateTopbarPnl()}
 
@@ -499,6 +520,8 @@ function rOv(){var ids=allIds();if(!ids.length){E('fk').innerHTML='<div class="n
 var tb=0,te=0,tu=0,tp=0,ts=0,paidSal=0;
 ids.forEach(function(id){var t=gt(id);if(!t)return;var l=t.l;if(l){tb+=l.balance||0;te+=l.equity||0;tu+=(l.equity||0)-(l.balance||0)}tp+=(t.pos||[]).length;var s=S.sal[id]||{};ts+=s.amt||0;var di=salDueInfo(s);if(di.paidThisCycle)paidSal+=s.amt||0});
 var totalSalPaid2=0;ids.forEach(function(id){totalSalPaid2+=(S.sal[id]?.paid||0)});var firmFE=0;ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};firmFE+=(t.q?.pnl||0)*(1-(s.split||50)/100)});firmFE-=totalSalPaid2;
+var pendingPayouts=0,totalPayoutVal=0;(S.payouts||[]).forEach(function(p){totalPayoutVal+=p.postSplit||0;if(!p.paid)pendingPayouts+=p.postSplit||0});
+var pendingPct=totalPayoutVal>0?((pendingPayouts/totalPayoutVal)*100):0;
 
 // Firm-wide equity curve data
 var firmDaily={};ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){firmDaily[dt]=(firmDaily[dt]||0)+dp[dt]})});
@@ -813,7 +836,7 @@ function viewTrader(id){
     html+='<div class="td-section"><div class="td-section-title">Payouts ('+tPayouts.length+')</div><div class="td-grid"><div class="td-cell"><div class="td-cell-label">Total Paid</div><div class="td-cell-val" style="color:var(--up)">$'+R(tPaidTotal).toLocaleString()+'</div></div><div class="td-cell"><div class="td-cell-label">Pending</div><div class="td-cell-val" style="color:var(--warn)">$'+R(tPendTotal).toLocaleString()+'</div></div><div class="td-cell"><div class="td-cell-label">Count</div><div class="td-cell-val">'+tPayouts.length+'</div></div></div>';
     html+='<div class="tw" style="margin-top:.5rem"><table><thead><tr><th>Date</th><th>Withdrawn</th><th>Post-Split</th><th>Wallet</th><th>Status</th></tr></thead><tbody>';
     tPayouts.sort(function(a,b){return new Date(b.date)-new Date(a.date)}).forEach(function(p){
-      html+='<tr><td>'+p.date+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:100px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td style="color:'+(p.paid?'var(--up)':'var(--warn)')+';font-weight:600">'+(p.paid?'\u2713 PAID':'PENDING')+'</td></tr>'});
+      html+='<tr style="'+(p.paid?'background:rgba(0,220,130,.06)':'')+'"><td>'+p.date+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:100px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td style="color:'+(p.paid?'var(--up)':'var(--warn)')+';font-weight:600">'+(p.paid?'\u2713 PAID':'PENDING')+'</td></tr>'});
     html+='</tbody></table></div></div>'}
 
   // Trader Calendar
@@ -1364,7 +1387,7 @@ function rPay(){
     h+='<div class="sh"><span class="sh-t">Completed Payouts</span><span class="sh-l"></span><span class="sh-ts" style="color:var(--up)">'+paid.length+' paid</span></div>';
     h+='<div class="tw"><table><thead><tr><th>Date</th><th>Trader</th><th>Account</th><th>Withdrawn</th><th>Post-Split</th><th>Wallet</th><th>Paid Date</th><th>Status</th><th></th></tr></thead><tbody>';
     paid.forEach(function(p){var pi=payouts.indexOf(p);
-      h+='<tr><td>'+p.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p.traderId+'\')">'+p.traderName+'</td><td>'+(p.account||'\u2014')+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td>'+(p.paidDate||'\u2014')+'</td><td><span style="color:var(--up);font-weight:600">\u2713 PAID</span></td><td><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editPayout('+pi+')">Edit</button></td></tr>'});
+      h+='<tr style="background:rgba(0,220,130,.04)"><td>'+p.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p.traderId+'\')">'+p.traderName+'</td><td>'+(p.account||'\u2014')+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td>'+(p.paidDate||'\u2014')+'</td><td><span style="color:var(--up);font-weight:600">\u2713 PAID</span></td><td><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editPayout('+pi+')">Edit</button></td></tr>'});
     h+='</tbody></table></div>'}
 
   E('payc').innerHTML=h}
