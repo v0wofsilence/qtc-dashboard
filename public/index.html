@@ -241,7 +241,10 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
   <div class="sidebar-section"><div class="sidebar-label">Management</div>
     <button class="sb" onclick="nav('roster')"><span class="sb-icon">≡</span>Roster</button>
     <button class="sb" onclick="nav('salary')"><span class="sb-icon">$</span>Salary</button>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Clusters</div>
     <button class="sb" onclick="nav('groups')"><span class="sb-icon">◎</span>Clusters</button>
+    <button class="sb" onclick="nav('autoclusters')"><span class="sb-icon">◇</span>Auto Clusters</button>
   </div>
   <div class="sidebar-section"><div class="sidebar-label">Risk</div>
     <button class="sb" onclick="nav('risk')"><span class="sb-icon">⚑</span>Risk Protocol</button>
@@ -262,6 +265,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 <div id="v-trader" class="vw"><div id="tdetail"></div></div>
 <div id="v-risk" class="vw"><div id="riskc"></div></div>
 <div id="v-groups" class="vw"><div id="grpc"></div></div>
+<div id="v-autoclusters" class="vw"><div id="autogrpc"></div></div>
 <div id="v-groupdetail" class="vw"><div id="grpdetail"></div></div>
 <div id="v-system" class="vw"><div id="sysc"></div></div>
 </div>
@@ -383,7 +387,7 @@ try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render f
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
-function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rGr();rSy();updateTopbarPnl()}
+function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rGr();rAC();rSy();updateTopbarPnl()}
 
 // ── EDIT TRADER (modal) ──
 var editId=null;
@@ -504,14 +508,13 @@ E('leaderboards').innerHTML=
   lb('Worst Performers',ranked.length>=3?worst:[],function(it){return(it.np>=0?'+$':'\u2212$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'});
 
 // Top clusters
-var clh='';
+var clh='<div class="sh"><span class="sh-t">Top Clusters</span><span class="sh-l"></span>'+((!S.groups||S.groups.length<2)?'<span class="sh-ts">Requires 2+ clusters</span>':'')+'</div><div class="lb">';
 if(S.groups&&S.groups.length){
   var sorted=S.groups.map(function(g,i){var tb2=0,tu2=0;(g.members||[]).forEach(function(id){var t=gt(id);if(t&&t.l){tb2+=t.l.balance||0;tu2+=(t.l.equity||0)-(t.l.balance||0)}});return{idx:i,name:g.name,color:g.color,members:(g.members||[]).length,bal:tb2,pnl:tu2}}).sort(function(a,b){return b.bal-a.bal}).slice(0,3);
-  if(sorted.length){clh+='<div class="sh"><span class="sh-t">Top Clusters</span><span class="sh-l"></span></div><div class="lb">';
-    sorted.forEach(function(c,i){clh+='<div class="lb-card" style="cursor:pointer" onclick="viewGroup('+c.idx+')"><div class="lb-rank" style="color:'+c.color+'">#'+(i+1)+'</div><div class="lb-name">'+c.name+'</div><div class="lb-val" style="color:'+(c.pnl>=0?'var(--up)':'var(--dn)')+'">'+(c.pnl>=0?'+':'')+'$'+F(c.pnl)+'</div><div class="lb-sub">'+c.members+' members · $'+R(c.bal).toLocaleString()+'</div></div>'});
-    // Pad to 3
-    for(var pi=sorted.length;pi<3;pi++)clh+='<div class="lb-card" style="opacity:.25"><div class="lb-rank">\u2014</div><div class="lb-name" style="color:var(--w4)">\u2014</div><div class="lb-val" style="color:var(--w4)">\u2014</div><div class="lb-sub">\u2014</div></div>';
-    clh+='</div>'}}
+  sorted.forEach(function(c,i){clh+='<div class="lb-card" style="cursor:pointer" onclick="viewGroup('+c.idx+')"><div class="lb-rank" style="color:'+c.color+'">#'+(i+1)+'</div><div class="lb-name">'+c.name+'</div><div class="lb-val" style="color:'+(c.pnl>=0?'var(--up)':'var(--dn)')+'">'+(c.pnl>=0?'+':'')+'$'+F(c.pnl)+'</div><div class="lb-sub">'+c.members+' members · $'+R(c.bal).toLocaleString()+'</div></div>'});
+  for(var pi=sorted.length;pi<3;pi++)clh+='<div class="lb-card" style="opacity:.25"><div class="lb-rank">\u2014</div><div class="lb-name" style="color:var(--w4)">\u2014</div><div class="lb-val" style="color:var(--w4)">\u2014</div><div class="lb-sub">\u2014</div></div>';
+}else{for(var pi=0;pi<3;pi++)clh+='<div class="lb-card" style="opacity:.25"><div class="lb-rank">\u2014</div><div class="lb-name" style="color:var(--w4)">\u2014</div><div class="lb-val" style="color:var(--w4)">\u2014</div><div class="lb-sub">\u2014</div></div>'}
+clh+='</div>';
 E('ovClusters').innerHTML=clh;
 }
 
@@ -1097,9 +1100,9 @@ function viewGroup(gi){
   h+=buildTraderCal('grp-'+gi,gDaily,{},gTrades);
 
   // Members table
-  h+='<div class="sh"><span class="sh-t">Members</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Balance</th><th>Open P&L</th><th>WR</th><th>P&L</th><th>Q-Score</th></tr></thead><tbody>';
-  mids.forEach(function(id){var t=gt(id);if(!t)return;var q=t.q||{};var b=t.l?.balance||0;var u=(t.l?.equity||0)-b;
-    h+='<tr style="cursor:pointer" onclick="viewTrader(\''+id+'\')"><td class="sym" style="color:var(--accent)">'+t.a.name+'</td><td>$'+F(b)+'</td><td style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</td><td>'+(q.wr||0)+'%</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td style="color:'+tCol(q.score||0)+'">'+(q.pending?'Pending':q.score||'\u2014')+'</td></tr>'});
+  h+='<div class="sh"><span class="sh-t">Members</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Account</th><th>Balance</th><th>Open P&L</th><th>WR</th><th>P&L</th><th>Q-Score</th></tr></thead><tbody>';
+  mids.forEach(function(id){var t=gt(id);if(!t)return;var q=t.q||{};var s=S.sal[id]||{};var b=t.l?.balance||0;var u=(t.l?.equity||0)-b;
+    h+='<tr style="cursor:pointer" onclick="viewTrader(\''+id+'\')"><td class="sym" style="color:var(--accent)">'+t.a.name+'</td><td style="font-size:.68rem">'+(s.email||'—')+'</td><td style="font-size:.68rem">'+(t.a.login||'—')+'</td><td>$'+F(b)+'</td><td style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</td><td>'+(q.wr||0)+'%</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td style="color:'+tCol(q.score||0)+'">'+(q.pending?'Pending':q.score||'\u2014')+'</td></tr>'});
   h+='</tbody></table></div>';
 
   nav('groupdetail');
@@ -1126,6 +1129,63 @@ function toggleGroupMember(gi,id){
   sG();editGroupMembers(gi)}
 
 function deleteGroup(gi){if(!confirm('Delete this cluster?'))return;S.groups.splice(gi,1);sG();nav('groups');rGr()}
+
+// ── AUTO CLUSTERS ──
+function rAC(){
+  var ids=allIds();
+  var traders=ids.map(function(id){
+    var t=gt(id);if(!t)return null;
+    var q=t.q||{};var b=t.l?.balance||0;
+    var ratios=calcRatios(q.dailyPnl||{},b);
+    // Consistency: low stddev of daily P&L relative to mean
+    var dp=q.dailyPnl||{};var dates=Object.keys(dp);var vals=dates.map(function(d){return dp[d]});
+    var mean=vals.length?vals.reduce(function(a,b){return a+b},0)/vals.length:0;
+    var variance=vals.length?vals.reduce(function(a,b){return a+(b-mean)*(b-mean)},0)/vals.length:0;
+    var stddev=Math.sqrt(variance);
+    var consistency=vals.length>1?(mean!==0?Math.abs(mean)/stddev:0):0;
+    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,consistency:isFinite(consistency)?consistency:0,score:q.score||0,pending:q.pending,bal:b}
+  }).filter(Boolean);
+
+  function buildAutoCluster(title,desc,sorted,valFn,colFn){
+    var top=sorted.slice(0,10);
+    var h='<div class="sh"><span class="sh-t">'+title+'</span><span class="sh-l"></span><span class="sh-ts">'+top.length+' traders</span></div>';
+    if(!top.length){h+='<div class="placeholder-box">No traders with data</div>';return h}
+    h+='<div style="font-family:var(--mono);font-size:.68rem;color:var(--w4);margin-bottom:.6rem">'+desc+'</div>';
+    h+='<div class="tw"><table><thead><tr><th>#</th><th>Trader</th><th>Value</th><th>Balance</th><th>Q-Score</th></tr></thead><tbody>';
+    top.forEach(function(tr,i){
+      var v=valFn(tr);var c=colFn(tr);
+      h+='<tr style="cursor:pointer" onclick="viewTrader(\''+tr.id+'\')"><td style="color:var(--w4)">'+(i+1)+'</td><td class="sym" style="color:var(--accent)">'+tr.name+'</td><td style="color:'+c+';font-weight:600">'+v+'</td><td>$'+F(tr.bal)+'</td><td style="color:'+tCol(tr.score)+'">'+(tr.pending?'Pending':tr.score||'\u2014')+'</td></tr>'});
+    h+='</tbody></table></div>';
+    return h}
+
+  var h='<div class="sh"><span class="sh-t">Auto Clusters</span><span class="sh-l"></span></div>';
+  h+='<div style="font-family:var(--mono);font-size:.72rem;color:var(--w3);margin-bottom:1.5rem">Automatically generated clusters based on trader performance metrics. Updates in real-time.</div>';
+
+  // Top P&L
+  var byPnl=traders.slice().sort(function(a,b){return b.pnl-a.pnl});
+  h+=buildAutoCluster('Highest P&L','Traders ranked by total profit & loss',byPnl,
+    function(tr){return(tr.pnl>=0?'+$':'\u2212$')+R(Math.abs(tr.pnl)).toLocaleString()},
+    function(tr){return tr.pnl>=0?'var(--up)':'var(--dn)'});
+
+  // Top WR
+  var byWR=traders.slice().sort(function(a,b){return b.wr-a.wr});
+  h+=buildAutoCluster('Highest Win Rate','Traders ranked by win rate percentage',byWR,
+    function(tr){return tr.wr+'%'},
+    function(tr){return tr.wr>=60?'var(--up)':tr.wr>=45?'var(--warn)':'var(--dn)'});
+
+  // Top Sharpe
+  var bySharpe=traders.slice().sort(function(a,b){return b.sharpe-a.sharpe});
+  h+=buildAutoCluster('Best Sharpe Ratio','Traders ranked by risk-adjusted returns',bySharpe,
+    function(tr){return tr.sharpe.toFixed(2)},
+    function(tr){return tr.sharpe>=1.5?'var(--up)':tr.sharpe>=0.5?'var(--warn)':'var(--dn)'});
+
+  // Most Consistent
+  var byConsistency=traders.slice().sort(function(a,b){return b.consistency-a.consistency});
+  h+=buildAutoCluster('Most Consistent','Traders ranked by P&L consistency (mean / std deviation)',byConsistency,
+    function(tr){return tr.consistency.toFixed(2)},
+    function(tr){return tr.consistency>=1?'var(--up)':tr.consistency>=0.3?'var(--warn)':'var(--dn)'});
+
+  E('autogrpc').innerHTML=h}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML='<div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div><div class="ci"><span class="cl">Supabase</span><span class="cv '+(SUPA_URL?'up':'dn')+'">'+(SUPA_URL?'CONNECTED':'NOT SET')+'</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div><div class="sh"><span class="sh-t">Data Persistence</span><span class="sh-l"></span></div><div class="fp"><div class="fg"><div><div class="fl">Supabase URL</div><input class="fi" id="supa-url" value="'+SUPA_URL+'" placeholder="https://xxx.supabase.co"></div><div><div class="fl">Supabase Anon Key</div><input class="fi" id="supa-key" type="password" value="'+SUPA_KEY+'" placeholder="eyJ..."></div></div><div class="br"><button class="btn btn-s" onclick="saveSupa()">Save & Sync</button><button class="btn" onclick="loadSupa()">Load from Supabase</button></div><div style="font-family:var(--mono);font-size:.52rem;color:var(--w4);margin-top:.5rem">Create a table: <code>qtc_state</code> with columns: <code>id</code> (int, default 1), <code>data</code> (jsonb), <code>updated_at</code> (timestamptz). Enable RLS with anon read/write on id=1.</div></div>'}
