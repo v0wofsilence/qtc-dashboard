@@ -385,7 +385,9 @@ if(SUPA_URL&&SUPA_KEY){
   try{var loaded=await supaLoad();if(loaded)log('Supabase data loaded','ok');else log('No Supabase data found','wrn')}catch(e){log('Supabase load failed: '+e.message,'wrn')}
 }
 try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');S.accts=[]}
-for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
+for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;
+  if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
+  S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
   try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
   try{var p=await px('positions',id);S.traders[id].pos=Array.isArray(p)?p:[]}catch(e){}
   try{var h=await px('history',id);S.traders[id].hist=Array.isArray(h)?h.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[]}catch(e){}
@@ -399,7 +401,7 @@ updateTopbarPnl();
 ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
 try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
-setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo();updateTopbarPnl()},20000)})();
+setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;if(S.deleted&&S.deleted.indexOf(id)>=0)continue;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
 function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rMatrix();rGr();rAC();rSy();updateTopbarPnl()}
 
@@ -908,9 +910,11 @@ function deleteTrader(id){var t=gt(id);if(!t)return;if(!confirm('PERMANENTLY DEL
   if(t.isM)S.manual=S.manual.filter(function(m){return'm-'+m.name!==id});
   // Remove from MetaAPI tracker
   if(S.traders[id])delete S.traders[id];
+  // Track as deleted so it doesn't come back on refresh
+  if(S.deleted.indexOf(id)<0)S.deleted.push(id);
   // Clean up all stored data
   delete S.sal[id];delete S.hist[id];
-  sM();sS();sH();renderAll()}
+  sM();sS();sH();sD();renderAll()}
 
 // ── SALARY ──
 function rSa(){var ids=allIds(),tot=0,tp=0;ids.forEach(function(id){tot+=(S.sal[id]?.amt||0);tp+=(S.sal[id]?.paid||0)});
@@ -1038,12 +1042,12 @@ function genPDF(id){
 // Example: var SUPA_URL='https://abcdefg.supabase.co',SUPA_KEY='eyJ...';
 var SUPA_URL='https://ozluadwsmtqvafnkqhvn.supabase.co',SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHVhZHdzbXRxdmFmbmtxaHZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjI3MjAsImV4cCI6MjA5NDA5ODcyMH0.9Ife2ypKut8OX1w-GIgviQuVS9TOH2ygnUjDKfVel54';
 async function supaSync(){if(!SUPA_URL||!SUPA_KEY)return;
-  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups};
+  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups,deleted:S.deleted};
     await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1',{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({data:payload,updated_at:new Date().toISOString()})});
   }catch(e){console.error('Supabase sync error:',e)}}
 async function supaLoad(){if(!SUPA_URL||!SUPA_KEY)return false;
   try{var r=await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1&select=data',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
-    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;sM();sS();sH();return true}
+    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;if(d.deleted)S.deleted=d.deleted;sM();sS();sH();return true}
   }catch(e){console.error('Supabase load error:',e)}return false}
 // Auto-sync on save
 var _sS=sS,_sM=sM,_sH=sH;
@@ -1058,6 +1062,8 @@ function toggleTheme(){document.body.classList.toggle('light');var isLight=docum
 (function(){var t=localStorage.getItem('qtc_theme');if(t==='light'){document.body.classList.add('light');E('themeBtn').textContent='☾'}})();
 
 // ── TRADER GROUPS ──
+if(!S.deleted)S.deleted=JSON.parse(localStorage.getItem('qtc_d')||'[]');
+function sD(){localStorage.setItem('qtc_d',JSON.stringify(S.deleted));supaSync()}
 if(!S.groups)S.groups=JSON.parse(localStorage.getItem('qtc_g')||'[]');
 function sG(){localStorage.setItem('qtc_g',JSON.stringify(S.groups));supaSync()}
 
