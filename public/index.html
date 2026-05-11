@@ -227,6 +227,17 @@ body.light .modal{background:#FFF;border:1px solid #DDD}
 body.light .modal-header{border-bottom:1px solid #E8E8E8}
 body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 .theme-toggle{cursor:pointer;font-size:1.1rem;padding:4px;user-select:none;opacity:.7;transition:opacity .15s}.theme-toggle:hover{opacity:1}
+
+/* Traders Matrix */
+.matrix-grid{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:2rem;padding:1rem;background:var(--b2);border:2px solid var(--b6);border-radius:8px}
+.matrix-cell{display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s}
+.matrix-cell:hover{transform:scale(1.1);z-index:2}
+.matrix-sq{border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background .3s}
+.matrix-label{font-family:var(--mono);font-size:.5rem;font-weight:600;color:rgba(255,255,255,.85);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding:0 3px}
+.matrix-val{font-family:var(--mono);font-size:.56rem;font-weight:700;color:#fff}
+.matrix-bal{font-family:var(--mono);font-size:.42rem;color:rgba(255,255,255,.6)}
+.matrix-legend{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;font-family:var(--mono);font-size:.62rem;color:var(--w3)}
+.matrix-legend-bar{height:12px;width:120px;border-radius:3px;background:linear-gradient(90deg,#FF4D4D,#FF6B6B,#E5C07B,#7BC87B,#00DC82)}
 </style>
 </head>
 <body>
@@ -248,6 +259,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
   </div>
   <div class="sidebar-section"><div class="sidebar-label">Risk</div>
     <button class="sb" onclick="nav('risk')"><span class="sb-icon">⚑</span>Risk Protocol</button>
+    <button class="sb" onclick="nav('matrix')"><span class="sb-icon">▥</span>Traders Matrix</button>
   </div>
 
   <div class="sidebar-section"><div class="sidebar-label">System</div>
@@ -264,6 +276,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 <div id="v-salary" class="vw"><div id="salc"></div></div>
 <div id="v-trader" class="vw"><div id="tdetail"></div></div>
 <div id="v-risk" class="vw"><div id="riskc"></div></div>
+<div id="v-matrix" class="vw"><div id="matrixc"></div></div>
 <div id="v-groups" class="vw"><div id="grpc"></div></div>
 <div id="v-autoclusters" class="vw"><div id="autogrpc"></div></div>
 <div id="v-autoclusterdetail" class="vw"><div id="acdetail"></div></div>
@@ -388,7 +401,7 @@ try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render f
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
-function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rGr();rAC();rSy();updateTopbarPnl()}
+function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rMatrix();rGr();rAC();rSy();updateTopbarPnl()}
 
 // ── EDIT TRADER (modal) ──
 var editId=null;
@@ -1170,7 +1183,8 @@ function rAC(){
   function buildAC(key,title,desc,sorted,valFn,colFn,warn){
     var top=sorted.slice(0,10);
     acTypes[key]={title:title,desc:desc,members:top,valFn:valFn,colFn:colFn};
-    var tb2=0,tu2=0;top.forEach(function(tr){tb2+=tr.bal;tu2+=(gt(tr.id)?.l?.equity||0)-(gt(tr.id)?.l?.balance||0)});
+    var tb2=0,tu2=0,tg14=0;top.forEach(function(tr){tb2+=tr.bal;tu2+=(gt(tr.id)?.l?.equity||0)-(gt(tr.id)?.l?.balance||0);tg14+=(tr.g14||0)});
+    var growthPct=tb2>0?(tg14/tb2*100):0;
     var borderCol=warn?'border-left:3px solid var(--dn);':'';
     return'<div class="tc" onclick="viewAutoCluster(\''+key+'\')" style="cursor:pointer;'+borderCol+'"><div class="tc-top"><div><div class="tc-nm">'+(warn?'\u26a0 ':'')+title+'</div><div class="tc-ti">'+top.length+' trader'+(top.length!==1?'s':'')+'</div></div></div><div style="font-size:.68rem;color:var(--w4);margin:.3rem 0">'+desc+'</div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(tb2)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(tu2>=0?'var(--up)':'var(--dn)')+'">'+(tu2>=0?'+':'')+'$'+F(tu2)+'</span></div></div>'}
 
@@ -1245,6 +1259,56 @@ function viewAutoCluster(key){
 
   nav('autoclusterdetail');
   E('acdetail').innerHTML=h}
+
+// ── TRADERS MATRIX ──
+function rMatrix(){
+  var ids=allIds();
+  var traders=ids.map(function(id){
+    var t=gt(id);if(!t)return null;
+    var q=t.q||{};var b=t.l?.balance||0;
+    var dp=q.dailyPnl||{};var dates=Object.keys(dp).sort();
+    var now=new Date();var g14=0;
+    dates.forEach(function(dt){var age=(now-new Date(dt))/(864e5);if(age<=14)g14+=dp[dt]});
+    var retPct=b>0?(g14/b*100):0;
+    return{id:id,name:t.a.name,bal:b,g14:g14,retPct:retPct}
+  }).filter(Boolean);
+
+  // Sort by balance low to high (left to right)
+  traders.sort(function(a,b){return a.bal-b.bal});
+
+  var h='<div class="sh"><span class="sh-t">Traders Matrix</span><span class="sh-l"></span></div>';
+  h+='<div style="font-family:var(--mono);font-size:.72rem;color:var(--w3);margin-bottom:1rem">14-day return % mapped to colour intensity. Left = smallest account, right = largest.</div>';
+
+  // Legend
+  h+='<div class="matrix-legend"><span>-10%+</span><div class="matrix-legend-bar"></div><span>+10%+</span></div>';
+
+  if(!traders.length){h+='<div class="placeholder-box">No traders</div>';E('matrixc').innerHTML=h;return}
+
+  // Find max balance for bar height scaling
+
+  h+='<div class="matrix-grid">';
+  traders.forEach(function(tr){
+    var pct=Math.max(-10,Math.min(10,tr.retPct));
+    var r,g,b2;
+    if(pct<0){var t2=(pct+10)/10;r=255;g=Math.round(77+(192-77)*t2);b2=Math.round(77+(123-77)*t2)}
+    else{var t2=pct/10;r=Math.round(229-(229-0)*t2);g=Math.round(192+(220-192)*t2);b2=Math.round(123-(123-130)*t2)}
+    var col='rgb('+r+','+g+','+b2+')';
+    var sz=traders.length<=10?80:traders.length<=20?68:traders.length<=40?56:46;
+    h+='<div class="matrix-cell" onclick="viewTrader(\''+tr.id+'\')">';
+    h+='<div class="matrix-sq" style="background:'+col+';width:'+sz+'px;height:'+sz+'px">';
+    h+='<div class="matrix-val">'+(tr.retPct>=0?'+':'')+tr.retPct.toFixed(1)+'%</div>';
+    h+='<div class="matrix-label">'+tr.name+'</div>';
+    h+='<div class="matrix-bal">$'+R(tr.bal).toLocaleString()+'</div>';
+    h+='</div></div>'});
+  h+='</div>';
+
+  // Summary stats
+  var totalBal=0,totalG14=0,greenCount=0,redCount=0;
+  traders.forEach(function(tr){totalBal+=tr.bal;totalG14+=tr.g14;if(tr.retPct>=0)greenCount++;else redCount++});
+  var avgRet=traders.length?(totalG14/totalBal*100):0;
+  h+='<div class="kpis" style="grid-template-columns:repeat(5,1fr)"><div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">'+traders.length+'</div></div><div class="kpi"><div class="kpi-l">Total Balance</div><div class="kpi-v">$'+R(totalBal).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">14d P&L</div><div class="kpi-v" style="color:'+(totalG14>=0?'var(--up)':'var(--dn)')+'">'+(totalG14>=0?'+':'')+'$'+R(totalG14).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Avg Return</div><div class="kpi-v" style="color:'+(avgRet>=0?'var(--up)':'var(--dn)')+'">'+(avgRet>=0?'+':'')+avgRet.toFixed(2)+'%</div></div><div class="kpi"><div class="kpi-l">Green / Red</div><div class="kpi-v"><span style="color:var(--up)">'+greenCount+'</span> / <span style="color:var(--dn)">'+redCount+'</span></div></div></div>';
+
+  E('matrixc').innerHTML=h}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML='<div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div><div class="ci"><span class="cl">Supabase</span><span class="cv '+(SUPA_URL?'up':'dn')+'">'+(SUPA_URL?'CONNECTED':'NOT SET')+'</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div><div class="sh"><span class="sh-t">Data Persistence</span><span class="sh-l"></span></div><div class="fp"><div class="fg"><div><div class="fl">Supabase URL</div><input class="fi" id="supa-url" value="'+SUPA_URL+'" placeholder="https://xxx.supabase.co"></div><div><div class="fl">Supabase Anon Key</div><input class="fi" id="supa-key" type="password" value="'+SUPA_KEY+'" placeholder="eyJ..."></div></div><div class="br"><button class="btn btn-s" onclick="saveSupa()">Save & Sync</button><button class="btn" onclick="loadSupa()">Load from Supabase</button></div><div style="font-family:var(--mono);font-size:.52rem;color:var(--w4);margin-top:.5rem">Create a table: <code>qtc_state</code> with columns: <code>id</code> (int, default 1), <code>data</code> (jsonb), <code>updated_at</code> (timestamptz). Enable RLS with anon read/write on id=1.</div></div>'}
