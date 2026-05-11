@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -10,6 +10,27 @@ export default async function handler(req, res) {
   const MGMT = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
   const authHeaders = { 'auth-token': TOKEN };
   const postHeaders = { 'auth-token': TOKEN, 'Content-Type': 'application/json' };
+
+  // DELETE: remove-account
+  if (req.method === 'DELETE') {
+    const { action, accountId } = req.query;
+    if (action === 'remove-account' && accountId) {
+      try {
+        // First undeploy
+        await fetch(MGMT + '/users/current/accounts/' + accountId + '/undeploy', {
+          method: 'POST', headers: postHeaders
+        });
+        // Then delete
+        var r = await fetch(MGMT + '/users/current/accounts/' + accountId, {
+          method: 'DELETE', headers: authHeaders
+        });
+        if (r.status === 204 || r.ok) return res.status(200).json({ success: true, id: accountId });
+        var data = await r.json().catch(function(){ return {} });
+        return res.status(r.status).json({ error: data.message || 'Delete failed' });
+      } catch(e) { return res.status(500).json({ error: e.message }) }
+    }
+    return res.status(400).json({ error: 'Unknown DELETE action' });
+  }
 
   // POST: create-account
   if (req.method === 'POST') {
