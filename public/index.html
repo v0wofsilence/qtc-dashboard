@@ -905,7 +905,15 @@ var p2dd=E('qp2dd').value;if(p2dd)salObj.p2dd=parseFloat(p2dd);
 S.sal[id]=salObj;sM();sS();E('addC').innerHTML='';renderAll()}
 function archiveTrader(id){var t=gt(id);if(!t)return;if(!confirm('Archive '+t.a.name+'? They will be removed from active roster but data is preserved.'))return;var s=S.sal[id]||{};s.archived=true;s.archivedDate=new Date().toISOString().slice(0,10);S.sal[id]=s;sS();renderAll()}
 function restoreTrader(id){var s=S.sal[id]||{};delete s.archived;delete s.archivedDate;S.sal[id]=s;sS();renderAll()}
-function deleteTrader(id){var t=gt(id);if(!t)return;if(!confirm('PERMANENTLY DELETE '+t.a.name+'? This removes all data including salary history, Q-Score history, and notes. This cannot be undone.'))return;if(!confirm('Are you sure? Type the trader name to confirm.\n\nExpected: '+t.a.name)){var c=prompt('Type trader name to confirm deletion:');if(c!==t.a.name){alert('Name did not match. Deletion cancelled.');return}}
+function deleteTrader(id){var t=gt(id);if(!t)return;
+  var isMetaAPI=!t.isM;
+  var msg=isMetaAPI?'PERMANENTLY DELETE '+t.a.name+'?\n\nThis will:\n• Remove from dashboard\n• Remove from MetaAPI (stop billing)\n• Delete all salary, Q-Score, and notes data\n\nThis cannot be undone.':'PERMANENTLY DELETE '+t.a.name+'?\n\nThis removes all data. This cannot be undone.';
+  if(!confirm(msg))return;
+  // Remove from MetaAPI if it's a MetaAPI account
+  if(isMetaAPI){
+    fetch('/api/metaapi?action=remove-account&accountId='+id,{method:'DELETE'}).then(function(r){return r.json()}).then(function(d){
+      if(d.success){log(t.a.name+' removed from MetaAPI','ok')}else{log('MetaAPI delete failed: '+(d.error||'unknown'),'er')}
+    }).catch(function(e){log('MetaAPI delete error: '+e.message,'er')})}
   // Remove manual trader
   if(t.isM)S.manual=S.manual.filter(function(m){return'm-'+m.name!==id});
   // Remove from MetaAPI tracker
