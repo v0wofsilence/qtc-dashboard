@@ -986,7 +986,7 @@ function genPDF(id){
 // To make this work across all devices automatically, replace the empty strings below
 // with your Supabase project URL and anon key, then redeploy.
 // Example: var SUPA_URL='https://abcdefg.supabase.co',SUPA_KEY='eyJ...';
-var SUPA_URL='https://ozluadwsmtqvafnkqhvn.supabase.co',SUPA_KEY='sb_publishable_KfUk6pYoDpvTdzqOmL3svg_7Bg7MchF';
+var SUPA_URL='https://ozluadwsmtqvafnkqhvn.supabase.co',SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHVhZHdzbXRxdmFmbmtxaHZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjI3MjAsImV4cCI6MjA5NDA5ODcyMH0.9Ife2ypKut8OX1w-GIgviQuVS9TOH2ygnUjDKfVel54';
 async function supaSync(){if(!SUPA_URL||!SUPA_KEY)return;
   try{var payload={manual:S.manual,sal:S.sal,hist:S.hist};
     await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1',{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({data:payload,updated_at:new Date().toISOString()})});
