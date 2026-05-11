@@ -338,6 +338,12 @@ function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(functi
 (async function(){
 try{
 log('Initialising...','inf');
+
+// Auto-load from Supabase if configured
+if(SUPA_URL&&SUPA_KEY){
+  log('Syncing from Supabase...','inf');
+  try{var loaded=await supaLoad();if(loaded)log('Supabase data loaded','ok');else log('No Supabase data found','wrn')}catch(e){log('Supabase load failed: '+e.message,'wrn')}
+}
 try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');S.accts=[]}
 for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
   try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
@@ -977,6 +983,9 @@ function genPDF(id){
   w.document.close();w.print()}
 
 // ── SUPABASE PERSISTENCE ──
+// To make this work across all devices automatically, replace the empty strings below
+// with your Supabase project URL and anon key, then redeploy.
+// Example: var SUPA_URL='https://abcdefg.supabase.co',SUPA_KEY='eyJ...';
 var SUPA_URL='',SUPA_KEY='';
 async function supaSync(){if(!SUPA_URL||!SUPA_KEY)return;
   try{var payload={manual:S.manual,sal:S.sal,hist:S.hist};
