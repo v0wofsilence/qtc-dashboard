@@ -501,7 +501,7 @@ function lb(title,items,valFn,colFn){var cards='';for(var i=0;i<3;i++){if(items[
 E('leaderboards').innerHTML=
   lb('Top Win Rate',ranked.length>=3?topWR:[],function(it){return it.wr+'%'},function(){return'var(--up)'})+
   lb('Top Profit',ranked.length>=3?topPnl:[],function(it){return(it.pnl>=0?'+':'')+'$'+it.pnl.toLocaleString()},function(it){return it.pnl>=0?'var(--up)':'var(--dn)'})+
-  lb('Worst Performers',ranked.length>=3?worst:[],function(it){return(it.np>=0?'+$':'\u2212$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'})
+  lb('Worst Performers',ranked.length>=3?worst:[],function(it){return(it.np>=0?'+$':'\u2212$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'});
 
 // Top clusters
 var clh='';
