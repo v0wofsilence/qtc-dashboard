@@ -209,10 +209,28 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 .ov-eq .eq-chart{border:none;border-radius:0;margin:0;flex:1;display:flex;flex-direction:column}
 .ov-eq .eq-chart svg{flex:1}
 .placeholder-box{border:2px solid var(--b6);border-radius:8px;background:var(--b2);padding:1.2rem;text-align:center;color:var(--w4);font-family:var(--mono);font-size:.74rem;margin-bottom:2rem}
+
+/* Light mode */
+body.light{--black:#F5F5F5;--b1:#FAFAFA;--b2:#FFFFFF;--b3:#F0F0F0;--b4:#E8E8E8;--b5:#DDD;--b6:#CCC;--w:#111;--w1:#222;--w2:#555;--w3:#777;--w4:#999;--w5:#BBB;--up:#00A65A;--dn:#D63031;--accent:#4A7CE0;--accent2:#3A6BD0;--warn:#C0960B}
+body.light .topbar{background:#FFFFFF;border-bottom:1px solid #E0E0E0}
+body.light .sidebar{background:#FFFFFF;border-right:1px solid #E0E0E0}
+body.light .sidebar-section{border-bottom:1px solid #E8E8E8}
+body.light .sidebar-footer{border-top:1px solid #E8E8E8}
+body.light .sb:hover{background:#F5F5F5}
+body.light .sb.active{color:var(--accent);background:rgba(74,124,224,.06);border-right:2px solid var(--accent)}
+body.light .search-input{background:#F0F0F0;border:1px solid #DDD;color:#222}
+body.light .search-input::placeholder{color:#999}
+body.light .search-results{background:#FFF;border:1px solid #DDD}
+body.light .syslog{background:#F5F5F5;border-top:1px solid #E0E0E0}
+body.light .modal-overlay{background:rgba(0,0,0,.3)}
+body.light .modal{background:#FFF;border:1px solid #DDD}
+body.light .modal-header{border-bottom:1px solid #E8E8E8}
+body.light .gear-menu{background:#FFF;border:1px solid #DDD}
+.theme-toggle{cursor:pointer;font-size:1.1rem;padding:4px;user-select:none;opacity:.7;transition:opacity .15s}.theme-toggle:hover{opacity:1}
 </style>
 </head>
 <body>
-<div class="topbar"><div class="topbar-left"><svg viewBox="0 0 1084 237" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:32px;width:auto;opacity:.9"><path d="M188.203 189.937V64.8067H215.281V189.937H188.203ZM146.151 75.8838V50.2424H258.563V75.8838H146.151Z" fill="#8CB1F6"/><path d="M110.566 199.161L89.0954 163C89.0954 163 96.5742 160.016 99.2452 157.4C102.985 155.742 107.572 149.109 107.572 149.109L138.053 199.161H110.566ZM0 120.186C0 109.656 1.7778 100.014 5.33341 91.2621C8.88902 82.3731 13.8806 74.7148 20.308 68.2874C26.7354 61.8599 34.3253 56.8684 43.0776 53.3128C51.9666 49.7572 61.6761 47.9794 72.2062 47.9794C82.5995 47.9794 92.1723 49.7572 100.925 53.3128C109.677 56.8684 117.267 61.8599 123.694 68.2874C130.122 74.7148 135.113 82.3731 138.669 91.2621C142.224 100.014 144.002 109.656 144.002 120.186C144.002 130.579 142.224 140.22 138.669 149.109C135.113 157.861 130.122 165.52 123.694 172.084C117.267 178.511 109.677 183.503 100.925 187.058C92.1723 190.614 82.5995 192.392 72.2062 192.392C61.6761 192.392 51.9666 190.614 43.0776 187.058C34.3253 183.503 26.7354 178.511 20.308 172.084C13.8806 165.52 8.88902 157.861 5.33341 149.109C1.7778 140.22 0 130.579 0 120.186ZM27.4876 120.186C27.4876 129.211 29.4022 137.211 33.2313 144.186C37.0604 151.024 42.3254 156.357 49.0264 160.186C55.8641 164.015 63.5907 165.93 72.2062 165.93C80.8217 165.93 88.4116 164.015 94.9758 160.186C101.677 156.357 106.942 151.024 110.771 144.186C114.6 137.211 116.515 129.211 116.515 120.186C116.515 111.023 114.6 103.023 110.771 96.1852C106.942 89.2108 101.677 83.809 94.9758 79.9799C88.4116 76.1507 80.8217 74.2362 72.2062 74.2362C63.5907 74.2362 55.8641 76.2191 49.0264 80.185C42.3254 84.0141 37.0604 89.3475 33.2313 96.1852C29.4022 103.023 27.4876 111.023 27.4876 120.186Z" fill="#8CB1F6"/><path d="M435.042 91.8913H421.942C420.967 87.0138 419.201 82.5078 416.647 78.3735C414.138 74.1927 410.979 70.5462 407.17 67.4338C403.361 64.3215 399.041 61.9059 394.21 60.1872C389.379 58.4684 384.153 57.609 378.532 57.609C369.52 57.609 361.298 59.9549 353.865 64.6467C346.479 69.3384 340.557 76.2367 336.097 85.3415C331.684 94.3998 329.478 105.502 329.478 118.648C329.478 131.887 331.684 143.036 336.097 152.094C340.557 161.153 346.479 168.028 353.865 172.719C361.298 177.365 369.52 179.687 378.532 179.687C384.153 179.687 389.379 178.828 394.21 177.109C399.041 175.391 403.361 172.998 407.17 169.932C410.979 166.82 414.138 163.173 416.647 158.993C419.201 154.812 420.967 150.283 421.942 145.405H435.042C433.881 151.955 431.697 158.064 428.492 163.731C425.333 169.352 421.292 174.276 416.368 178.503C411.49 182.73 405.869 186.028 399.505 188.397C393.141 190.766 386.15 191.951 378.532 191.951C366.547 191.951 355.909 188.955 346.619 182.962C337.328 176.923 330.035 168.423 324.739 157.46C319.49 146.497 316.866 133.56 316.866 118.648C316.866 103.737 319.49 90.7997 324.739 79.8368C330.035 68.8739 337.328 60.3962 346.619 54.4038C355.909 48.3649 366.547 45.3454 378.532 45.3454C386.15 45.3454 393.141 46.53 399.505 48.8991C405.869 51.2218 411.49 54.5199 416.368 58.7936C421.292 63.0208 425.333 67.9448 428.492 73.5656C431.697 79.1864 433.881 85.295 435.042 91.8913ZM463.699 190H450.042L501.953 47.2965H515.889L567.8 190H554.143L509.409 64.2286H508.433L463.699 190ZM473.524 135.302H544.318V147.008H473.524V135.302ZM590.099 190V47.2965H636.158C646.284 47.2965 654.739 49.2475 661.521 53.1495C668.349 57.0051 673.483 62.2543 676.92 68.8971C680.404 75.5399 682.146 83.0188 682.146 91.3339C682.146 99.649 680.427 107.151 676.99 113.84C673.552 120.483 668.442 125.756 661.66 129.658C654.878 133.513 646.447 135.441 636.367 135.441H600.133V123.735H636.018C643.497 123.735 649.699 122.341 654.623 119.554C659.547 116.72 663.216 112.865 665.632 107.987C668.094 103.11 669.325 97.5586 669.325 91.3339C669.325 85.1092 668.094 79.5581 665.632 74.6805C663.216 69.8029 659.523 65.9706 654.553 63.1834C649.629 60.3962 643.381 59.0026 635.809 59.0026H603.13V190H590.099ZM723.607 47.2965V190H710.577V47.2965H723.607ZM750.749 59.0026V47.2965H854.223V59.0026H809.001V190H795.971V59.0026H750.749ZM864.938 190H851.28L903.192 47.2965H917.128L969.039 190H955.382L910.647 64.2286H909.672L864.938 190ZM874.762 135.302H945.557V147.008H874.762V135.302ZM991.338 190V47.2965H1004.37V178.294H1072.38V190H991.338Z" fill="#8CB1F6"/></svg><div class="ts-s"><div class="pulse" id="dot"></div><span id="st">Connecting</span></div><span id="openPnl" style="font-family:var(--mono);font-weight:600"></span></div><div class="topbar-center"><div class="search-wrap"><input class="search-input" id="searchInput" type="text" placeholder="Search traders..." oninput="onSearch()" onfocus="onSearch()" autocomplete="off"><div class="search-results" id="searchResults"></div></div></div><div class="topbar-right"><span id="ck"></span></div></div>
+<div class="topbar"><div class="topbar-left"><svg viewBox="0 0 1084 237" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:32px;width:auto;opacity:.9"><path d="M188.203 189.937V64.8067H215.281V189.937H188.203ZM146.151 75.8838V50.2424H258.563V75.8838H146.151Z" fill="#8CB1F6"/><path d="M110.566 199.161L89.0954 163C89.0954 163 96.5742 160.016 99.2452 157.4C102.985 155.742 107.572 149.109 107.572 149.109L138.053 199.161H110.566ZM0 120.186C0 109.656 1.7778 100.014 5.33341 91.2621C8.88902 82.3731 13.8806 74.7148 20.308 68.2874C26.7354 61.8599 34.3253 56.8684 43.0776 53.3128C51.9666 49.7572 61.6761 47.9794 72.2062 47.9794C82.5995 47.9794 92.1723 49.7572 100.925 53.3128C109.677 56.8684 117.267 61.8599 123.694 68.2874C130.122 74.7148 135.113 82.3731 138.669 91.2621C142.224 100.014 144.002 109.656 144.002 120.186C144.002 130.579 142.224 140.22 138.669 149.109C135.113 157.861 130.122 165.52 123.694 172.084C117.267 178.511 109.677 183.503 100.925 187.058C92.1723 190.614 82.5995 192.392 72.2062 192.392C61.6761 192.392 51.9666 190.614 43.0776 187.058C34.3253 183.503 26.7354 178.511 20.308 172.084C13.8806 165.52 8.88902 157.861 5.33341 149.109C1.7778 140.22 0 130.579 0 120.186ZM27.4876 120.186C27.4876 129.211 29.4022 137.211 33.2313 144.186C37.0604 151.024 42.3254 156.357 49.0264 160.186C55.8641 164.015 63.5907 165.93 72.2062 165.93C80.8217 165.93 88.4116 164.015 94.9758 160.186C101.677 156.357 106.942 151.024 110.771 144.186C114.6 137.211 116.515 129.211 116.515 120.186C116.515 111.023 114.6 103.023 110.771 96.1852C106.942 89.2108 101.677 83.809 94.9758 79.9799C88.4116 76.1507 80.8217 74.2362 72.2062 74.2362C63.5907 74.2362 55.8641 76.2191 49.0264 80.185C42.3254 84.0141 37.0604 89.3475 33.2313 96.1852C29.4022 103.023 27.4876 111.023 27.4876 120.186Z" fill="#8CB1F6"/><path d="M435.042 91.8913H421.942C420.967 87.0138 419.201 82.5078 416.647 78.3735C414.138 74.1927 410.979 70.5462 407.17 67.4338C403.361 64.3215 399.041 61.9059 394.21 60.1872C389.379 58.4684 384.153 57.609 378.532 57.609C369.52 57.609 361.298 59.9549 353.865 64.6467C346.479 69.3384 340.557 76.2367 336.097 85.3415C331.684 94.3998 329.478 105.502 329.478 118.648C329.478 131.887 331.684 143.036 336.097 152.094C340.557 161.153 346.479 168.028 353.865 172.719C361.298 177.365 369.52 179.687 378.532 179.687C384.153 179.687 389.379 178.828 394.21 177.109C399.041 175.391 403.361 172.998 407.17 169.932C410.979 166.82 414.138 163.173 416.647 158.993C419.201 154.812 420.967 150.283 421.942 145.405H435.042C433.881 151.955 431.697 158.064 428.492 163.731C425.333 169.352 421.292 174.276 416.368 178.503C411.49 182.73 405.869 186.028 399.505 188.397C393.141 190.766 386.15 191.951 378.532 191.951C366.547 191.951 355.909 188.955 346.619 182.962C337.328 176.923 330.035 168.423 324.739 157.46C319.49 146.497 316.866 133.56 316.866 118.648C316.866 103.737 319.49 90.7997 324.739 79.8368C330.035 68.8739 337.328 60.3962 346.619 54.4038C355.909 48.3649 366.547 45.3454 378.532 45.3454C386.15 45.3454 393.141 46.53 399.505 48.8991C405.869 51.2218 411.49 54.5199 416.368 58.7936C421.292 63.0208 425.333 67.9448 428.492 73.5656C431.697 79.1864 433.881 85.295 435.042 91.8913ZM463.699 190H450.042L501.953 47.2965H515.889L567.8 190H554.143L509.409 64.2286H508.433L463.699 190ZM473.524 135.302H544.318V147.008H473.524V135.302ZM590.099 190V47.2965H636.158C646.284 47.2965 654.739 49.2475 661.521 53.1495C668.349 57.0051 673.483 62.2543 676.92 68.8971C680.404 75.5399 682.146 83.0188 682.146 91.3339C682.146 99.649 680.427 107.151 676.99 113.84C673.552 120.483 668.442 125.756 661.66 129.658C654.878 133.513 646.447 135.441 636.367 135.441H600.133V123.735H636.018C643.497 123.735 649.699 122.341 654.623 119.554C659.547 116.72 663.216 112.865 665.632 107.987C668.094 103.11 669.325 97.5586 669.325 91.3339C669.325 85.1092 668.094 79.5581 665.632 74.6805C663.216 69.8029 659.523 65.9706 654.553 63.1834C649.629 60.3962 643.381 59.0026 635.809 59.0026H603.13V190H590.099ZM723.607 47.2965V190H710.577V47.2965H723.607ZM750.749 59.0026V47.2965H854.223V59.0026H809.001V190H795.971V59.0026H750.749ZM864.938 190H851.28L903.192 47.2965H917.128L969.039 190H955.382L910.647 64.2286H909.672L864.938 190ZM874.762 135.302H945.557V147.008H874.762V135.302ZM991.338 190V47.2965H1004.37V178.294H1072.38V190H991.338Z" fill="#8CB1F6"/></svg><div class="ts-s"><div class="pulse" id="dot"></div><span id="st">Connecting</span></div><span id="openPnl" style="font-family:var(--mono);font-weight:600"></span></div><div class="topbar-center"><div class="search-wrap"><input class="search-input" id="searchInput" type="text" placeholder="Search traders..." oninput="onSearch()" onfocus="onSearch()" autocomplete="off"><div class="search-results" id="searchResults"></div></div></div><div class="topbar-right"><span id="ck"></span><span class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀</span></div></div>
 <div class="layout">
 <div class="sidebar">
   <div class="sidebar-section"><div class="sidebar-label">Dashboard</div>
@@ -226,6 +244,9 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
   </div>
   <div class="sidebar-section"><div class="sidebar-label">Risk</div>
     <button class="sb" onclick="nav('risk')"><span class="sb-icon">⚑</span>Risk Protocol</button>
+  </div>
+  <div class="sidebar-section"><div class="sidebar-label">Groups</div>
+    <button class="sb" onclick="nav('groups')"><span class="sb-icon">◎</span>Trader Groups</button>
   </div>
   <div class="sidebar-section"><div class="sidebar-label">System</div>
     <button class="sb" onclick="nav('system')"><span class="sb-icon">⚙</span>System</button>
@@ -241,6 +262,8 @@ textarea.fi{resize:vertical;font-family:var(--font);font-size:.7rem}
 <div id="v-salary" class="vw"><div id="salc"></div></div>
 <div id="v-trader" class="vw"><div id="tdetail"></div></div>
 <div id="v-risk" class="vw"><div id="riskc"></div></div>
+<div id="v-groups" class="vw"><div id="grpc"></div></div>
+<div id="v-groupdetail" class="vw"><div id="grpdetail"></div></div>
 <div id="v-system" class="vw"><div id="sysc"></div></div>
 </div>
 </div>
@@ -361,7 +384,7 @@ try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render f
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){}}rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
-function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rSy();updateTopbarPnl()}
+function renderAll(){rOv();rPo();rCa();rRo();rSa();rRisk();rGr();rSy();updateTopbarPnl()}
 
 // ── EDIT TRADER (modal) ──
 var editId=null;
@@ -988,12 +1011,12 @@ function genPDF(id){
 // Example: var SUPA_URL='https://abcdefg.supabase.co',SUPA_KEY='eyJ...';
 var SUPA_URL='https://ozluadwsmtqvafnkqhvn.supabase.co',SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHVhZHdzbXRxdmFmbmtxaHZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjI3MjAsImV4cCI6MjA5NDA5ODcyMH0.9Ife2ypKut8OX1w-GIgviQuVS9TOH2ygnUjDKfVel54';
 async function supaSync(){if(!SUPA_URL||!SUPA_KEY)return;
-  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist};
+  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups};
     await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1',{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({data:payload,updated_at:new Date().toISOString()})});
   }catch(e){console.error('Supabase sync error:',e)}}
 async function supaLoad(){if(!SUPA_URL||!SUPA_KEY)return false;
   try{var r=await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1&select=data',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
-    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;sM();sS();sH();return true}
+    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;sM();sS();sH();return true}
   }catch(e){console.error('Supabase load error:',e)}return false}
 // Auto-sync on save
 var _sS=sS,_sM=sM,_sH=sH;
@@ -1002,6 +1025,89 @@ function saveSupa(){SUPA_URL=E('supa-url').value.trim();SUPA_KEY=E('supa-key').v
 function loadSupa(){SUPA_URL=E('supa-url').value.trim();SUPA_KEY=E('supa-key').value.trim();localStorage.setItem('qtc_supa',JSON.stringify({url:SUPA_URL,key:SUPA_KEY}));supaLoad().then(function(ok){if(ok){renderAll();alert('Loaded from Supabase')}else alert('No data found or load failed')})}
 // Load Supabase config on start
 (function(){try{var sc=JSON.parse(localStorage.getItem('qtc_supa')||'{}');if(sc.url)SUPA_URL=sc.url;if(sc.key)SUPA_KEY=sc.key}catch(e){}})();
+
+// ── THEME TOGGLE ──
+function toggleTheme(){document.body.classList.toggle('light');var isLight=document.body.classList.contains('light');E('themeBtn').textContent=isLight?'☾':'☀';localStorage.setItem('qtc_theme',isLight?'light':'dark')}
+(function(){var t=localStorage.getItem('qtc_theme');if(t==='light'){document.body.classList.add('light');E('themeBtn').textContent='☾'}})();
+
+// ── TRADER GROUPS ──
+if(!S.groups)S.groups=JSON.parse(localStorage.getItem('qtc_g')||'[]');
+function sG(){localStorage.setItem('qtc_g',JSON.stringify(S.groups));supaSync()}
+
+function rGr(){
+  var h='<div class="sh"><span class="sh-t">Trader Groups</span><span class="sh-l"></span><span class="sh-btn" onclick="createGroup()">+ New Group</span></div>';
+  if(!S.groups.length){h+='<div class="placeholder-box">No groups created yet</div>';E('grpc').innerHTML=h;return}
+  h+='<div class="tg">';
+  S.groups.forEach(function(g,gi){
+    var mids=g.members||[];var tb=0,tu=0,tc=0;
+    mids.forEach(function(id){var t=gt(id);if(!t)return;tc++;if(t.l){tb+=t.l.balance||0;tu+=(t.l.equity||0)-(t.l.balance||0)}});
+    h+='<div class="tc" onclick="viewGroup('+gi+')" style="cursor:pointer"><div class="tc-dot" style="background:'+(g.color||'var(--accent)')+'"></div><div class="tc-top"><div><div class="tc-nm">'+g.name+'</div><div class="tc-ti">'+tc+' trader'+(tc!==1?'s':'')+'</div></div><div style="text-align:right"><div class="tc-sc" style="color:var(--accent);font-size:1.2rem">'+mids.length+'</div><div class="tc-sl">members</div></div></div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(tb)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(tu>=0?'var(--up)':'var(--dn)')+'">'+(tu>=0?'+':'')+'$'+F(tu)+'</span></div></div>'});
+  h+='</div>';
+  E('grpc').innerHTML=h}
+
+function createGroup(){
+  var name=prompt('Group name:');if(!name||!name.trim())return;
+  var colors=['#8CB1F6','#00DC82','#FF4D4D','#E5C07B','#C678DD','#56B6C2','#E06C75'];
+  S.groups.push({name:name.trim(),members:[],color:colors[S.groups.length%colors.length]});
+  sG();rGr()}
+
+function viewGroup(gi){
+  var g=S.groups[gi];if(!g)return;
+  var mids=g.members||[];
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span class="tp-back" onclick="nav(\'groups\')">← Back to Groups</span><div class="br"><button class="btn" onclick="editGroupMembers('+gi+')">Edit Members</button><button class="btn" style="color:var(--dn);border-color:rgba(255,77,77,.3)" onclick="deleteGroup('+gi+')">Delete Group</button></div></div>';
+
+  // Group header
+  h+='<div class="tp-hero" style="align-items:flex-start"><div style="width:60px;height:60px;border-radius:50%;background:'+(g.color||'var(--accent)')+';display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;flex-shrink:0">'+g.name.charAt(0).toUpperCase()+'</div>';
+  h+='<div class="tp-info" style="flex:1"><div class="tp-name">'+g.name+'</div>';
+  h+='<div class="tp-tier-tag">'+mids.length+' member'+(mids.length!==1?'s':'')+'</div>';
+
+  // Group metrics
+  var tb=0,te=0,tu=0,tp=0,gpnl=0;
+  mids.forEach(function(id){var t=gt(id);if(!t)return;if(t.l){tb+=t.l.balance||0;te+=t.l.equity||0;tu+=(t.l.equity||0)-(t.l.balance||0)}tp+=(t.pos||[]).length;gpnl+=(t.q?.pnl||0)});
+  h+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(tb)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(te>=tb?'var(--up)':'var(--dn)')+'">$'+F(te)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(tu>=0?'var(--up)':'var(--dn)')+'">'+(tu>=0?'+':'')+'$'+F(tu)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Total P&L</span><span class="tp-meta-val" style="color:'+(gpnl>=0?'var(--up)':'var(--dn)')+'">'+(gpnl>=0?'+':'')+'$'+R(gpnl).toLocaleString()+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Positions</span><span class="tp-meta-val">'+tp+'</span></div></div>';
+  h+='</div></div>';
+
+  // Group equity curve
+  var gDaily={};mids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){gDaily[dt]=(gDaily[dt]||0)+dp[dt]})});
+  h+=buildEquityCurve(gDaily,tb,'grpEq'+gi,'Group Equity Curve');
+
+  // Group session performance
+  var gTrades=[];mids.forEach(function(id){var t=gt(id);if(t)(t.hist||[]).forEach(function(tr){gTrades.push(tr)})});
+  h+=buildSessionHTML(gTrades,'Group Session Performance');
+
+  // Group calendar
+  h+=buildTraderCal('grp-'+gi,gDaily,{},gTrades);
+
+  // Members table
+  h+='<div class="sh"><span class="sh-t">Members</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Balance</th><th>Open P&L</th><th>WR</th><th>P&L</th><th>Q-Score</th></tr></thead><tbody>';
+  mids.forEach(function(id){var t=gt(id);if(!t)return;var q=t.q||{};var b=t.l?.balance||0;var u=(t.l?.equity||0)-b;
+    h+='<tr style="cursor:pointer" onclick="viewTrader(\''+id+'\')"><td class="sym" style="color:var(--accent)">'+t.a.name+'</td><td>$'+F(b)+'</td><td style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</td><td>'+(q.wr||0)+'%</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td style="color:'+tCol(q.score||0)+'">'+(q.pending?'Pending':q.score||'\u2014')+'</td></tr>'});
+  h+='</tbody></table></div>';
+
+  nav('groupdetail');
+  E('grpdetail').innerHTML=h}
+
+function editGroupMembers(gi){
+  var g=S.groups[gi];if(!g)return;
+  var ids=allIds();
+  var h='<div class="modal-header"><div class="modal-title">Edit Members — '+g.name+'</div><span class="modal-close" onclick="closeEdit()">×</span></div><div class="modal-body">';
+  h+='<div style="margin-bottom:.8rem;font-size:.74rem;color:var(--w3)">Select traders to include in this group. Traders can be in multiple groups.</div>';
+  ids.forEach(function(id){var t=gt(id);if(!t)return;var checked=g.members.indexOf(id)>=0;
+    h+='<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--b5);cursor:pointer" onclick="toggleGroupMember('+gi+',\''+id+'\')">';
+    h+='<div style="width:20px;height:20px;border:2px solid '+(checked?'var(--accent)':'var(--b5)')+';border-radius:4px;background:'+(checked?'var(--accent)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff">'+(checked?'✓':'')+'</div>';
+    h+='<span style="font-weight:500;font-size:.82rem;color:var(--w1)">'+t.a.name+'</span>';
+    h+='<span style="font-family:var(--mono);font-size:.68rem;color:var(--w4);margin-left:auto">$'+F(t.l?.balance||0)+'</span></div>'});
+  h+='<div class="br" style="margin-top:1rem"><button class="btn btn-s" onclick="closeEdit();viewGroup('+gi+')">Done</button></div></div>';
+  E('editModalContent').innerHTML=h;
+  E('editModal').style.display='flex'}
+
+function toggleGroupMember(gi,id){
+  var g=S.groups[gi];if(!g)return;
+  var idx=g.members.indexOf(id);
+  if(idx>=0)g.members.splice(idx,1);else g.members.push(id);
+  sG();editGroupMembers(gi)}
+
+function deleteGroup(gi){if(!confirm('Delete this group?'))return;S.groups.splice(gi,1);sG();nav('groups');rGr()}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML='<div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div><div class="ci"><span class="cl">Supabase</span><span class="cv '+(SUPA_URL?'up':'dn')+'">'+(SUPA_URL?'CONNECTED':'NOT SET')+'</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div><div class="sh"><span class="sh-t">Data Persistence</span><span class="sh-l"></span></div><div class="fp"><div class="fg"><div><div class="fl">Supabase URL</div><input class="fi" id="supa-url" value="'+SUPA_URL+'" placeholder="https://xxx.supabase.co"></div><div><div class="fl">Supabase Anon Key</div><input class="fi" id="supa-key" type="password" value="'+SUPA_KEY+'" placeholder="eyJ..."></div></div><div class="br"><button class="btn btn-s" onclick="saveSupa()">Save & Sync</button><button class="btn" onclick="loadSupa()">Load from Supabase</button></div><div style="font-family:var(--mono);font-size:.52rem;color:var(--w4);margin-top:.5rem">Create a table: <code>qtc_state</code> with columns: <code>id</code> (int, default 1), <code>data</code> (jsonb), <code>updated_at</code> (timestamptz). Enable RLS with anon read/write on id=1.</div></div>'}
