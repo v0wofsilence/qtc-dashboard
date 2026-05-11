@@ -1152,7 +1152,18 @@ function rAC(){
     var grossProfit=0,grossLoss=0;vals.forEach(function(v){if(v>0)grossProfit+=v;else grossLoss+=Math.abs(v)});
     var pf=grossLoss>0?(grossProfit/grossLoss):grossProfit>0?99:0;
     var np=netPosition(id);
-    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,consistency:isFinite(consistency)?consistency:0,score:q.score||0,pending:q.pending,bal:b,winStreak:winStreak,loseStreak:loseStreak,ddPct:ddPct,maxDayLossPct:maxDayLossPct,pf:pf,np:np}
+    // Growth: P&L in last 7/14/30 days
+    var now=new Date();var g7=0,g14=0,g30=0;
+    dates.forEach(function(dt){var age=(now-new Date(dt))/(864e5);if(age<=7)g7+=dp[dt];if(age<=14)g14+=dp[dt];if(age<=30)g30+=dp[dt]});
+    // Risk-reward: avg win / avg loss
+    var wins=[],losses=[];vals.forEach(function(v){if(v>0)wins.push(v);else if(v<0)losses.push(Math.abs(v))});
+    var avgWin=wins.length?wins.reduce(function(a,c){return a+c},0)/wins.length:0;
+    var avgLoss=losses.length?losses.reduce(function(a,c){return a+c},0)/losses.length:0;
+    var rr=avgLoss>0?(avgWin/avgLoss):avgWin>0?99:0;
+    // Overtrading: trades per day
+    var tradeDates={};(gt(id)?.hist||[]).forEach(function(tr){if(!tr.time)return;var d=new Date(tr.time).toISOString().slice(0,10);tradeDates[d]=(tradeDates[d]||0)+1});
+    var tdVals=Object.values(tradeDates);var avgTradesPerDay=tdVals.length?tdVals.reduce(function(a,c){return a+c},0)/tdVals.length:0;
+    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,consistency:isFinite(consistency)?consistency:0,score:q.score||0,pending:q.pending,bal:b,winStreak:winStreak,loseStreak:loseStreak,ddPct:ddPct,maxDayLossPct:maxDayLossPct,pf:pf,np:np,g7:g7,g14:g14,g30:g30,rr:isFinite(rr)?rr:0,avgTpd:avgTradesPerDay}
   }).filter(Boolean);
 
   acTypes={};
@@ -1173,6 +1184,14 @@ function rAC(){
   h+=buildAC('consistent','Most Consistent','Top traders by P&L consistency',traders.slice().sort(function(a,b){return b.consistency-a.consistency}),function(tr){return tr.consistency.toFixed(2)},function(tr){return tr.consistency>=1?'var(--up)':tr.consistency>=0.3?'var(--warn)':'var(--dn)'});
   h+=buildAC('pf','Highest Profit Factor','Top traders by gross profit / gross loss',traders.slice().sort(function(a,b){return b.pf-a.pf}),function(tr){return tr.pf>=99?'\u221e':tr.pf.toFixed(2)},function(tr){return tr.pf>=2?'var(--up)':tr.pf>=1?'var(--warn)':'var(--dn)'});
   h+=buildAC('fe','Best Firm Economics','Top traders by net firm economics',traders.slice().sort(function(a,b){return b.np-a.np}),function(tr){return(tr.np>=0?'+$':'\u2212$')+R(Math.abs(tr.np)).toLocaleString()},function(tr){return tr.np>=0?'var(--up)':'var(--dn)'});
+  h+=buildAC('rr','Best Risk-Reward','Top traders by avg win size vs avg loss size',traders.slice().sort(function(a,b){return b.rr-a.rr}),function(tr){return tr.rr>=99?'\u221e':tr.rr.toFixed(2)+'x'},function(tr){return tr.rr>=2?'var(--up)':tr.rr>=1?'var(--warn)':'var(--dn)'});
+  h+='</div>';
+
+  // OTW (Ones To Watch)
+  h+='<div class="sh"><span class="sh-t">OTW — Ones To Watch</span><span class="sh-l"></span></div><div class="tg">';
+  h+=buildAC('g7','Growth — Last 7 Days','Fastest growing traders this week',traders.slice().sort(function(a,b){return b.g7-a.g7}),function(tr){return(tr.g7>=0?'+$':'\u2212$')+R(Math.abs(tr.g7)).toLocaleString()},function(tr){return tr.g7>=0?'var(--up)':'var(--dn)'});
+  h+=buildAC('g14','Growth — Last 14 Days','Fastest growing traders over two weeks',traders.slice().sort(function(a,b){return b.g14-a.g14}),function(tr){return(tr.g14>=0?'+$':'\u2212$')+R(Math.abs(tr.g14)).toLocaleString()},function(tr){return tr.g14>=0?'var(--up)':'var(--dn)'});
+  h+=buildAC('g30','Growth — Last 30 Days','Fastest growing traders this month',traders.slice().sort(function(a,b){return b.g30-a.g30}),function(tr){return(tr.g30>=0?'+$':'\u2212$')+R(Math.abs(tr.g30)).toLocaleString()},function(tr){return tr.g30>=0?'var(--up)':'var(--dn)'});
   h+='</div>';
 
   // RISK WARNINGS
@@ -1183,6 +1202,7 @@ function rAC(){
   h+=buildAC('lowwr','Win Rate Below 30%','Severely underperforming win rate',traders.filter(function(tr){return tr.wr<30&&tr.wr>0}).sort(function(a,b){return a.wr-b.wr}),function(tr){return tr.wr+'%'},function(tr){return tr.wr<25?'var(--dn)':'var(--warn)'},true);
   h+=buildAC('bigloss','3%+ Single Day Loss','Day loss exceeding 3% of balance',traders.filter(function(tr){return tr.maxDayLossPct>=3}).sort(function(a,b){return b.maxDayLossPct-a.maxDayLossPct}),function(tr){return tr.maxDayLossPct.toFixed(2)+'%'},function(tr){return tr.maxDayLossPct>=5?'var(--dn)':'var(--warn)'},true);
   h+=buildAC('negfe','Negative Firm Economics','Traders costing the firm money',traders.filter(function(tr){return tr.np<0}).sort(function(a,b){return a.np-b.np}),function(tr){return '\u2212$'+R(Math.abs(tr.np)).toLocaleString()},function(tr){return'var(--dn)'},true);
+  h+=buildAC('overtrade','Overtrading','Traders averaging 10+ trades per day',traders.filter(function(tr){return tr.avgTpd>=10}).sort(function(a,b){return b.avgTpd-a.avgTpd}),function(tr){return tr.avgTpd.toFixed(1)+' /day'},function(tr){return tr.avgTpd>=20?'var(--dn)':'var(--warn)'},true);
   h+='</div>';
 
   E('autogrpc').innerHTML=h}
