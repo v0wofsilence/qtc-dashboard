@@ -1138,51 +1138,54 @@ function rAC(){
     var t=gt(id);if(!t)return null;
     var q=t.q||{};var b=t.l?.balance||0;
     var ratios=calcRatios(q.dailyPnl||{},b);
-    // Consistency: low stddev of daily P&L relative to mean
-    var dp=q.dailyPnl||{};var dates=Object.keys(dp);var vals=dates.map(function(d){return dp[d]});
-    var mean=vals.length?vals.reduce(function(a,b){return a+b},0)/vals.length:0;
-    var variance=vals.length?vals.reduce(function(a,b){return a+(b-mean)*(b-mean)},0)/vals.length:0;
+    var dp=q.dailyPnl||{};var dates=Object.keys(dp).sort();var vals=dates.map(function(d){return dp[d]});
+    var mean=vals.length?vals.reduce(function(a,c){return a+c},0)/vals.length:0;
+    var variance=vals.length?vals.reduce(function(a,c){return a+(c-mean)*(c-mean)},0)/vals.length:0;
     var stddev=Math.sqrt(variance);
     var consistency=vals.length>1?(mean!==0?Math.abs(mean)/stddev:0):0;
-    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,consistency:isFinite(consistency)?consistency:0,score:q.score||0,pending:q.pending,bal:b}
+    var winStreak=0,loseStreak=0,curWin=0,curLose=0;
+    vals.forEach(function(v){if(v>0){curWin++;curLose=0;if(curWin>winStreak)winStreak=curWin}else if(v<0){curLose++;curWin=0;if(curLose>loseStreak)loseStreak=curLose}else{curWin=0;curLose=0}});
+    var ddInfo=calcDrawdowns(dp,b);
+    var ddPct=b>0?(ddInfo.currentDD/b*100):0;
+    var maxDayLoss=vals.length?Math.min.apply(null,vals):0;
+    var maxDayLossPct=b>0?(Math.abs(maxDayLoss)/b*100):0;
+    var grossProfit=0,grossLoss=0;vals.forEach(function(v){if(v>0)grossProfit+=v;else grossLoss+=Math.abs(v)});
+    var pf=grossLoss>0?(grossProfit/grossLoss):grossProfit>0?99:0;
+    var np=netPosition(id);
+    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,consistency:isFinite(consistency)?consistency:0,score:q.score||0,pending:q.pending,bal:b,winStreak:winStreak,loseStreak:loseStreak,ddPct:ddPct,maxDayLossPct:maxDayLossPct,pf:pf,np:np}
   }).filter(Boolean);
 
-  var acTypes={};
-  function buildAutoCluster(key,title,desc,sorted,valFn,colFn){
+  acTypes={};
+  function buildAC(key,title,desc,sorted,valFn,colFn,warn){
     var top=sorted.slice(0,10);
     acTypes[key]={title:title,desc:desc,members:top,valFn:valFn,colFn:colFn};
     var tb2=0,tu2=0;top.forEach(function(tr){tb2+=tr.bal;tu2+=(gt(tr.id)?.l?.equity||0)-(gt(tr.id)?.l?.balance||0)});
-    var h='<div class="tc" onclick="viewAutoCluster(\''+key+'\')" style="cursor:pointer"><div class="tc-top"><div><div class="tc-nm">'+title+'</div><div class="tc-ti">'+top.length+' trader'+(top.length!==1?'s':'')+'</div></div></div><div style="font-size:.68rem;color:var(--w4);margin:.3rem 0">'+desc+'</div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(tb2)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(tu2>=0?'var(--up)':'var(--dn)')+'">'+(tu2>=0?'+':'')+'$'+F(tu2)+'</span></div></div>';
-    return h}
+    var borderCol=warn?'border-left:3px solid var(--dn);':'';
+    return'<div class="tc" onclick="viewAutoCluster(\''+key+'\')" style="cursor:pointer;'+borderCol+'"><div class="tc-top"><div><div class="tc-nm">'+(warn?'\u26a0 ':'')+title+'</div><div class="tc-ti">'+top.length+' trader'+(top.length!==1?'s':'')+'</div></div></div><div style="font-size:.68rem;color:var(--w4);margin:.3rem 0">'+desc+'</div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(tb2)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(tu2>=0?'var(--up)':'var(--dn)')+'">'+(tu2>=0?'+':'')+'$'+F(tu2)+'</span></div></div>'}
 
-  var h='<div class="sh"><span class="sh-t">Auto Clusters</span><span class="sh-l"></span></div>';
-  h+='<div style="font-family:var(--mono);font-size:.72rem;color:var(--w3);margin-bottom:1.5rem">Automatically generated clusters based on trader performance metrics. Updates in real-time.</div>';
+  var h='';
 
-  // Top P&L
-  var byPnl=traders.slice().sort(function(a,b){return b.pnl-a.pnl});
-  h+='<div class="tg">';h+=buildAutoCluster('pnl','Highest P&L','Traders ranked by total profit & loss',byPnl,
-    function(tr){return(tr.pnl>=0?'+$':'\u2212$')+R(Math.abs(tr.pnl)).toLocaleString()},
-    function(tr){return tr.pnl>=0?'var(--up)':'var(--dn)'});
+  // PROFITABILITY
+  h+='<div class="sh"><span class="sh-t">Profitability</span><span class="sh-l"></span></div><div class="tg">';
+  h+=buildAC('pnl','Highest P&L','Top traders by total profit & loss',traders.slice().sort(function(a,b){return b.pnl-a.pnl}),function(tr){return(tr.pnl>=0?'+$':'\u2212$')+R(Math.abs(tr.pnl)).toLocaleString()},function(tr){return tr.pnl>=0?'var(--up)':'var(--dn)'});
+  h+=buildAC('wr','Highest Win Rate','Top traders by win rate',traders.slice().sort(function(a,b){return b.wr-a.wr}),function(tr){return tr.wr+'%'},function(tr){return tr.wr>=60?'var(--up)':tr.wr>=45?'var(--warn)':'var(--dn)'});
+  h+=buildAC('sharpe','Best Sharpe Ratio','Top traders by risk-adjusted returns',traders.slice().sort(function(a,b){return b.sharpe-a.sharpe}),function(tr){return tr.sharpe.toFixed(2)},function(tr){return tr.sharpe>=1.5?'var(--up)':tr.sharpe>=0.5?'var(--warn)':'var(--dn)'});
+  h+=buildAC('consistent','Most Consistent','Top traders by P&L consistency',traders.slice().sort(function(a,b){return b.consistency-a.consistency}),function(tr){return tr.consistency.toFixed(2)},function(tr){return tr.consistency>=1?'var(--up)':tr.consistency>=0.3?'var(--warn)':'var(--dn)'});
+  h+=buildAC('pf','Highest Profit Factor','Top traders by gross profit / gross loss',traders.slice().sort(function(a,b){return b.pf-a.pf}),function(tr){return tr.pf>=99?'\u221e':tr.pf.toFixed(2)},function(tr){return tr.pf>=2?'var(--up)':tr.pf>=1?'var(--warn)':'var(--dn)'});
+  h+=buildAC('fe','Best Firm Economics','Top traders by net firm economics',traders.slice().sort(function(a,b){return b.np-a.np}),function(tr){return(tr.np>=0?'+$':'\u2212$')+R(Math.abs(tr.np)).toLocaleString()},function(tr){return tr.np>=0?'var(--up)':'var(--dn)'});
+  h+='</div>';
 
-  // Top WR
-  var byWR=traders.slice().sort(function(a,b){return b.wr-a.wr});
-  h+=buildAutoCluster('wr','Highest Win Rate','Traders ranked by win rate percentage',byWR,
-    function(tr){return tr.wr+'%'},
-    function(tr){return tr.wr>=60?'var(--up)':tr.wr>=45?'var(--warn)':'var(--dn)'});
+  // RISK WARNINGS
+  h+='<div class="sh"><span class="sh-t">Risk Warnings</span><span class="sh-l"></span></div><div class="tg">';
+  h+=buildAC('winstreak','2+ Winning Days in a Row','Monitor for overconfidence',traders.filter(function(tr){return tr.winStreak>=2}).sort(function(a,b){return b.winStreak-a.winStreak}),function(tr){return tr.winStreak+' days'},function(tr){return tr.winStreak>=5?'var(--up)':tr.winStreak>=3?'var(--warn)':'var(--accent)'},true);
+  h+=buildAC('deepdd','5%+ Drawdown','Traders in significant drawdown',traders.filter(function(tr){return tr.ddPct>=5}).sort(function(a,b){return b.ddPct-a.ddPct}),function(tr){return tr.ddPct.toFixed(2)+'%'},function(tr){return tr.ddPct>=10?'var(--dn)':'var(--warn)'},true);
+  h+=buildAC('losestreak','2+ Losing Days in a Row','Watch for tilt',traders.filter(function(tr){return tr.loseStreak>=2}).sort(function(a,b){return b.loseStreak-a.loseStreak}),function(tr){return tr.loseStreak+' days'},function(tr){return tr.loseStreak>=5?'var(--dn)':tr.loseStreak>=3?'var(--warn)':'var(--accent)'},true);
+  h+=buildAC('lowwr','Win Rate Below 40%','Consistently losing more than winning',traders.filter(function(tr){return tr.wr<40&&tr.wr>0}).sort(function(a,b){return a.wr-b.wr}),function(tr){return tr.wr+'%'},function(tr){return tr.wr<25?'var(--dn)':'var(--warn)'},true);
+  h+=buildAC('bigloss','3%+ Single Day Loss','Day loss exceeding 3% of balance',traders.filter(function(tr){return tr.maxDayLossPct>=3}).sort(function(a,b){return b.maxDayLossPct-a.maxDayLossPct}),function(tr){return tr.maxDayLossPct.toFixed(2)+'%'},function(tr){return tr.maxDayLossPct>=5?'var(--dn)':'var(--warn)'},true);
+  h+=buildAC('negfe','Negative Firm Economics','Traders costing the firm money',traders.filter(function(tr){return tr.np<0}).sort(function(a,b){return a.np-b.np}),function(tr){return '\u2212$'+R(Math.abs(tr.np)).toLocaleString()},function(tr){return'var(--dn)'},true);
+  h+='</div>';
 
-  // Top Sharpe
-  var bySharpe=traders.slice().sort(function(a,b){return b.sharpe-a.sharpe});
-  h+=buildAutoCluster('sharpe','Best Sharpe Ratio','Traders ranked by risk-adjusted returns',bySharpe,
-    function(tr){return tr.sharpe.toFixed(2)},
-    function(tr){return tr.sharpe>=1.5?'var(--up)':tr.sharpe>=0.5?'var(--warn)':'var(--dn)'});
-
-  // Most Consistent
-  var byConsistency=traders.slice().sort(function(a,b){return b.consistency-a.consistency});
-  h+=buildAutoCluster('consistent','Most Consistent','Traders ranked by P&L consistency (mean / std deviation)',byConsistency,
-    function(tr){return tr.consistency.toFixed(2)},
-    function(tr){return tr.consistency>=1?'var(--up)':tr.consistency>=0.3?'var(--warn)':'var(--dn)'});
-
-  h+='</div>';E('autogrpc').innerHTML=h}
+  E('autogrpc').innerHTML=h}
 
 function viewAutoCluster(key){
   var ac=acTypes[key];if(!ac)return;
