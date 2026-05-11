@@ -266,6 +266,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 <div id="v-risk" class="vw"><div id="riskc"></div></div>
 <div id="v-groups" class="vw"><div id="grpc"></div></div>
 <div id="v-autoclusters" class="vw"><div id="autogrpc"></div></div>
+<div id="v-autoclusterdetail" class="vw"><div id="acdetail"></div></div>
 <div id="v-groupdetail" class="vw"><div id="grpdetail"></div></div>
 <div id="v-system" class="vw"><div id="sysc"></div></div>
 </div>
@@ -1146,16 +1147,12 @@ function rAC(){
     return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,consistency:isFinite(consistency)?consistency:0,score:q.score||0,pending:q.pending,bal:b}
   }).filter(Boolean);
 
-  function buildAutoCluster(title,desc,sorted,valFn,colFn){
+  var acTypes={};
+  function buildAutoCluster(key,title,desc,sorted,valFn,colFn){
     var top=sorted.slice(0,10);
-    var h='<div class="sh"><span class="sh-t">'+title+'</span><span class="sh-l"></span><span class="sh-ts">'+top.length+' traders</span></div>';
-    if(!top.length){h+='<div class="placeholder-box">No traders with data</div>';return h}
-    h+='<div style="font-family:var(--mono);font-size:.68rem;color:var(--w4);margin-bottom:.6rem">'+desc+'</div>';
-    h+='<div class="tw"><table><thead><tr><th>#</th><th>Trader</th><th>Value</th><th>Balance</th><th>Q-Score</th></tr></thead><tbody>';
-    top.forEach(function(tr,i){
-      var v=valFn(tr);var c=colFn(tr);
-      h+='<tr style="cursor:pointer" onclick="viewTrader(\''+tr.id+'\')"><td style="color:var(--w4)">'+(i+1)+'</td><td class="sym" style="color:var(--accent)">'+tr.name+'</td><td style="color:'+c+';font-weight:600">'+v+'</td><td>$'+F(tr.bal)+'</td><td style="color:'+tCol(tr.score)+'">'+(tr.pending?'Pending':tr.score||'\u2014')+'</td></tr>'});
-    h+='</tbody></table></div>';
+    acTypes[key]={title:title,desc:desc,members:top,valFn:valFn,colFn:colFn};
+    var tb2=0,tu2=0;top.forEach(function(tr){tb2+=tr.bal;tu2+=(gt(tr.id)?.l?.equity||0)-(gt(tr.id)?.l?.balance||0)});
+    var h='<div class="tc" onclick="viewAutoCluster(\''+key+'\')" style="cursor:pointer"><div class="tc-top"><div><div class="tc-nm">'+title+'</div><div class="tc-ti">'+top.length+' trader'+(top.length!==1?'s':'')+'</div></div></div><div style="font-size:.68rem;color:var(--w4);margin:.3rem 0">'+desc+'</div><div class="tc-r"><span class="tc-rl">Balance</span><span class="tc-rv">$'+F(tb2)+'</span></div><div class="tc-r"><span class="tc-rl">Open P&L</span><span class="tc-rv" style="color:'+(tu2>=0?'var(--up)':'var(--dn)')+'">'+(tu2>=0?'+':'')+'$'+F(tu2)+'</span></div></div>';
     return h}
 
   var h='<div class="sh"><span class="sh-t">Auto Clusters</span><span class="sh-l"></span></div>';
@@ -1163,29 +1160,68 @@ function rAC(){
 
   // Top P&L
   var byPnl=traders.slice().sort(function(a,b){return b.pnl-a.pnl});
-  h+=buildAutoCluster('Highest P&L','Traders ranked by total profit & loss',byPnl,
+  h+='<div class="tg">';h+=buildAutoCluster('pnl','Highest P&L','Traders ranked by total profit & loss',byPnl,
     function(tr){return(tr.pnl>=0?'+$':'\u2212$')+R(Math.abs(tr.pnl)).toLocaleString()},
     function(tr){return tr.pnl>=0?'var(--up)':'var(--dn)'});
 
   // Top WR
   var byWR=traders.slice().sort(function(a,b){return b.wr-a.wr});
-  h+=buildAutoCluster('Highest Win Rate','Traders ranked by win rate percentage',byWR,
+  h+=buildAutoCluster('wr','Highest Win Rate','Traders ranked by win rate percentage',byWR,
     function(tr){return tr.wr+'%'},
     function(tr){return tr.wr>=60?'var(--up)':tr.wr>=45?'var(--warn)':'var(--dn)'});
 
   // Top Sharpe
   var bySharpe=traders.slice().sort(function(a,b){return b.sharpe-a.sharpe});
-  h+=buildAutoCluster('Best Sharpe Ratio','Traders ranked by risk-adjusted returns',bySharpe,
+  h+=buildAutoCluster('sharpe','Best Sharpe Ratio','Traders ranked by risk-adjusted returns',bySharpe,
     function(tr){return tr.sharpe.toFixed(2)},
     function(tr){return tr.sharpe>=1.5?'var(--up)':tr.sharpe>=0.5?'var(--warn)':'var(--dn)'});
 
   // Most Consistent
   var byConsistency=traders.slice().sort(function(a,b){return b.consistency-a.consistency});
-  h+=buildAutoCluster('Most Consistent','Traders ranked by P&L consistency (mean / std deviation)',byConsistency,
+  h+=buildAutoCluster('consistent','Most Consistent','Traders ranked by P&L consistency (mean / std deviation)',byConsistency,
     function(tr){return tr.consistency.toFixed(2)},
     function(tr){return tr.consistency>=1?'var(--up)':tr.consistency>=0.3?'var(--warn)':'var(--dn)'});
 
-  E('autogrpc').innerHTML=h}
+  h+='</div>';E('autogrpc').innerHTML=h}
+
+function viewAutoCluster(key){
+  var ac=acTypes[key];if(!ac)return;
+  var mids=ac.members.map(function(m){return m.id});
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span class="tp-back" onclick="nav(\'autoclusters\')">← Back to Auto Clusters</span></div>';
+
+  // Header
+  h+='<div class="tp-hero" style="align-items:flex-start"><div style="width:60px;height:60px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;flex-shrink:0">A</div>';
+  h+='<div class="tp-info" style="flex:1"><div class="tp-name">'+ac.title+'</div>';
+  h+='<div class="tp-tier-tag">'+mids.length+' member'+(mids.length!==1?'s':'')+' · Auto-generated</div>';
+
+  var tb=0,te=0,tu=0,tp=0,gpnl=0;
+  mids.forEach(function(id){var t=gt(id);if(!t)return;if(t.l){tb+=t.l.balance||0;te+=t.l.equity||0;tu+=(t.l.equity||0)-(t.l.balance||0)}tp+=(t.pos||[]).length;gpnl+=(t.q?.pnl||0)});
+  h+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(tb)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(te>=tb?'var(--up)':'var(--dn)')+'">$'+F(te)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(tu>=0?'var(--up)':'var(--dn)')+'">'+(tu>=0?'+':'')+'$'+F(tu)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Total P&L</span><span class="tp-meta-val" style="color:'+(gpnl>=0?'var(--up)':'var(--dn)')+'">'+(gpnl>=0?'+':'')+'$'+R(gpnl).toLocaleString()+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Positions</span><span class="tp-meta-val">'+tp+'</span></div></div>';
+  h+='</div></div>';
+
+  // Equity curve
+  var gDaily={};mids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){gDaily[dt]=(gDaily[dt]||0)+dp[dt]})});
+  h+=buildEquityCurve(gDaily,tb,'acEq'+key,'Cluster Equity Curve');
+
+  // Session performance
+  var gTrades=[];mids.forEach(function(id){var t=gt(id);if(t)(t.hist||[]).forEach(function(tr){gTrades.push(tr)})});
+  h+=buildSessionHTML(gTrades,'Cluster Session Performance');
+
+  // Drawdown
+  h+=buildDrawdownHTML(gDaily,tb,'Cluster Drawdown Analysis');
+
+  // Calendar
+  h+=buildTraderCal('ac-'+key,gDaily,{},gTrades);
+
+  // Members table with ranking value
+  h+='<div class="sh"><span class="sh-t">Members</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Account</th><th>Value</th><th>Balance</th><th>WR</th><th>P&L</th><th>Q-Score</th></tr></thead><tbody>';
+  ac.members.forEach(function(tr,i){
+    var t=gt(tr.id);if(!t)return;var s=S.sal[tr.id]||{};var v=ac.valFn(tr);var c=ac.colFn(tr);
+    h+='<tr style="cursor:pointer" onclick="viewTrader(\''+tr.id+'\')"><td style="color:var(--w4)">'+(i+1)+'</td><td class="sym" style="color:var(--accent)">'+t.a.name+'</td><td style="font-size:.68rem">'+(s.email||'\u2014')+'</td><td style="font-size:.68rem">'+(t.a.login||'\u2014')+'</td><td style="color:'+c+';font-weight:600">'+v+'</td><td>$'+F(tr.bal)+'</td><td>'+(tr.wr||0)+'%</td><td style="color:'+((tr.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(tr.pnl>=0?'+':'')+'$'+(tr.pnl||0).toLocaleString()+'</td><td style="color:'+tCol(tr.score||0)+'">'+(tr.pending?'Pending':tr.score||'\u2014')+'</td></tr>'});
+  h+='</tbody></table></div>';
+
+  nav('autoclusterdetail');
+  E('acdetail').innerHTML=h}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML='<div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div><div class="ci"><span class="cl">Supabase</span><span class="cv '+(SUPA_URL?'up':'dn')+'">'+(SUPA_URL?'CONNECTED':'NOT SET')+'</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div><div class="sh"><span class="sh-t">Data Persistence</span><span class="sh-l"></span></div><div class="fp"><div class="fg"><div><div class="fl">Supabase URL</div><input class="fi" id="supa-url" value="'+SUPA_URL+'" placeholder="https://xxx.supabase.co"></div><div><div class="fl">Supabase Anon Key</div><input class="fi" id="supa-key" type="password" value="'+SUPA_KEY+'" placeholder="eyJ..."></div></div><div class="br"><button class="btn btn-s" onclick="saveSupa()">Save & Sync</button><button class="btn" onclick="loadSupa()">Load from Supabase</button></div><div style="font-family:var(--mono);font-size:.52rem;color:var(--w4);margin-top:.5rem">Create a table: <code>qtc_state</code> with columns: <code>id</code> (int, default 1), <code>data</code> (jsonb), <code>updated_at</code> (timestamptz). Enable RLS with anon read/write on id=1.</div></div>'}
