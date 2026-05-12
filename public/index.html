@@ -408,21 +408,28 @@ function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(functi
 // ── Init ──
 (async function(){
 try{
+// Render immediately so UI is interactive while loading
+try{renderAll()}catch(e){}
 log('Initialising...','inf');
-// Load Supabase and MetaAPI accounts in parallel
+ss('ok','Loading...');
+
+// Add timeout wrapper
+function withTimeout(promise,ms){return Promise.race([promise,new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timeout'))},ms)})])}
+
+// Load Supabase and MetaAPI accounts in parallel (10s timeout)
 var initResults=await Promise.all([
-  (SUPA_URL&&SUPA_KEY)?supaLoad().then(function(ok){if(ok)log('Supabase loaded','ok');return ok}).catch(function(e){log('Supabase: '+e.message,'wrn');return false}):Promise.resolve(false),
-  px('list-accounts').then(function(a){log(a.length+' account(s)','ok');return a}).catch(function(e){log('Accounts: '+e.message,'er');return[]})
+  (SUPA_URL&&SUPA_KEY)?withTimeout(supaLoad(),8000).then(function(ok){if(ok)log('Supabase loaded','ok');return ok}).catch(function(e){log('Supabase: '+e.message,'wrn');return false}):Promise.resolve(false),
+  withTimeout(px('list-accounts'),10000).then(function(a){log(a.length+' account(s)','ok');return a}).catch(function(e){log('Accounts: '+e.message,'er');return[]})
 ]);
 S.accts=initResults[1]||[];
-// Load all accounts in parallel
+// Load all accounts in parallel (15s timeout per account)
 var loadPromises=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)}).map(function(ac){var id=ac.id;
   S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
-  return Promise.all([
+  return withTimeout(Promise.all([
     px('account-info',id).catch(function(){return null}),
     px('positions',id).catch(function(){return[]}),
     px('history',id).catch(function(){return[]})
-  ]).then(function(r){
+  ]),15000).then(function(r){
     if(r[0])S.traders[id].l=r[0];
     S.traders[id].pos=Array.isArray(r[1])?r[1]:[];
     S.traders[id].hist=Array.isArray(r[2])?r[2].filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[];
@@ -430,7 +437,7 @@ var loadPromises=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexO
     if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
     S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
     if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12)}
-  })});
+  }).catch(function(e){log(ac.name+': '+e.message,'wrn')})});
 await Promise.all(loadPromises);try{sH()}catch(e){}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
 try{sS()}catch(e){log('sS error: '+e.message,'er')}
