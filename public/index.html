@@ -1443,7 +1443,7 @@ function rPay(){
     h+='<div class="sh"><span class="sh-t">Pending Payouts</span><span class="sh-l"></span><span class="sh-ts" style="color:var(--warn)">'+pending.length+' awaiting payment</span></div>';
     h+='<div class="tw"><table><thead><tr><th>Date</th><th>Trader</th><th>Account</th><th>Withdrawn</th><th>Post-Split</th><th>Wallet</th><th>Status</th><th></th></tr></thead><tbody>';
     pending.forEach(function(p,i){var pi=payouts.indexOf(p);
-      h+='<tr><td>'+p.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p.traderId+'\')">'+p.traderName+'</td><td>'+(p.account||'\u2014')+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'<span style="color:var(--w4)">Not set</span>')+'</td><td><span style="color:var(--warn);font-weight:600">PENDING</span></td><td><div class="br"><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editPayout('+pi+')">Edit</button><button class="btn" style="font-size:.58rem;padding:2px 8px;color:var(--dn);border-color:rgba(255,77,77,.3)" onclick="deletePayout('+pi+')">\u2715</button></div></td></tr>'});
+      h+='<tr><td>'+p.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p.traderId+'\')">'+p.traderName+'</td><td>'+(p.account||'\u2014')+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'<span style="color:var(--w4)">Not set</span>')+'</td><td><span style="color:var(--warn);font-weight:600">PENDING</span></td><td><div class="br"><button class="btn" style="font-size:.58rem;padding:2px 8px;background:var(--up);color:#000;border-color:var(--up);font-weight:600" onclick="markPayoutPaid('+pi+')">\u2713 Approve</button><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editPayout('+pi+')">Edit</button><button class="btn" style="font-size:.58rem;padding:2px 8px;color:var(--dn);border-color:rgba(255,77,77,.3)" onclick="deletePayout('+pi+')">\u2715</button></div></td></tr>'});
     h+='</tbody></table></div>'}
 
   // Paid payouts
@@ -1452,7 +1452,7 @@ function rPay(){
     h+='<div class="sh"><span class="sh-t">Completed Payouts</span><span class="sh-l"></span><span class="sh-ts" style="color:var(--up)">'+paid.length+' paid</span></div>';
     h+='<div class="tw"><table><thead><tr><th>Date</th><th>Trader</th><th>Account</th><th>Withdrawn</th><th>Post-Split</th><th>Wallet</th><th>Paid Date</th><th>Status</th><th></th></tr></thead><tbody>';
     paid.forEach(function(p){var pi=payouts.indexOf(p);
-      h+='<tr style="background:rgba(0,220,130,.04)"><td>'+p.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p.traderId+'\')">'+p.traderName+'</td><td>'+(p.account||'\u2014')+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td>'+(p.paidDate||'\u2014')+'</td><td><span style="color:var(--up);font-weight:600">\u2713 PAID</span></td><td><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editPayout('+pi+')">Edit</button></td></tr>'});
+      h+='<tr style="background:rgba(0,220,130,.04)"><td>'+p.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p.traderId+'\')">'+p.traderName+'</td><td>'+(p.account||'\u2014')+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td>'+(p.paidDate||'\u2014')+'</td><td><span style="color:var(--up);font-weight:600">\u2713 PAID</span></td><td><div class="br"><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editPayout('+pi+')">Edit</button><button class="btn" style="font-size:.58rem;padding:2px 8px;color:var(--warn);border-color:rgba(229,192,11,.3)" onclick="unmarkPayoutPaid('+pi+')">Unmark</button></div></td></tr>'});
     h+='</tbody></table></div>'}
 
   E('payc').innerHTML=h}
@@ -1521,6 +1521,17 @@ function updatePayout(pi){
     if(!p.paid)p.paidDate=null}
   sP();closeEdit();rPay()}
 
+function markPayoutPaid(pi){
+  var p=S.payouts[pi];if(!p)return;
+  if(!p.wallet){alert('Add a crypto wallet address first by clicking Edit');editPayout(pi);return}
+  if(!confirm('Mark this payout as paid?\n\n'+p.traderName+' — $'+R(p.postSplit).toLocaleString()+'\nWallet: '+p.wallet))return;
+  p.paid=true;p.paidDate=new Date().toISOString().slice(0,10);
+  sP();rPay();log('Payout marked paid: '+p.traderName+' — $'+R(p.postSplit).toLocaleString(),'ok')}
+function unmarkPayoutPaid(pi){
+  var p=S.payouts[pi];if(!p)return;
+  if(!confirm('Unmark this payout as paid?'))return;
+  p.paid=false;p.paidDate=null;
+  sP();rPay()}
 function deletePayout(pi){if(!confirm('Delete this payout record?'))return;S.payouts.splice(pi,1);sP();rPay()}
 
 function getTraderPayouts(traderId){return(S.payouts||[]).filter(function(p){return p.traderId===traderId})}
