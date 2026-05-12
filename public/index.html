@@ -525,7 +525,7 @@ var pendingPct=totalPayoutVal>0?((pendingPayouts/totalPayoutVal)*100):0;
 
 // Firm-wide equity curve data
 var firmDaily={};ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){firmDaily[dt]=(firmDaily[dt]||0)+dp[dt]})});
-var eqHTML=buildEquityCurve(firmDaily,tb,'firmEqGrad','Firm Equity Curve');
+var eqHTML=buildEquityCurve(firmDaily,0,'firmEqGrad','Firm P&L Curve');
 
 // KPIs stacked vertically + equity curve side by side
 E('fk').innerHTML='<div class="sh"><span class="sh-t">Firm Overview</span><span class="sh-l"></span><span class="sh-ts">'+T()+'</span></div><div class="ov-top"><div class="ov-kpis"><div class="ov-kpi"><div class="kpi-l">Traders</div><div class="ov-kpi-v">'+ids.length+'</div></div><div class="ov-kpi"><div class="kpi-l">Total Balance</div><div class="ov-kpi-v">$'+F(tb)+'</div></div><div class="ov-kpi"><div class="kpi-l">Total Equity</div><div class="ov-kpi-v" style="color:'+(te>=tb?'var(--up)':'var(--dn)')+'">$'+F(te)+'</div></div><div class="ov-kpi"><div class="kpi-l">Open P&L</div><div class="ov-kpi-v" style="color:'+(tu>=0?'var(--up)':'var(--dn)')+'">'+(tu>=0?'+':'')+'$'+F(tu)+'</div></div><div class="ov-kpi"><div class="kpi-l">Positions</div><div class="ov-kpi-v">'+tp+'</div></div><div class="ov-kpi"><div class="kpi-l">Pending Payouts</div><div class="ov-kpi-v" style="color:'+(pendingPayouts>0?'var(--warn)':'var(--up)')+'">'+(pendingPayouts>0?'$'+R(pendingPayouts).toLocaleString()+' ('+pendingPct.toFixed(0)+'%)':'None')+'</div></div><div class="ov-kpi"><div class="kpi-l">Firm Economics</div><div class="ov-kpi-v" style="color:'+(firmFE>=0?'var(--up)':'var(--dn)')+'">'+(firmFE>=0?'+$':'\u2212$')+R(Math.abs(firmFE)).toLocaleString()+'</div></div><div class="ov-kpi"><div class="kpi-l">Salary Paid</div><div class="ov-kpi-v">$'+paidSal.toLocaleString()+'</div><div class="kpi-s">of $'+ts.toLocaleString()+' due</div></div></div><div class="ov-eq">'+eqHTML+'</div></div>';
@@ -545,8 +545,8 @@ function lbEmpty(){return'<div class="lb-card" style="opacity:.25"><div class="l
 function lb(title,items,valFn,colFn){var cards='';for(var i=0;i<3;i++){if(items[i])cards+=lbCard(items[i],i,valFn,colFn);else cards+=lbEmpty()}return'<div class="sh"><span class="sh-t">'+title+'</span><span class="sh-l"></span>'+(items.length<3?'<span class="sh-ts">Requires 3+ traders</span>':'')+'</div><div class="lb">'+cards+'</div>'}
 E('leaderboards').innerHTML=
   lb('Top Win Rate',ranked.length>=3?topWR:[],function(it){return it.wr+'%'},function(){return'var(--up)'})+
-  lb('Top Profit',ranked.length>=3?topPnl:[],function(it){return(it.pnl>=0?'+':'')+'$'+it.pnl.toLocaleString()},function(it){return it.pnl>=0?'var(--up)':'var(--dn)'})+
-  lb('Worst Performers',ranked.length>=3?worst:[],function(it){return(it.np>=0?'+$':'\u2212$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'});
+  lb('Most Profit Made',ranked.length>=3?topPnl:[],function(it){return(it.pnl>=0?'+':'')+'$'+it.pnl.toLocaleString()},function(it){return it.pnl>=0?'var(--up)':'var(--dn)'})+
+  lb('Worst Performers P&L',ranked.length>=3?worst:[],function(it){return(it.np>=0?'+$':'\u2212$')+R(Math.abs(it.np)).toLocaleString()},function(it){return it.np>=0?'var(--up)':'var(--dn)'});
 
 // Top clusters
 var clh='<div class="sh"><span class="sh-t">Top Clusters</span><span class="sh-l"></span>'+((!S.groups||S.groups.length<2)?'<span class="sh-ts">Requires 2+ clusters</span>':'')+'</div><div class="lb">';
@@ -1217,7 +1217,7 @@ function viewGroup(gi){
 
   // Group equity curve
   var gDaily={};mids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){gDaily[dt]=(gDaily[dt]||0)+dp[dt]})});
-  h+=buildEquityCurve(gDaily,tb,'grpEq'+gi,'Cluster Equity Curve');
+  h+=buildEquityCurve(gDaily,0,'grpEq'+gi,'Cluster P&L Curve');
 
   // Group session performance
   var gTrades=[];mids.forEach(function(id){var t=gt(id);if(t)(t.hist||[]).forEach(function(tr){gTrades.push(tr)})});
@@ -1351,7 +1351,7 @@ function viewAutoCluster(key){
 
   // Equity curve
   var gDaily={};mids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){gDaily[dt]=(gDaily[dt]||0)+dp[dt]})});
-  h+=buildEquityCurve(gDaily,tb,'acEq'+key,'Cluster Equity Curve');
+  h+=buildEquityCurve(gDaily,0,'acEq'+key,'Cluster P&L Curve');
 
   // Session performance
   var gTrades=[];mids.forEach(function(id){var t=gt(id);if(t)(t.hist||[]).forEach(function(tr){gTrades.push(tr)})});
