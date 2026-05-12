@@ -239,38 +239,9 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 .matrix-legend{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;font-family:var(--mono);font-size:.62rem;color:var(--w3)}
 .matrix-legend-bar{height:12px;width:120px;border-radius:3px;background:linear-gradient(90deg,#FF4D4D,#FF6B6B,#E5C07B,#7BC87B,#00DC82)}
 
-/* Pin Lock */
-.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #333;transition:all .15s}
-.pin-dot.filled{background:#8CB1F6;border-color:#8CB1F6}
-.pin-dot.error{border-color:#FF4D4D;background:#FF4D4D}
-.pin-key{width:64px;height:64px;border-radius:50%;border:1px solid #222;background:#0A0A0A;color:#E5E5E5;font-family:'Inter',sans-serif;font-size:1.3rem;font-weight:500;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center}
-.pin-key:hover{background:#141414;border-color:#444}
-.pin-key:active{background:#8CB1F6;color:#000;transform:scale(.95)}
-@keyframes pinShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-.pin-shake{animation:pinShake .3s ease}
 </style>
 </head>
 <body>
-<div id="pinLock" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column">
-<svg viewBox="0 0 1084 237" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:40px;width:auto;opacity:.6;margin-bottom:2rem"><path d="M188.203 189.937V64.8067H215.281V189.937H188.203ZM146.151 75.8838V50.2424H258.563V75.8838H146.151Z" fill="#8CB1F6"/><path d="M110.566 199.161L89.0954 163C89.0954 163 96.5742 160.016 99.2452 157.4C102.985 155.742 107.572 149.109 107.572 149.109L138.053 199.161H110.566ZM0 120.186C0 109.656 1.7778 100.014 5.33341 91.2621C8.88902 82.3731 13.8806 74.7148 20.308 68.2874C26.7354 61.8599 34.3253 56.8684 43.0776 53.3128C51.9666 49.7572 61.6761 47.9794 72.2062 47.9794C82.5995 47.9794 92.1723 49.7572 100.925 53.3128C109.677 56.8684 117.267 61.8599 123.694 68.2874C130.122 74.7148 135.113 82.3731 138.669 91.2621C142.224 100.014 144.002 109.656 144.002 120.186C144.002 130.579 142.224 140.22 138.669 149.109C135.113 157.861 130.122 165.52 123.694 172.084C117.267 178.511 109.677 183.503 100.925 187.058C92.1723 190.614 82.5995 192.392 72.2062 192.392C61.6761 192.392 51.9666 190.614 43.0776 187.058C34.3253 183.503 26.7354 178.511 20.308 172.084C13.8806 165.52 8.88902 157.861 5.33341 149.109C1.7778 140.22 0 130.579 0 120.186ZM27.4876 120.186C27.4876 129.211 29.4022 137.211 33.2313 144.186C37.0604 151.024 42.3254 156.357 49.0264 160.186C55.8641 164.015 63.5907 165.93 72.2062 165.93C80.8217 165.93 88.4116 164.015 94.9758 160.186C101.677 156.357 106.942 151.024 110.771 144.186C114.6 137.211 116.515 129.211 116.515 120.186C116.515 111.023 114.6 103.023 110.771 96.1852C106.942 89.2108 101.677 83.809 94.9758 79.9799C88.4116 76.1507 80.8217 74.2362 72.2062 74.2362C63.5907 74.2362 55.8641 76.2191 49.0264 80.185C42.3254 84.0141 37.0604 89.3475 33.2313 96.1852C29.4022 103.023 27.4876 111.023 27.4876 120.186Z" fill="#8CB1F6"/><path d="M435.042 91.8913H421.942C420.967 87.0138 419.201 82.5078 416.647 78.3735C414.138 74.1927 410.979 70.5462 407.17 67.4338C403.361 64.3215 399.041 61.9059 394.21 60.1872C389.379 58.4684 384.153 57.609 378.532 57.609C369.52 57.609 361.298 59.9549 353.865 64.6467C346.479 69.3384 340.557 76.2367 336.097 85.3415C331.684 94.3998 329.478 105.502 329.478 118.648C329.478 131.887 331.684 143.036 336.097 152.094C340.557 161.153 346.479 168.028 353.865 172.719C361.298 177.365 369.52 179.687 378.532 179.687C384.153 179.687 389.379 178.828 394.21 177.109C399.041 175.391 403.361 172.998 407.17 169.932C410.979 166.82 414.138 163.173 416.647 158.993C419.201 154.812 420.967 150.283 421.942 145.405H435.042C433.881 151.955 431.697 158.064 428.492 163.731C425.333 169.352 421.292 174.276 416.368 178.503C411.49 182.73 405.869 186.028 399.505 188.397C393.141 190.766 386.15 191.951 378.532 191.951C366.547 191.951 355.909 188.955 346.619 182.962C337.328 176.923 330.035 168.423 324.739 157.46C319.49 146.497 316.866 133.56 316.866 118.648C316.866 103.737 319.49 90.7997 324.739 79.8368C330.035 68.8739 337.328 60.3962 346.619 54.4038C355.909 48.3649 366.547 45.3454 378.532 45.3454C386.15 45.3454 393.141 46.53 399.505 48.8991C405.869 51.2218 411.49 54.5199 416.368 58.7936C421.292 63.0208 425.333 67.9448 428.492 73.5656C431.697 79.1864 433.881 85.295 435.042 91.8913ZM463.699 190H450.042L501.953 47.2965H515.889L567.8 190H554.143L509.409 64.2286H508.433L463.699 190ZM473.524 135.302H544.318V147.008H473.524V135.302ZM590.099 190V47.2965H636.158C646.284 47.2965 654.739 49.2475 661.521 53.1495C668.349 57.0051 673.483 62.2543 676.92 68.8971C680.404 75.5399 682.146 83.0188 682.146 91.3339C682.146 99.649 680.427 107.151 676.99 113.84C673.552 120.483 668.442 125.756 661.66 129.658C654.878 133.513 646.447 135.441 636.367 135.441H600.133V123.735H636.018C643.497 123.735 649.699 122.341 654.623 119.554C659.547 116.72 663.216 112.865 665.632 107.987C668.094 103.11 669.325 97.5586 669.325 91.3339C669.325 85.1092 668.094 79.5581 665.632 74.6805C663.216 69.8029 659.523 65.9706 654.553 63.1834C649.629 60.3962 643.381 59.0026 635.809 59.0026H603.13V190H590.099ZM723.607 47.2965V190H710.577V47.2965H723.607ZM750.749 59.0026V47.2965H854.223V59.0026H809.001V190H795.971V59.0026H750.749ZM864.938 190H851.28L903.192 47.2965H917.128L969.039 190H955.382L910.647 64.2286H909.672L864.938 190ZM874.762 135.302H945.557V147.008H874.762V135.302ZM991.338 190V47.2965H1004.37V178.294H1072.38V190H991.338Z" fill="#8CB1F6"/></svg>
-<div style="text-align:center;margin-bottom:1.5rem"><div style="font-family:Inter,sans-serif;font-size:.7rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#666">Enter PIN to continue</div></div>
-<div style="display:flex;gap:12px;margin-bottom:1.5rem" id="pinDots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
-<div id="pinError" style="font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:#FF4D4D;height:1.2rem;margin-bottom:1rem"></div>
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:220px">
-<button class="pin-key" onclick="pinPress('1')">1</button><button class="pin-key" onclick="pinPress('2')">2</button><button class="pin-key" onclick="pinPress('3')">3</button>
-<button class="pin-key" onclick="pinPress('4')">4</button><button class="pin-key" onclick="pinPress('5')">5</button><button class="pin-key" onclick="pinPress('6')">6</button>
-<button class="pin-key" onclick="pinPress('7')">7</button><button class="pin-key" onclick="pinPress('8')">8</button><button class="pin-key" onclick="pinPress('9')">9</button>
-<button class="pin-key" style="visibility:hidden"></button><button class="pin-key" onclick="pinPress('0')">0</button><button class="pin-key" onclick="pinDelete()" style="font-size:.9rem">⌫</button>
-</div>
-</div>
-<script>
-var PIN_CODE='0070',pinEntry='';
-function pinPress(n){if(pinEntry.length>=4)return;pinEntry+=n;updatePinDots();if(pinEntry.length===4){setTimeout(function(){if(pinEntry===PIN_CODE){document.getElementById('pinLock').style.display='none';sessionStorage.setItem('qtc_unlocked','1')}else{document.getElementById('pinError').textContent='Incorrect PIN';document.getElementById('pinDots').classList.add('pin-shake');var dots=document.querySelectorAll('.pin-dot');dots.forEach(function(d){d.classList.add('error')});setTimeout(function(){pinEntry='';updatePinDots();document.getElementById('pinDots').classList.remove('pin-shake');dots.forEach(function(d){d.classList.remove('error')})},600)}},200)}}
-function pinDelete(){if(pinEntry.length>0){pinEntry=pinEntry.slice(0,-1);updatePinDots();document.getElementById('pinError').textContent=''}}
-function updatePinDots(){var dots=document.querySelectorAll('.pin-dot');dots.forEach(function(d,i){d.classList.toggle('filled',i<pinEntry.length)})}
-document.addEventListener('keydown',function(e){var lock=document.getElementById('pinLock');if(!lock||lock.style.display==='none')return;if(e.key>='0'&&e.key<='9')pinPress(e.key);if(e.key==='Backspace')pinDelete()});
-if(sessionStorage.getItem('qtc_unlocked')==='1'){document.getElementById('pinLock').style.display='none'}
-</script>
 <div class="topbar"><div class="topbar-left"><svg viewBox="0 0 1084 237" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:32px;width:auto;opacity:.9"><path d="M188.203 189.937V64.8067H215.281V189.937H188.203ZM146.151 75.8838V50.2424H258.563V75.8838H146.151Z" fill="#8CB1F6"/><path d="M110.566 199.161L89.0954 163C89.0954 163 96.5742 160.016 99.2452 157.4C102.985 155.742 107.572 149.109 107.572 149.109L138.053 199.161H110.566ZM0 120.186C0 109.656 1.7778 100.014 5.33341 91.2621C8.88902 82.3731 13.8806 74.7148 20.308 68.2874C26.7354 61.8599 34.3253 56.8684 43.0776 53.3128C51.9666 49.7572 61.6761 47.9794 72.2062 47.9794C82.5995 47.9794 92.1723 49.7572 100.925 53.3128C109.677 56.8684 117.267 61.8599 123.694 68.2874C130.122 74.7148 135.113 82.3731 138.669 91.2621C142.224 100.014 144.002 109.656 144.002 120.186C144.002 130.579 142.224 140.22 138.669 149.109C135.113 157.861 130.122 165.52 123.694 172.084C117.267 178.511 109.677 183.503 100.925 187.058C92.1723 190.614 82.5995 192.392 72.2062 192.392C61.6761 192.392 51.9666 190.614 43.0776 187.058C34.3253 183.503 26.7354 178.511 20.308 172.084C13.8806 165.52 8.88902 157.861 5.33341 149.109C1.7778 140.22 0 130.579 0 120.186ZM27.4876 120.186C27.4876 129.211 29.4022 137.211 33.2313 144.186C37.0604 151.024 42.3254 156.357 49.0264 160.186C55.8641 164.015 63.5907 165.93 72.2062 165.93C80.8217 165.93 88.4116 164.015 94.9758 160.186C101.677 156.357 106.942 151.024 110.771 144.186C114.6 137.211 116.515 129.211 116.515 120.186C116.515 111.023 114.6 103.023 110.771 96.1852C106.942 89.2108 101.677 83.809 94.9758 79.9799C88.4116 76.1507 80.8217 74.2362 72.2062 74.2362C63.5907 74.2362 55.8641 76.2191 49.0264 80.185C42.3254 84.0141 37.0604 89.3475 33.2313 96.1852C29.4022 103.023 27.4876 111.023 27.4876 120.186Z" fill="#8CB1F6"/><path d="M435.042 91.8913H421.942C420.967 87.0138 419.201 82.5078 416.647 78.3735C414.138 74.1927 410.979 70.5462 407.17 67.4338C403.361 64.3215 399.041 61.9059 394.21 60.1872C389.379 58.4684 384.153 57.609 378.532 57.609C369.52 57.609 361.298 59.9549 353.865 64.6467C346.479 69.3384 340.557 76.2367 336.097 85.3415C331.684 94.3998 329.478 105.502 329.478 118.648C329.478 131.887 331.684 143.036 336.097 152.094C340.557 161.153 346.479 168.028 353.865 172.719C361.298 177.365 369.52 179.687 378.532 179.687C384.153 179.687 389.379 178.828 394.21 177.109C399.041 175.391 403.361 172.998 407.17 169.932C410.979 166.82 414.138 163.173 416.647 158.993C419.201 154.812 420.967 150.283 421.942 145.405H435.042C433.881 151.955 431.697 158.064 428.492 163.731C425.333 169.352 421.292 174.276 416.368 178.503C411.49 182.73 405.869 186.028 399.505 188.397C393.141 190.766 386.15 191.951 378.532 191.951C366.547 191.951 355.909 188.955 346.619 182.962C337.328 176.923 330.035 168.423 324.739 157.46C319.49 146.497 316.866 133.56 316.866 118.648C316.866 103.737 319.49 90.7997 324.739 79.8368C330.035 68.8739 337.328 60.3962 346.619 54.4038C355.909 48.3649 366.547 45.3454 378.532 45.3454C386.15 45.3454 393.141 46.53 399.505 48.8991C405.869 51.2218 411.49 54.5199 416.368 58.7936C421.292 63.0208 425.333 67.9448 428.492 73.5656C431.697 79.1864 433.881 85.295 435.042 91.8913ZM463.699 190H450.042L501.953 47.2965H515.889L567.8 190H554.143L509.409 64.2286H508.433L463.699 190ZM473.524 135.302H544.318V147.008H473.524V135.302ZM590.099 190V47.2965H636.158C646.284 47.2965 654.739 49.2475 661.521 53.1495C668.349 57.0051 673.483 62.2543 676.92 68.8971C680.404 75.5399 682.146 83.0188 682.146 91.3339C682.146 99.649 680.427 107.151 676.99 113.84C673.552 120.483 668.442 125.756 661.66 129.658C654.878 133.513 646.447 135.441 636.367 135.441H600.133V123.735H636.018C643.497 123.735 649.699 122.341 654.623 119.554C659.547 116.72 663.216 112.865 665.632 107.987C668.094 103.11 669.325 97.5586 669.325 91.3339C669.325 85.1092 668.094 79.5581 665.632 74.6805C663.216 69.8029 659.523 65.9706 654.553 63.1834C649.629 60.3962 643.381 59.0026 635.809 59.0026H603.13V190H590.099ZM723.607 47.2965V190H710.577V47.2965H723.607ZM750.749 59.0026V47.2965H854.223V59.0026H809.001V190H795.971V59.0026H750.749ZM864.938 190H851.28L903.192 47.2965H917.128L969.039 190H955.382L910.647 64.2286H909.672L864.938 190ZM874.762 135.302H945.557V147.008H874.762V135.302ZM991.338 190V47.2965H1004.37V178.294H1072.38V190H991.338Z" fill="#8CB1F6"/></svg><div class="ts-s"><div class="pulse" id="dot"></div><span id="st">Connecting</span></div><span id="openPnl" style="font-family:var(--mono);font-weight:600"></span></div><div class="topbar-center"><div class="search-wrap"><input class="search-input" id="searchInput" type="text" placeholder="Search traders..." oninput="onSearch()" onfocus="onSearch()" autocomplete="off"><div class="search-results" id="searchResults"></div></div></div><div class="topbar-right"><span id="ck"></span><span class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀</span></div></div>
 <div class="layout">
 <div class="sidebar">
@@ -408,78 +379,43 @@ function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(functi
 // ── Init ──
 (async function(){
 try{
-// Show loading state immediately
-ss('ok','Loading...');
-E('sf-traders').textContent='Loading...';
-E('sf-status').textContent='Connecting';
-
-// Show debug info on screen while loading
-var dbg=document.createElement('div');dbg.id='dbgOverlay';dbg.style.cssText='position:fixed;bottom:20px;right:20px;background:#111;border:1px solid #333;padding:12px 16px;border-radius:8px;font-family:monospace;font-size:12px;color:#8CB1F6;z-index:9998;max-width:350px;line-height:1.6';
-dbg.innerHTML='⏳ Connecting...';document.body.appendChild(dbg);
-function dbgLog(msg){dbg.innerHTML+='<br>'+msg;console.log('DBG:',msg)}
-
-dbgLog('Supabase: '+(SUPA_URL?'configured':'not set'));
-dbgLog('Fetching accounts...');
-
-// Add timeout wrapper
-function withTimeout(promise,ms){return Promise.race([promise,new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timeout '+ms+'ms'))},ms)})])}
-
-// Load Supabase and MetaAPI accounts in parallel
-var initResults=await Promise.all([
-  (SUPA_URL&&SUPA_KEY)?withTimeout(supaLoad(),8000).then(function(ok){dbgLog('Supabase: '+(ok?'✓':'empty'));return ok}).catch(function(e){dbgLog('Supabase: ✗ '+e.message);return false}):Promise.resolve(false),
-  withTimeout(px('list-accounts'),10000).then(function(a){dbgLog('Accounts: ✓ '+a.length);return a}).catch(function(e){dbgLog('Accounts: ✗ '+e.message);return[]})
-]);
-S.accts=initResults[1]||[];
-dbgLog('Loading '+S.accts.length+' traders...');
-
-// Load all accounts in parallel
-var loadPromises=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)}).map(function(ac){var id=ac.id;
+log('Initialising...','inf');
+// Auto-load from Supabase if configured
+if(SUPA_URL&&SUPA_KEY){
+  log('Syncing from Supabase...','inf');
+  try{var loaded=await supaLoad();if(loaded)log('Supabase data loaded','ok');else log('No Supabase data found','wrn')}catch(e){log('Supabase load failed: '+e.message,'wrn')}
+}
+try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');S.accts=[]}
+for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;
+  if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
   S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
-  return withTimeout(Promise.all([
-    px('account-info',id).catch(function(){return null}),
-    px('positions',id).catch(function(){return[]}),
-    px('history',id).catch(function(){return[]})
-  ]),15000).then(function(r){
-    if(r[0])S.traders[id].l=r[0];
-    S.traders[id].pos=Array.isArray(r[1])?r[1]:[];
-    S.traders[id].hist=Array.isArray(r[2])?r[2].filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[];
-    dbgLog(ac.name+': $'+F(S.traders[id].l?.balance||0));
-    if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
-    S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
-    if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12)}
-  }).catch(function(e){dbgLog(ac.name+': ✗ '+e.message)})});
-await Promise.all(loadPromises);try{sH()}catch(e){}
+  try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
+  try{var p=await px('positions',id);S.traders[id].pos=Array.isArray(p)?p:[]}catch(e){}
+  try{var h=await px('history',id);S.traders[id].hist=Array.isArray(h)?h.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[]}catch(e){}
+  if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
+  S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
+  if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);try{sH()}catch(e){}}}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
 try{sS()}catch(e){log('sS error: '+e.message,'er')}
 var total=S.accts.length+S.manual.length;E('sf-traders').textContent=S.accts.length+' accounts · '+total+' traders';E('sf-status').textContent='Refresh: 20s';
 updateTopbarPnl();
-ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');
-dbgLog('Rendering...');log('All systems operational','ok');
+ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
 S.lastBal={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastBal[id]=t.l.balance||0});
-try{renderAll();dbgLog('\u2713 Ready')}catch(e){dbgLog('Render: \u2717 '+e.message);log('Render error: '+e.message,'er');ss('err','Render fail')}
-setTimeout(function(){var d=E('dbgOverlay');if(d)d.remove()},3000);
-}catch(e){
-var d=E('dbgOverlay');if(d)d.innerHTML+='<br><span style="color:#FF4D4D">CRASH: '+e.message+'</span>';
-log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e);
-try{renderAll()}catch(re){}
-}
-setInterval(async function(){
-  var refreshIds=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)});
-  var results=await Promise.all(refreshIds.map(function(ac){var id=ac.id;
-    return Promise.all([px('account-info',id).catch(function(){return null}),px('positions',id).catch(function(){return null})]).then(function(r){return{id:id,info:r[0],pos:r[1]}})}));
-  results.forEach(function(r){if(!r.info||!S.traders[r.id])return;
-    var prevBal=S.lastBal[r.id]||0;
-    S.traders[r.id].l=r.info;if(r.pos)S.traders[r.id].pos=Array.isArray(r.pos)?r.pos:[];
-    var newBal=r.info.balance||0;
-    if(prevBal>0&&newBal<prevBal){
-      var drop=prevBal-newBal;var prevEq=S.lastEq&&S.lastEq[r.id]||prevBal;var newEq=r.info.equity||newBal;
-      var eqDrop=prevEq-newEq;
-      if(drop>10&&Math.abs(eqDrop-drop)<drop*0.2){
-        var t=gt(r.id);var s=S.sal[r.id]||{};var split=s.split||50;
-        var already=S.payouts.some(function(p){return p.traderId===r.id&&p.amount===drop&&p.date===new Date().toISOString().slice(0,10)});
-        if(!already){S.payouts.push({traderId:r.id,traderName:t?t.a.name:'Unknown',account:t?t.a.login||'':'',amount:drop,split:split,postSplit:drop*(split/100),wallet:'',date:new Date().toISOString().slice(0,10),notes:'Auto-detected withdrawal',paid:false,paidDate:null,created:new Date().toISOString()});
-          sP();log('Payout detected: '+((t&&t.a.name)||r.id)+' — $'+R(drop).toLocaleString(),'wrn');rPay()}}}
-    S.lastBal[r.id]=newBal});
+try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
+}catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
+setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
+  var prevBal=S.lastBal[id]||0;
+  try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){continue}
+  var newBal=S.traders[id].l?.balance||0;
+  if(prevBal>0&&newBal<prevBal){
+    var drop=prevBal-newBal;var prevEq=S.lastEq&&S.lastEq[id]||prevBal;var newEq=S.traders[id].l?.equity||newBal;
+    var eqDrop=prevEq-newEq;
+    if(drop>10&&Math.abs(eqDrop-drop)<drop*0.2){
+      var t=gt(id);var s=S.sal[id]||{};var split=s.split||50;
+      var already=S.payouts.some(function(p){return p.traderId===id&&p.amount===drop&&p.date===new Date().toISOString().slice(0,10)});
+      if(!already){S.payouts.push({traderId:id,traderName:t?t.a.name:'Unknown',account:t?t.a.login||'':'',amount:drop,split:split,postSplit:drop*(split/100),wallet:'',date:new Date().toISOString().slice(0,10),notes:'Auto-detected withdrawal',paid:false,paidDate:null,created:new Date().toISOString()});
+        sP();log('Payout detected: '+((t&&t.a.name)||id)+' — $'+R(drop).toLocaleString(),'wrn');rPay()}}}
+  S.lastBal[id]=newBal}
 S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.l.equity||0});
 rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
@@ -924,7 +860,6 @@ function viewTrader(id){
     [{n:'Risk Control',s:q.at.rc,w:22},{n:'Performance',s:q.at.fp,w:18},{n:'Consistency',s:q.at.cs,w:18},{n:'Capital Efficiency',s:q.at.ce,w:12},{n:'Eval Quality',s:q.at.eq,w:10},{n:'DD Recovery',s:q.at.dr,w:10},{n:'Discipline',s:q.at.dp,w:10}].forEach(function(at){html+='<div class="td-cell"><div class="td-cell-label">'+at.n+' ('+at.w+'%)</div><div class="td-cell-val" style="color:'+tCol(at.s||0)+'">'+(at.s||'—')+'</div><div class="td-bar"><div class="td-bar-fill" style="width:'+(at.s||0)+'%;background:var(--accent)"></div></div></div>'});
     html+='</div></div>';
   }
-
 
   // Session performance
   html+=buildSessionHTML(t.hist||[]);
