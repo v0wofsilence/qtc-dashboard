@@ -408,21 +408,31 @@ function gt(id){if(S.traders[id])return S.traders[id];var m=S.manual.find(functi
 // ── Init ──
 (async function(){
 try{
-// Render immediately so UI is interactive while loading
-try{renderAll()}catch(e){}
-log('Initialising...','inf');
+// Show loading state immediately
 ss('ok','Loading...');
+E('sf-traders').textContent='Loading...';
+E('sf-status').textContent='Connecting';
+
+// Show debug info on screen while loading
+var dbg=document.createElement('div');dbg.id='dbgOverlay';dbg.style.cssText='position:fixed;bottom:20px;right:20px;background:#111;border:1px solid #333;padding:12px 16px;border-radius:8px;font-family:monospace;font-size:12px;color:#8CB1F6;z-index:9998;max-width:350px;line-height:1.6';
+dbg.innerHTML='⏳ Connecting...';document.body.appendChild(dbg);
+function dbgLog(msg){dbg.innerHTML+='<br>'+msg;console.log('DBG:',msg)}
+
+dbgLog('Supabase: '+(SUPA_URL?'configured':'not set'));
+dbgLog('Fetching accounts...');
 
 // Add timeout wrapper
-function withTimeout(promise,ms){return Promise.race([promise,new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timeout'))},ms)})])}
+function withTimeout(promise,ms){return Promise.race([promise,new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timeout '+ms+'ms'))},ms)})])}
 
-// Load Supabase and MetaAPI accounts in parallel (10s timeout)
+// Load Supabase and MetaAPI accounts in parallel
 var initResults=await Promise.all([
-  (SUPA_URL&&SUPA_KEY)?withTimeout(supaLoad(),8000).then(function(ok){if(ok)log('Supabase loaded','ok');return ok}).catch(function(e){log('Supabase: '+e.message,'wrn');return false}):Promise.resolve(false),
-  withTimeout(px('list-accounts'),10000).then(function(a){log(a.length+' account(s)','ok');return a}).catch(function(e){log('Accounts: '+e.message,'er');return[]})
+  (SUPA_URL&&SUPA_KEY)?withTimeout(supaLoad(),8000).then(function(ok){dbgLog('Supabase: '+(ok?'✓':'empty'));return ok}).catch(function(e){dbgLog('Supabase: ✗ '+e.message);return false}):Promise.resolve(false),
+  withTimeout(px('list-accounts'),10000).then(function(a){dbgLog('Accounts: ✓ '+a.length);return a}).catch(function(e){dbgLog('Accounts: ✗ '+e.message);return[]})
 ]);
 S.accts=initResults[1]||[];
-// Load all accounts in parallel (15s timeout per account)
+dbgLog('Loading '+S.accts.length+' traders...');
+
+// Load all accounts in parallel
 var loadPromises=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)}).map(function(ac){var id=ac.id;
   S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
   return withTimeout(Promise.all([
@@ -433,21 +443,26 @@ var loadPromises=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexO
     if(r[0])S.traders[id].l=r[0];
     S.traders[id].pos=Array.isArray(r[1])?r[1]:[];
     S.traders[id].hist=Array.isArray(r[2])?r[2].filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[];
-    log(ac.name+': $'+F(S.traders[id].l?.balance||0),'ok');
+    dbgLog(ac.name+': $'+F(S.traders[id].l?.balance||0));
     if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
     S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
     if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12)}
-  }).catch(function(e){log(ac.name+': '+e.message,'wrn')})});
+  }).catch(function(e){dbgLog(ac.name+': ✗ '+e.message)})});
 await Promise.all(loadPromises);try{sH()}catch(e){}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
 try{sS()}catch(e){log('sS error: '+e.message,'er')}
 var total=S.accts.length+S.manual.length;E('sf-traders').textContent=S.accts.length+' accounts · '+total+' traders';E('sf-status').textContent='Refresh: 20s';
 updateTopbarPnl();
-ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
-// Store initial balances for withdrawal detection
+ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');
+dbgLog('Rendering...');log('All systems operational','ok');
 S.lastBal={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastBal[id]=t.l.balance||0});
-try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
-}catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
+try{renderAll();dbgLog('\u2713 Ready')}catch(e){dbgLog('Render: \u2717 '+e.message);log('Render error: '+e.message,'er');ss('err','Render fail')}
+setTimeout(function(){var d=E('dbgOverlay');if(d)d.remove()},3000);
+}catch(e){
+var d=E('dbgOverlay');if(d)d.innerHTML+='<br><span style="color:#FF4D4D">CRASH: '+e.message+'</span>';
+log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e);
+try{renderAll()}catch(re){}
+}
 setInterval(async function(){
   var refreshIds=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)});
   var results=await Promise.all(refreshIds.map(function(ac){var id=ac.id;
