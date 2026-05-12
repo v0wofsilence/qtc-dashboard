@@ -260,7 +260,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 <button class="pin-key" onclick="pinPress('1')">1</button><button class="pin-key" onclick="pinPress('2')">2</button><button class="pin-key" onclick="pinPress('3')">3</button>
 <button class="pin-key" onclick="pinPress('4')">4</button><button class="pin-key" onclick="pinPress('5')">5</button><button class="pin-key" onclick="pinPress('6')">6</button>
 <button class="pin-key" onclick="pinPress('7')">7</button><button class="pin-key" onclick="pinPress('8')">8</button><button class="pin-key" onclick="pinPress('9')">9</button>
-<button class="pin-key" onclick="pinPress('A')">A</button><button class="pin-key" onclick="pinPress('0')">0</button><button class="pin-key" onclick="pinDelete()" style="font-size:.9rem">⌫</button>
+<button class="pin-key" style="visibility:hidden"></button><button class="pin-key" onclick="pinPress('0')">0</button><button class="pin-key" onclick="pinDelete()" style="font-size:.9rem">⌫</button>
 </div>
 </div>
 
@@ -311,7 +311,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 <div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEdit()"><div class="modal" id="editModalContent"></div></div>
 <script>
 // ── PIN LOCK ──
-var PIN_CODE='007A';
+var PIN_CODE='0070';
 var pinEntry='';
 function pinPress(n){
   if(pinEntry.length>=4)return;
@@ -336,7 +336,7 @@ function updatePinDots(){var dots=document.querySelectorAll('.pin-dot');dots.for
 // Keyboard support
 document.addEventListener('keydown',function(e){
   var lock=document.getElementById('pinLock');if(!lock||lock.style.display==='none')return;
-  if(e.key>='0'&&e.key<='9')pinPress(e.key);if(e.key==='a'||e.key==='A')pinPress('A');
+  if(e.key>='0'&&e.key<='9')pinPress(e.key);
   if(e.key==='Backspace')pinDelete();
 });
 // Skip pin if already unlocked this session
@@ -1198,7 +1198,7 @@ function genPDF(id){
 <button class="pin-key" onclick="pinPress('1')">1</button><button class="pin-key" onclick="pinPress('2')">2</button><button class="pin-key" onclick="pinPress('3')">3</button>
 <button class="pin-key" onclick="pinPress('4')">4</button><button class="pin-key" onclick="pinPress('5')">5</button><button class="pin-key" onclick="pinPress('6')">6</button>
 <button class="pin-key" onclick="pinPress('7')">7</button><button class="pin-key" onclick="pinPress('8')">8</button><button class="pin-key" onclick="pinPress('9')">9</button>
-<button class="pin-key" onclick="pinPress('A')">A</button><button class="pin-key" onclick="pinPress('0')">0</button><button class="pin-key" onclick="pinDelete()" style="font-size:.9rem">⌫</button>
+<button class="pin-key" style="visibility:hidden"></button><button class="pin-key" onclick="pinPress('0')">0</button><button class="pin-key" onclick="pinDelete()" style="font-size:.9rem">⌫</button>
 </div>
 </div>
 ');
