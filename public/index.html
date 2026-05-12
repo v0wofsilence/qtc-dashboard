@@ -391,15 +391,23 @@ if(SUPA_URL&&SUPA_KEY){
   try{var loaded=await supaLoad();if(loaded)log('Supabase data loaded','ok');else log('No Supabase data found','wrn')}catch(e){log('Supabase load failed: '+e.message,'wrn')}
 }
 try{S.accts=await px('list-accounts');log(S.accts.length+' MetaAPI account(s)','ok')}catch(e){log('Accounts: '+e.message,'er');S.accts=[]}
-for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;
-  if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
+// Load all accounts in parallel
+var loadPromises=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)}).map(function(ac){var id=ac.id;
   S.traders[id]={a:ac,l:null,pos:[],hist:[],q:null};
-  try{S.traders[id].l=await px('account-info',id);log(ac.name+': $'+F(S.traders[id].l.balance),'ok')}catch(e){log(ac.name+': '+e.message,'wrn')}
-  try{var p=await px('positions',id);S.traders[id].pos=Array.isArray(p)?p:[]}catch(e){}
-  try{var h=await px('history',id);S.traders[id].hist=Array.isArray(h)?h.filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[]}catch(e){}
-  if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
-  S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
-  if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);try{sH()}catch(e){}}}
+  return Promise.all([
+    px('account-info',id).catch(function(){return null}),
+    px('positions',id).catch(function(){return[]}),
+    px('history',id).catch(function(){return[]})
+  ]).then(function(r){
+    if(r[0])S.traders[id].l=r[0];
+    S.traders[id].pos=Array.isArray(r[1])?r[1]:[];
+    S.traders[id].hist=Array.isArray(r[2])?r[2].filter(function(d){return d.type==='DEAL_TYPE_BUY'||d.type==='DEAL_TYPE_SELL'}):[];
+    log(ac.name+': $'+F(S.traders[id].l?.balance||0),'ok');
+    if(!S.sal[id])S.sal[id]={amt:3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
+    S.traders[id].q=compQ(S.traders[id].hist,S.traders[id].l?.balance||0,S.sal[id]);
+    if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12)}
+  })});
+await Promise.all(loadPromises);try{sH()}catch(e){}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
 try{sS()}catch(e){log('sS error: '+e.message,'er')}
 var total=S.accts.length+S.manual.length;E('sf-traders').textContent=S.accts.length+' accounts · '+total+' traders';E('sf-status').textContent='Refresh: 20s';
@@ -411,24 +419,23 @@ try{assignTradeIds()}catch(e){}
 S.lastBal={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastBal[id]=t.l.balance||0});
 try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
-setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
-  var prevBal=S.lastBal[id]||0;
-  try{S.traders[id].l=await px('account-info',id);S.traders[id].pos=await px('positions',id)}catch(e){continue}
-  var newBal=S.traders[id].l?.balance||0;
-  // Detect withdrawal: balance dropped AND equity also dropped by similar amount (not a trade closing)
-  if(prevBal>0&&newBal<prevBal){
-    var drop=prevBal-newBal;var prevEq=S.lastEq&&S.lastEq[id]||prevBal;var newEq=S.traders[id].l?.equity||newBal;
-    var eqDrop=prevEq-newEq;
-    // If balance and equity both dropped by similar amounts (within 20%), it's a withdrawal not a trade
-    if(drop>10&&Math.abs(eqDrop-drop)<drop*0.2){
-      var t=gt(id);var s=S.sal[id]||{};var split=s.split||50;
-      // Check we haven't already logged this exact withdrawal
-      var already=S.payouts.some(function(p){return p.traderId===id&&p.amount===drop&&p.date===new Date().toISOString().slice(0,10)});
-      if(!already){
-        S.payouts.push({uid:genId('PAY'),traderId:id,traderName:t?t.a.name:'Unknown',account:t?t.a.login||'':'',amount:drop,split:split,postSplit:drop*(split/100),wallet:'',date:new Date().toISOString().slice(0,10),notes:'Auto-detected withdrawal',paid:false,paidDate:null,created:new Date().toISOString()});
-        sP();log('Payout detected: '+((t&&t.a.name)||id)+' — $'+R(drop).toLocaleString(),'wrn');rPay()}}}
-  S.lastBal[id]=newBal}
-// Track equity for next cycle
+setInterval(async function(){
+  var refreshIds=S.accts.filter(function(ac){return!(S.deleted&&S.deleted.indexOf(ac.id)>=0)});
+  var results=await Promise.all(refreshIds.map(function(ac){var id=ac.id;
+    return Promise.all([px('account-info',id).catch(function(){return null}),px('positions',id).catch(function(){return null})]).then(function(r){return{id:id,info:r[0],pos:r[1]}})}));
+  results.forEach(function(r){if(!r.info||!S.traders[r.id])return;
+    var prevBal=S.lastBal[r.id]||0;
+    S.traders[r.id].l=r.info;if(r.pos)S.traders[r.id].pos=Array.isArray(r.pos)?r.pos:[];
+    var newBal=r.info.balance||0;
+    if(prevBal>0&&newBal<prevBal){
+      var drop=prevBal-newBal;var prevEq=S.lastEq&&S.lastEq[r.id]||prevBal;var newEq=r.info.equity||newBal;
+      var eqDrop=prevEq-newEq;
+      if(drop>10&&Math.abs(eqDrop-drop)<drop*0.2){
+        var t=gt(r.id);var s=S.sal[r.id]||{};var split=s.split||50;
+        var already=S.payouts.some(function(p){return p.traderId===r.id&&p.amount===drop&&p.date===new Date().toISOString().slice(0,10)});
+        if(!already){S.payouts.push({uid:genId('PAY'),traderId:r.id,traderName:t?t.a.name:'Unknown',account:t?t.a.login||'':'',amount:drop,split:split,postSplit:drop*(split/100),wallet:'',date:new Date().toISOString().slice(0,10),notes:'Auto-detected withdrawal',paid:false,paidDate:null,created:new Date().toISOString()});
+          sP();log('Payout detected: '+((t&&t.a.name)||r.id)+' — $'+R(drop).toLocaleString(),'wrn');rPay()}}}
+    S.lastBal[r.id]=newBal});
 S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.l.equity||0});
 rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
