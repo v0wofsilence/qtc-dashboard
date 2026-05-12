@@ -247,7 +247,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
   <div class="sidebar-section"><div class="sidebar-label">Dashboard</div>
     <button class="sb active" onclick="nav('overview')"><span class="sb-icon">◈</span>Overview</button>
     <button class="sb" onclick="nav('positions')"><span class="sb-icon">⇄</span>Positions</button>
-    <button class="sb" onclick="nav('calendar')"><span class="sb-icon">▦</span>Calendar</button>
+    <button class="sb" onclick="nav('calendar')"><span class="sb-icon">▦</span>Calendars</button>
   </div>
   <div class="sidebar-section"><div class="sidebar-label">Management</div>
     <button class="sb" onclick="nav('roster')"><span class="sb-icon">≡</span>Roster</button>
@@ -272,7 +272,7 @@ body.light .gear-menu{background:#FFF;border:1px solid #DDD}
 <div class="content">
 <div id="v-overview" class="vw active"><div id="fk"></div><div id="ovPositions"></div><div id="leaderboards"></div><div id="ovClusters"></div></div>
 <div id="v-positions" class="vw"><div id="posc"></div></div>
-<div id="v-calendar" class="vw"><div id="dayPanel" class="day-panel"></div><div id="calc"></div></div>
+<div id="v-calendar" class="vw"><div id="calTabs" class="sort-bar" style="margin-bottom:1.2rem"></div><div id="dayPanel" class="day-panel"></div><div id="calc"></div></div>
 <div id="v-roster" class="vw"><div id="rost"></div></div>
 <div id="v-salary" class="vw"><div id="salc"></div></div>
 <div id="v-payouts" class="vw"><div id="payc"></div></div>
@@ -566,7 +566,14 @@ E('posc').innerHTML='<div class="sh"><span class="sh-t">Positions & P&L</span><s
 
 // ── CALENDAR ──
 var CAL={dayPnl:{},dayTraders:{},salaryEvents:{},tradesByDay:{}};
-function rCa(){var yr=S.calYear,mo=S.calMonth,ids=allIds();var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();var today=new Date();var todayStr=today.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+var calTab='trading';
+function setCalTab(tab){calTab=tab;rCa()}
+function rCa(){
+  // Sub-tabs
+  E('calTabs').innerHTML='<span class="sort-label">View</span><button class="sort-btn'+(calTab==='trading'?' active':'')+'" onclick="setCalTab(\'trading\')">Trading</button><button class="sort-btn'+(calTab==='salary'?' active':'')+'" onclick="setCalTab(\'salary\')">Salary</button><button class="sort-btn'+(calTab==='payouts'?' active':'')+'" onclick="setCalTab(\'payouts\')">Payouts</button>';
+  if(calTab==='salary'){rCaSalary();return}
+  if(calTab==='payouts'){rCaPayouts();return}
+  // Trading calendar (original)var yr=S.calYear,mo=S.calMonth,ids=allIds();var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();var today=new Date();var todayStr=today.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
 CAL={dayPnl:{},dayTraders:{},salaryEvents:{},tradesByDay:{}};
 ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){if(dt.slice(0,7)===moKey){CAL.dayPnl[dt]=(CAL.dayPnl[dt]||0)+dp[dt];if(!CAL.dayTraders[dt])CAL.dayTraders[dt]=[];CAL.dayTraders[dt].push({name:t.a.name,pnl:dp[dt]})}});(t.hist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt&&dt.slice(0,7)===moKey){if(!CAL.tradesByDay[dt])CAL.tradesByDay[dt]=[];CAL.tradesByDay[dt].push({sym:tr.symbol,type:tr.type,vol:tr.volume,profit:tr.profit,time:tr.time,trader:t.a.name})}})});
 ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!CAL.salaryEvents[ds])CAL.salaryEvents[ds]=[];CAL.salaryEvents[ds].push({name:t.a.name,amt:s.amt||0});nx.setDate(nx.getDate()+cy)}});
@@ -585,6 +592,60 @@ if(trades.length){h+='<div class="dp-section"><div class="dp-section-title">Trad
 if(!pnl&&!salEvts.length&&!trades.length)h+='<div style="text-align:center;padding:1rem;color:var(--w4);font-size:.74rem">No events</div>';
 panel.innerHTML=h;panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'start'})}
 function closeDay(){E('dayPanel').classList.remove('open');E('dayPanel').innerHTML=''}
+
+// ── SALARY CALENDAR ──
+function rCaSalary(){
+  var yr=S.calYear,mo=S.calMonth,ids=allIds();
+  var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();
+  var todayStr=new Date().toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+
+  var salEvents={};var totalDue=0;
+  ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);
+    while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);
+    while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!salEvents[ds])salEvents[ds]=[];salEvents[ds].push({name:t.a.name,amt:s.amt||0,id:id,paid:false});totalDue+=s.amt||0;nx.setDate(nx.getDate()+cy)}});
+
+  // Check which salary payments have been marked paid
+  ids.forEach(function(id){var s=S.sal[id]||{};if(s.payments){s.payments.forEach(function(p){if(p.date&&p.date.slice(0,7)===moKey&&salEvents[p.date]){salEvents[p.date].forEach(function(e){if(e.id===id)e.paid=true})}})}});
+
+  var paidCount=0,unpaidCount=0;Object.values(salEvents).forEach(function(evts){evts.forEach(function(e){if(e.paid)paidCount++;else unpaidCount++})});
+
+  var html='<div class="cal-header"><button class="cal-nav" onclick="S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}closeDay();rCa()">\u2190</button><div class="cal-title">Salary \u2014 '+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}closeDay();rCa()">\u2192</button></div>';
+  html+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Total Due</div><div class="cal-sum-val" style="color:var(--warn)">$'+totalDue.toLocaleString()+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Payments</div><div class="cal-sum-val">'+(paidCount+unpaidCount)+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Paid</div><div class="cal-sum-val" style="color:var(--up)">'+paidCount+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Unpaid</div><div class="cal-sum-val" style="color:var(--dn)">'+unpaidCount+'</div></div></div>';
+
+  html+='<div class="cal-grid">';var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];for(var i=0;i<7;i++)html+='<div class="cal-dow">'+dows[i]+'</div>';
+  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)html+='<div class="cal-day empty"></div>';
+  for(var d=1;d<=daysInMonth;d++){var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var evts=salEvents[ds]||[];
+    html+='<div class="cal-day'+(isToday?' today':'')+'"'+(evts.length?' onclick="openDay(\''+ds+'\')"':'')+' style="'+(evts.length?'':'opacity:.5')+'"><div class="cal-date">'+d+'</div>';
+    evts.forEach(function(e){html+='<div class="cal-event sal" style="'+(e.paid?'color:var(--up);border-color:rgba(0,220,130,.3);background:rgba(0,220,130,.08)':'')+'">$'+e.amt.toLocaleString()+' '+e.name.slice(0,8)+(e.paid?' \u2713':'')+'</div>'});
+    html+='</div>'}
+  var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)html+='<div class="cal-day empty"></div>';
+  html+='</div>';E('calc').innerHTML=html}
+
+// ── PAYOUT CALENDAR ──
+function rCaPayouts(){
+  var yr=S.calYear,mo=S.calMonth;
+  var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();
+  var todayStr=new Date().toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+
+  var payByDay={};var totalAmount=0,paidAmount=0,pendingAmount=0;
+  (S.payouts||[]).forEach(function(p){if(p.date&&p.date.slice(0,7)===moKey){if(!payByDay[p.date])payByDay[p.date]=[];payByDay[p.date].push(p);totalAmount+=p.postSplit||0;if(p.paid)paidAmount+=p.postSplit||0;else pendingAmount+=p.postSplit||0}});
+
+  var html='<div class="cal-header"><button class="cal-nav" onclick="S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--}closeDay();rCa()">\u2190</button><div class="cal-title">Payouts \u2014 '+moNames[mo]+' '+yr+'</div><button class="cal-nav" onclick="S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++}closeDay();rCa()">\u2192</button></div>';
+  html+='<div class="cal-summary"><div class="cal-sum-cell"><div class="cal-sum-label">Total Payouts</div><div class="cal-sum-val">$'+R(totalAmount).toLocaleString()+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Paid</div><div class="cal-sum-val" style="color:var(--up)">$'+R(paidAmount).toLocaleString()+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Pending</div><div class="cal-sum-val" style="color:var(--warn)">$'+R(pendingAmount).toLocaleString()+'</div></div><div class="cal-sum-cell"><div class="cal-sum-label">Count</div><div class="cal-sum-val">'+(S.payouts||[]).filter(function(p){return p.date&&p.date.slice(0,7)===moKey}).length+'</div></div></div>';
+
+  html+='<div class="cal-grid">';var dows=['MON','TUE','WED','THU','FRI','SAT','SUN'];for(var i=0;i<7;i++)html+='<div class="cal-dow">'+dows[i]+'</div>';
+  var startOffset=(firstDay+6)%7;for(var i=0;i<startOffset;i++)html+='<div class="cal-day empty"></div>';
+  for(var d=1;d<=daysInMonth;d++){var ds=yr+'-'+(mo<9?'0':'')+(mo+1)+'-'+(d<10?'0':'')+d;var isToday=ds===todayStr;var pays=payByDay[ds]||[];
+    html+='<div class="cal-day'+(isToday?' today':'')+'" style="'+(pays.length?'':'opacity:.5')+'">';
+    html+='<div class="cal-date">'+d+'</div>';
+    pays.forEach(function(p){
+      var col=p.paid?'color:var(--up);border-color:rgba(0,220,130,.3);background:rgba(0,220,130,.08)':'color:var(--warn);border-color:rgba(229,192,11,.3);background:rgba(229,192,11,.06)';
+      html+='<div class="cal-event" style="'+col+'">$'+R(p.postSplit).toLocaleString()+' '+p.traderName.slice(0,8)+(p.paid?' \u2713':'')+'</div>'});
+    html+='</div>'}
+  var totalCells=startOffset+daysInMonth;var remaining=7-(totalCells%7);if(remaining<7)for(var i=0;i<remaining;i++)html+='<div class="cal-day empty"></div>';
+  html+='</div>';E('calc').innerHTML=html}
 
 // ── SHARPE & SORTINO ──
 function calcRatios(dailyPnl,bal){
