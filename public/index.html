@@ -308,6 +308,7 @@ body.light .sh-l{background:linear-gradient(90deg,#DDE2EA,transparent)!important
   <div class="sidebar-section"><div class="sidebar-label">Management</div>
     <button class="sb" onclick="nav('roster')"><span class="sb-icon">≡</span>Roster</button>
     <button class="sb" onclick="nav('salary')"><span class="sb-icon">$</span>Salary</button>
+    <button class="sb" onclick="nav('deposits')"><span class="sb-icon">↱</span>Deposits</button>
     <button class="sb" onclick="nav('payouts')"><span class="sb-icon">↳</span>Payouts</button>
   </div>
   <div class="sidebar-section"><div class="sidebar-label">Clusters</div>
@@ -330,6 +331,7 @@ body.light .sh-l{background:linear-gradient(90deg,#DDE2EA,transparent)!important
 <div id="v-calendar" class="vw"><div id="calTabs" class="sort-bar" style="margin-bottom:1.2rem"></div><div id="dayPanel" class="day-panel"></div><div id="calc"></div></div>
 <div id="v-roster" class="vw"><div id="rost"></div></div>
 <div id="v-salary" class="vw"><div id="salc"></div></div>
+<div id="v-deposits" class="vw"><div id="depc"></div></div>
 <div id="v-payouts" class="vw"><div id="payc"></div></div>
 <div id="v-trader" class="vw"><div id="tdetail"></div></div>
 <div id="v-risk" class="vw"><div id="riskc"></div></div>
@@ -433,6 +435,18 @@ function hlth(h){if(!h||h.length<2)return{a:'',c:'var(--w4)',l:'—'};var r=h.sl
 function fees(pnl,sp,sal,alloc,salPaid){var ts=pnl*(sp/100),fs=pnl*(1-sp/100),cost=salPaid?sal:0,n=fs-cost,be=sal>0?R(sal/(1-sp/100)):0;return{ts:R(ts),fs:R(fs),n:R(n),be:be,roic:alloc>0?((fs-cost)/alloc*100).toFixed(2):'0',ok:n>0,cost:cost}}
 function salDueInfo(s){var now=new Date(),st=s.start?new Date(s.start):now,cy=s.cycle||30;var nx=new Date(st);while(nx<=now)nx.setDate(nx.getDate()+cy);var prev=new Date(nx);prev.setDate(prev.getDate()-cy);var daysSince=R((now-prev)/864e5);var lastPay=(s.payments&&s.payments.length)?s.payments[s.payments.length-1]:null;var paidThisCycle=lastPay&&lastPay.type==='paid'&&new Date(lastPay.date)>=prev;return{daysSince:daysSince,daysLeft:cy-daysSince,dueDate:nx,paidThisCycle:paidThisCycle,cycle:cy}}
 // Net position: lifetime firm revenue vs lifetime salary paid
+function getTraderDeposits(id){return(S.deposits||[]).filter(function(d){return d.traderId===id})}
+function getTotalDeposited(id){return getTraderDeposits(id).reduce(function(s,d){return s+(d.amount||0)},0)}
+function getStartingBalance(id){
+  // Starting balance = current balance - P&L - open P&L + total deposits (deposits added to balance shouldn't count as profit)
+  // Actually: starting = balance - cumulative trading P&L - total deposits
+  // We track the original starting balance per trader
+  var t=gt(id);if(!t)return 0;
+  var sal=S.sal[id]||{};
+  if(sal.startingBalance!==undefined)return sal.startingBalance;
+  // Fallback: balance - closed pnl - total deposits
+  var closedPnl=t.q?.pnl||0;var totalDep=getTotalDeposited(id);
+  return(t.l?.balance||0)-closedPnl-totalDep}
 function netPosition(id){var t=gt(id);if(!t)return 0;var s=S.sal[id]||{};if(s.feOverride!==undefined&&s.feOverride!==null)return s.feOverride;var pnl=t.q?.pnl||0;var fs=pnl*(1-(s.split||50)/100);return fs-(s.paid||0)}
 
 // ── State ──
@@ -485,7 +499,7 @@ setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i]
 S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.l.equity||0});
 rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
-function renderAll(){rOv();rPo();rCa();rRo();rSa();rPay();rRisk();rMatrix();rGr();rAC();rSy();updateTopbarPnl()}
+function renderAll(){rOv();rPo();rCa();rRo();rSa();rPay();rDep();rRisk();rMatrix();rGr();rAC();rSy();updateTopbarPnl()}
 
 // ── EDIT TRADER (modal) ──
 var editId=null;
@@ -897,7 +911,7 @@ function viewTrader(id){
   html+='</div>';
 
   // Key metrics row
-  html+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(b)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Split</span><span class="tp-meta-val" style="color:var(--accent)">'+(s.split||50)+'%</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sharpe</span><span class="tp-meta-val">'+ratios.sharpe+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sortino</span><span class="tp-meta-val">'+ratios.sortino+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Payouts</span><span class="tp-meta-val">'+getTraderPayouts(id).length+'</span></div></div>';
+  html+='<div class="tp-meta"><div class="tp-meta-item"><span class="tp-meta-label">Balance</span><span class="tp-meta-val">$'+F(b)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Equity</span><span class="tp-meta-val" style="color:'+(e>=b?'var(--up)':'var(--dn)')+'">$'+F(e)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Open P&L</span><span class="tp-meta-val" style="color:'+(u>=0?'var(--up)':'var(--dn)')+'">'+(u>=0?'+':'')+'$'+F(u)+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Split</span><span class="tp-meta-val" style="color:var(--accent)">'+(s.split||50)+'%</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sharpe</span><span class="tp-meta-val">'+ratios.sharpe+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Sortino</span><span class="tp-meta-val">'+ratios.sortino+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Payouts</span><span class="tp-meta-val">'+getTraderPayouts(id).length+'</span></div><div class="tp-meta-item"><span class="tp-meta-label">Deposits</span><span class="tp-meta-val" style="color:var(--accent)">'+(getTotalDeposited(id)>0?'+$'+R(getTotalDeposited(id)).toLocaleString():'—')+'</span></div></div>';
 
   // Notes inline
   html+='<div style="margin-top:.6rem"><div style="font-size:.52rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Notes</div><textarea id="tp-notes-input" style="width:100%;min-height:60px;padding:6px 8px;background:var(--b4);border:1px solid var(--b5);color:var(--w1);font-family:var(--font);font-size:.7rem;resize:vertical" placeholder="Add notes...">'+getNote(id).replace(/</g,'&lt;')+'</textarea><div style="margin-top:.3rem"><button class="btn" style="padding:4px 10px;font-size:.6rem" onclick="saveNote(\''+id+'\')">Save Notes</button></div></div>';
@@ -959,6 +973,16 @@ function viewTrader(id){
       html+='<tr style="'+(p.paid?'background:rgba(0,220,130,.06)':'')+'"><td>'+p.date+'</td><td style="color:var(--dn)">$'+R(p.amount).toLocaleString()+'</td><td style="font-weight:600">$'+R(p.postSplit).toLocaleString()+'</td><td style="font-size:.62rem;max-width:100px;overflow:hidden;text-overflow:ellipsis">'+(p.wallet||'\u2014')+'</td><td style="color:'+(p.paid?'var(--up)':'var(--warn)')+';font-weight:600">'+(p.paid?'\u2713 PAID':'PENDING')+'</td></tr>'});
     html+='</tbody></table></div></div>'}
 
+  // Deposits
+  var tDeposits=getTraderDeposits(id);
+  if(tDeposits.length){
+    var depTotal=0;tDeposits.forEach(function(d){depTotal+=d.amount||0});
+    html+='<div class="td-section"><div class="td-section-title">Deposits ('+tDeposits.length+')</div><div class="td-grid"><div class="td-cell"><div class="td-cell-label">Total Added</div><div class="td-cell-val" style="color:var(--accent)">+$'+R(depTotal).toLocaleString()+'</div></div><div class="td-cell"><div class="td-cell-label">Count</div><div class="td-cell-val">'+tDeposits.length+'</div></div></div>';
+    html+='<div class="tw" style="margin-top:.5rem"><table><thead><tr><th>Date</th><th>Amount</th><th>Notes</th></tr></thead><tbody>';
+    tDeposits.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date)}).forEach(function(d){
+      html+='<tr><td>'+d.date+'</td><td style="color:var(--accent);font-weight:600">+$'+R(d.amount).toLocaleString()+'</td><td style="font-size:.7rem;color:var(--w3)">'+(d.notes||'—')+'</td></tr>'});
+    html+='</tbody></table></div></div>'}
+
   // Trader Calendar
   html+=buildTraderCal(id,q.dailyPnl||{},s,t.hist||[]);
 
@@ -983,12 +1007,12 @@ sortData.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return
 ids=sortData.map(function(d){return d.id});
 var arrow=rosterSort.dir==='asc'?' ↑':' ↓';
 function sBtn(key,label){return'<button class="sort-btn'+(rosterSort.key===key?' active':'')+'" onclick="sortRoster(\''+key+'\')">'+label+(rosterSort.key===key?arrow:'')+'</button>'}
-E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+sBtn('nextDue','Next Due')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Split</th><th>Cycle</th><th>Next Due</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
+E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+sBtn('nextDue','Next Due')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>DD %</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Split</th><th>Cycle</th><th>Next Due</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0;
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
   var rowClass=metQuota?'row-met':'row-below';
-  return'<tr class="'+rowClass+'"><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="font-family:var(--mono);color:var(--accent)">'+(s.split||50)+'%</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td style="font-family:var(--mono);font-size:.64rem;color:var(--accent)">'+di.dueDate.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'})+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><div class="gear-wrap"><span class="gear-btn" onclick="event.stopPropagation();toggleGear(\'gm-'+id+'\',event)">⚙</span><div class="gear-menu" id="gm-'+id+'"><button class="gear-item" onclick="closeGears();viewTrader(\''+id+'\')"><span class="gear-icon">👁</span>View Profile</button><button class="gear-item" onclick="closeGears();editTrader(\''+id+'\')"><span class="gear-icon">✎</span>Edit</button><button class="gear-item warn" onclick="closeGears();archiveTrader(\''+id+'\')"><span class="gear-icon">▣</span>Archive</button><button class="gear-item danger" onclick="closeGears();deleteTrader(\''+id+'\')"><span class="gear-icon">✕</span>Delete</button></div></div></td></tr>'
+  return'<tr class="'+rowClass+'"><td class="sym">'+a.name+'</td><td style="font-size:.58rem;color:var(--w4)">'+(a.login||'—')+'</td><td style="color:'+(q.pending?'var(--w4)':tCol(q.score||0))+';font-weight:700">'+(q.pending?'Pending':q.score||'—')+'</td><td><span class="tag tag-t">'+trTier+'</span></td><td>$'+F(b)+'</td><td style="color:'+(function(){var dd=calcDrawdowns(q.dailyPnl||{},b);var pct=b>0?(dd.currentDD/b*100):0;return pct>=10?'var(--dn)':pct>=5?'var(--warn)':pct>0?'var(--w2)':'var(--up)'})()+'">'+(function(){var dd=calcDrawdowns(q.dailyPnl||{},b);var pct=b>0?(dd.currentDD/b*100):0;return pct>0?'-'+pct.toFixed(2)+'%':'0%'})()+'</td><td>'+(q.wr||'—')+'%</td><td>'+(q.pf||'—')+'</td><td style="color:'+((q.pnl||0)>=0?'var(--up)':'var(--dn)')+'">'+(q.pnl>=0?'+':'')+'$'+(q.pnl||0).toLocaleString()+'</td><td>$'+(s.amt||0).toLocaleString()+'</td><td style="font-family:var(--mono);color:var(--accent)">'+(s.split||50)+'%</td><td style="color:'+(di.paidThisCycle?'var(--up)':'var(--warn)')+'">'+(di.paidThisCycle?'PAID':'Day '+di.daysSince+'/'+di.cycle)+'</td><td style="font-family:var(--mono);font-size:.64rem;color:var(--accent)">'+di.dueDate.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'})+'</td><td><span class="fe-tag '+(np>=0?'fe-pos':'fe-neg')+'">'+(np>=0?'+$':'−$')+R(Math.abs(np)).toLocaleString()+'</span></td><td><div class="gear-wrap"><span class="gear-btn" onclick="event.stopPropagation();toggleGear(\'gm-'+id+'\',event)">⚙</span><div class="gear-menu" id="gm-'+id+'"><button class="gear-item" onclick="closeGears();viewTrader(\''+id+'\')"><span class="gear-icon">👁</span>View Profile</button><button class="gear-item" onclick="closeGears();editTrader(\''+id+'\')"><span class="gear-icon">✎</span>Edit</button><button class="gear-item warn" onclick="closeGears();archiveTrader(\''+id+'\')"><span class="gear-icon">▣</span>Archive</button><button class="gear-item danger" onclick="closeGears();deleteTrader(\''+id+'\')"><span class="gear-icon">✕</span>Delete</button></div></div></td></tr>'
 }).join('')+'</tbody></table></div>'+
 (archivedIds.length?'<div class="sh"><span class="sh-t">Archived Traders</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>P&L</th><th>Salary Paid</th><th>FE</th><th>Archived</th><th>Actions</th></tr></thead><tbody>'+archivedIds.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,q=t.q||{},s=S.sal[id]||{},np=netPosition(id);
@@ -1205,12 +1229,12 @@ function genPDF(id){
 // Example: var SUPA_URL='https://abcdefg.supabase.co',SUPA_KEY='eyJ...';
 var SUPA_URL='https://ozluadwsmtqvafnkqhvn.supabase.co',SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHVhZHdzbXRxdmFmbmtxaHZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjI3MjAsImV4cCI6MjA5NDA5ODcyMH0.9Ife2ypKut8OX1w-GIgviQuVS9TOH2ygnUjDKfVel54';
 async function supaSync(){if(!SUPA_URL||!SUPA_KEY)return;
-  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups,deleted:S.deleted,payouts:S.payouts};
+  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups,deleted:S.deleted,payouts:S.payouts,deposits:S.deposits};
     await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1',{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({data:payload,updated_at:new Date().toISOString()})});
   }catch(e){console.error('Supabase sync error:',e)}}
 async function supaLoad(){if(!SUPA_URL||!SUPA_KEY)return false;
   try{var r=await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1&select=data',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
-    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;if(d.deleted)S.deleted=d.deleted;if(d.payouts)S.payouts=d.payouts;sM();sS();sH();return true}
+    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;if(d.deleted)S.deleted=d.deleted;if(d.payouts)S.payouts=d.payouts;if(d.deposits)S.deposits=d.deposits;sM();sS();sH();return true}
   }catch(e){console.error('Supabase load error:',e)}return false}
 // Auto-sync on save
 var _sS=sS,_sM=sM,_sH=sH;
@@ -1228,6 +1252,8 @@ function toggleTheme(){document.body.classList.toggle('light');var isLight=docum
 if(!S.deleted)S.deleted=JSON.parse(localStorage.getItem('qtc_d')||'[]');
 function sD(){localStorage.setItem('qtc_d',JSON.stringify(S.deleted));supaSync()}
 if(!S.payouts)S.payouts=JSON.parse(localStorage.getItem('qtc_p')||'[]');
+if(!S.deposits)S.deposits=JSON.parse(localStorage.getItem('qtc_dep')||'[]');
+function sDep(){localStorage.setItem('qtc_dep',JSON.stringify(S.deposits));supaSync()}
 function sP(){localStorage.setItem('qtc_p',JSON.stringify(S.payouts));supaSync()}
 if(!S.groups)S.groups=JSON.parse(localStorage.getItem('qtc_g')||'[]');
 function sG(){localStorage.setItem('qtc_g',JSON.stringify(S.groups));supaSync()}
@@ -1590,6 +1616,73 @@ function unmarkPayoutPaid(pi){
 function deletePayout(pi){if(!confirm('Delete this payout record?'))return;S.payouts.splice(pi,1);sP();rPay()}
 
 function getTraderPayouts(traderId){return(S.payouts||[]).filter(function(p){return p.traderId===traderId})}
+
+// ── DEPOSITS ──
+function rDep(){
+  var deposits=S.deposits||[];
+  var total=0;deposits.forEach(function(d){total+=d.amount||0});
+  var byTrader={};deposits.forEach(function(d){if(!byTrader[d.traderId])byTrader[d.traderId]={name:d.traderName,total:0,count:0,account:d.account};byTrader[d.traderId].total+=d.amount||0;byTrader[d.traderId].count++});
+
+  var h='<div class="sh"><span class="sh-t">Deposits</span><span class="sh-l"></span><span class="sh-btn" onclick="newDeposit()">+ Record Deposit</span></div>';
+  h+='<div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="kpi-l">Total Deposits</div><div class="kpi-v">'+deposits.length+'</div></div><div class="kpi"><div class="kpi-l">Total Capital Added</div><div class="kpi-v" style="color:var(--accent)">$'+R(total).toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Traders Funded</div><div class="kpi-v">'+Object.keys(byTrader).length+'</div></div></div>';
+
+  if(!deposits.length){h+='<div class="placeholder-box">No deposits recorded yet. Use this to track when capital is added to a trader account so it isn\u2019t counted as trading profit.</div>';E('depc').innerHTML=h;return}
+
+  // Summary by trader
+  h+='<div class="sh"><span class="sh-t">By Trader</span><span class="sh-l"></span></div>';
+  h+='<div class="tw"><table><thead><tr><th>Trader</th><th>Account</th><th>Deposits</th><th>Total Added</th></tr></thead><tbody>';
+  Object.keys(byTrader).forEach(function(id){var b=byTrader[id];
+    h+='<tr style="cursor:pointer" onclick="viewTrader(\''+id+'\')"><td class="sym" style="color:var(--accent)">'+b.name+'</td><td style="font-size:.68rem">'+(b.account||'\u2014')+'</td><td>'+b.count+'</td><td style="font-weight:600;color:var(--accent)">+$'+R(b.total).toLocaleString()+'</td></tr>'});
+  h+='</tbody></table></div>';
+
+  // All deposits chronologically
+  h+='<div class="sh"><span class="sh-t">All Deposits</span><span class="sh-l"></span></div>';
+  h+='<div class="tw"><table><thead><tr><th>Date</th><th>Trader</th><th>Account</th><th>Amount</th><th>Notes</th><th></th></tr></thead><tbody>';
+  deposits.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date)}).forEach(function(d){var di=deposits.indexOf(d);
+    h+='<tr><td>'+d.date+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+d.traderId+'\')">'+d.traderName+'</td><td>'+(d.account||'\u2014')+'</td><td style="color:var(--accent);font-weight:600">+$'+R(d.amount).toLocaleString()+'</td><td style="font-size:.7rem;color:var(--w3)">'+(d.notes||'\u2014')+'</td><td><div class="br"><button class="btn" style="font-size:.58rem;padding:2px 8px" onclick="editDeposit('+di+')">Edit</button><button class="btn" style="font-size:.58rem;padding:2px 8px;color:var(--dn);border-color:rgba(255,77,77,.3)" onclick="deleteDeposit('+di+')">\u2715</button></div></td></tr>'});
+  h+='</tbody></table></div>';
+
+  E('depc').innerHTML=h}
+
+function newDeposit(){
+  var ids=allIds();
+  var h='<div class="modal-header"><div class="modal-title">Record New Deposit</div><span class="modal-close" onclick="closeEdit()">\u00d7</span></div><div class="modal-body">';
+  h+='<div style="margin-bottom:.8rem;font-size:.7rem;color:var(--w3);padding:.6rem .8rem;background:rgba(123,163,240,.06);border-left:2px solid var(--accent);border-radius:4px">A deposit adds capital to a trader\u2019s account without counting as trading profit. All performance metrics (P&L, DD %, ROIC) will adjust accordingly.</div>';
+  h+='<div class="mf-group"><div class="mf-label">Trader</div><select class="mf-input" id="dep-trader">';
+  ids.forEach(function(id){var t=gt(id);if(!t)return;h+='<option value="'+id+'">'+t.a.name+' ('+(t.a.login||'manual')+')</option>'});
+  h+='</select></div>';
+  h+='<div class="mf-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">';
+  h+='<div class="mf-group"><div class="mf-label">Amount Deposited</div><input class="mf-input" id="dep-amount" type="number" step="0.01" placeholder="10000"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Date</div><input class="mf-input" id="dep-date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div></div>';
+  h+='<div class="mf-group"><div class="mf-label">Notes (optional)</div><input class="mf-input" id="dep-notes" placeholder="e.g. Capital injection, account funding"></div>';
+  h+='<div class="br" style="margin-top:1rem"><button class="btn btn-s" onclick="saveDeposit()">Record Deposit</button></div></div>';
+  E('editModalContent').innerHTML=h;E('editModal').classList.add('open')}
+
+function saveDeposit(){
+  var traderId=E('dep-trader').value;var t=gt(traderId);if(!t)return;
+  var amount=parseFloat(E('dep-amount').value)||0;if(amount<=0){alert('Enter a valid amount');return}
+  var date=E('dep-date').value||new Date().toISOString().slice(0,10);
+  var notes=E('dep-notes').value.trim();
+  S.deposits.push({traderId:traderId,traderName:t.a.name,account:t.a.login||'manual',amount:amount,date:date,notes:notes,created:new Date().toISOString()});
+  sDep();closeEdit();renderAll();log('Deposit recorded: '+t.a.name+' \u2014 $'+R(amount).toLocaleString(),'ok')}
+
+function editDeposit(di){
+  var d=S.deposits[di];if(!d)return;
+  var h='<div class="modal-header"><div class="modal-title">Edit Deposit \u2014 '+d.traderName+'</div><span class="modal-close" onclick="closeEdit()">\u00d7</span></div><div class="modal-body">';
+  h+='<div class="mf-group"><div class="mf-label">Amount</div><input class="mf-input" id="ed-amount" type="number" step="0.01" value="'+d.amount+'"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Date</div><input class="mf-input" id="ed-date" type="date" value="'+d.date+'"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Notes</div><input class="mf-input" id="ed-notes" value="'+(d.notes||'')+'"></div>';
+  h+='<div class="br" style="margin-top:1rem"><button class="btn btn-s" onclick="updateDeposit('+di+')">Save Changes</button></div></div>';
+  E('editModalContent').innerHTML=h;E('editModal').classList.add('open')}
+
+function updateDeposit(di){
+  var d=S.deposits[di];if(!d)return;
+  d.amount=parseFloat(E('ed-amount').value)||d.amount;
+  d.date=E('ed-date').value||d.date;
+  d.notes=E('ed-notes').value.trim();
+  sDep();closeEdit();renderAll()}
+
+function deleteDeposit(di){if(!confirm('Delete this deposit record?'))return;S.deposits.splice(di,1);sDep();renderAll()}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML='<div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div><div class="ci"><span class="cl">Supabase</span><span class="cv '+(SUPA_URL?'up':'dn')+'">'+(SUPA_URL?'CONNECTED':'NOT SET')+'</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div><div class="sh"><span class="sh-t">Data Persistence</span><span class="sh-l"></span></div><div class="fp"><div class="fg"><div><div class="fl">Supabase URL</div><input class="fi" id="supa-url" value="'+SUPA_URL+'" placeholder="https://xxx.supabase.co"></div><div><div class="fl">Supabase Anon Key</div><input class="fi" id="supa-key" type="password" value="'+SUPA_KEY+'" placeholder="eyJ..."></div></div><div class="br"><button class="btn btn-s" onclick="saveSupa()">Save & Sync</button><button class="btn" onclick="loadSupa()">Load from Supabase</button></div><div style="font-family:var(--mono);font-size:.52rem;color:var(--w4);margin-top:.5rem">Create a table: <code>qtc_state</code> with columns: <code>id</code> (int, default 1), <code>data</code> (jsonb), <code>updated_at</code> (timestamptz). Enable RLS with anon read/write on id=1.</div></div>'}
