@@ -2548,6 +2548,31 @@ function checkDailyRisk(){
 var daily2Tab='rule';
 function setDaily2Tab(t){daily2Tab=t;rDaily2Page()}
 
+function exportViolations(){
+  var violations=S.riskViolations||{};
+  var rows=[['Trader Name','Account Number','Violation Date','Account Balance (Start of Day)','Loss Amount','Loss %','Breach Time (UTC)']];
+  Object.keys(violations).forEach(function(id){
+    var t=gt(id);if(!t)return;
+    (violations[id]||[]).forEach(function(v){
+      rows.push([
+        t.a.name,
+        t.a.login||'',
+        v.date,
+        v.startBal||0,
+        v.lossAmount||0,
+        v.lossPct?v.lossPct.toFixed(2)+'%':'',
+        v.time||''
+      ]);
+    });
+  });
+  if(rows.length<=1){alert('No violations to export.');return}
+  // Sort by date desc
+  var header=rows[0];
+  var data=rows.slice(1).sort(function(a,b){return new Date(b[2])-new Date(a[2])});
+  rows=[header].concat(data);
+  downloadCSV('qtc-violations-'+new Date().toISOString().slice(0,10)+'.csv',rows);
+  log('Exported '+(rows.length-1)+' violation(s) to CSV','ok')}
+
 function rDaily2Page(){
   // Sub-tabs at the page level
   var tabsH='<div style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid var(--b5)">';
@@ -2640,7 +2665,7 @@ function rViolationHist(){
   var totalViolations=summary.reduce(function(s,r){return s+r.count},0);
   var tradersWithViolations=summary.filter(function(r){return r.count>0}).length;
   
-  var h='<div class="sh"><span class="sh-t">Violation History</span><span class="sh-l"></span><span class="sh-ts">All 2% rule breaches since tracking began</span></div>';
+  var h='<div class="sh"><span class="sh-t">Violation History</span><span class="sh-l"></span><span class="sh-btn" onclick="exportViolations()">↤ Export CSV</span><span class="sh-ts" style="margin-left:.8rem">All 2% rule breaches since tracking began</span></div>';
   
   // KPIs
   h+='<div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.5rem"><div class="kpi"><div class="kpi-l">Total Violations</div><div class="kpi-v" style="color:'+(totalViolations>0?'var(--dn)':'var(--up)')+'">'+totalViolations+'</div></div><div class="kpi"><div class="kpi-l">Traders With Breaches</div><div class="kpi-v" style="color:'+(tradersWithViolations>0?'var(--warn)':'var(--up)')+'">'+tradersWithViolations+' / '+realIds.length+'</div></div><div class="kpi"><div class="kpi-l">Compliance Rate</div><div class="kpi-v" style="color:var(--up)">'+(realIds.length?Math.round((realIds.length-tradersWithViolations)/realIds.length*100):100)+'%</div></div></div>';
