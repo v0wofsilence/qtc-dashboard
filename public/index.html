@@ -465,6 +465,14 @@ function checkTierChange(id,currentTier){
     hist.push({tier:currentTier,date:new Date().toISOString().slice(0,10),time:new Date().toISOString()});
     if(hist.length>50)S.tierHist[id]=hist.slice(-50);
     sTier()}}
+function isControl(id){return!!(S.sal[id]&&S.sal[id].isControl)}
+function nonCtrlIds(){return allIds().filter(function(id){return!isControl(id)})}
+function toggleControl(id){
+  if(!S.sal[id])S.sal[id]={};
+  S.sal[id].isControl=!S.sal[id].isControl;
+  sS();
+  log((S.sal[id].isControl?'Marked':'Unmarked')+' as control: '+(gt(id)?.a?.name||id),'inf');
+  renderAll()}
 function netPosition(id){var t=gt(id);if(!t)return 0;var s=S.sal[id]||{};if(s.feOverride!==undefined&&s.feOverride!==null)return s.feOverride;var pnl=t.q?.pnl||0;var fs=pnl*(1-(s.split||50)/100);return fs-(s.paid||0)}
 
 // ── State ──
@@ -495,7 +503,7 @@ for(var i=0;i<S.accts.length;i++){var ac=S.accts[i],id=ac.id;
   if(!S.hist[id])S.hist[id]=[];if(S.traders[id].q.score>0){S.hist[id].push(S.traders[id].q.score);if(S.hist[id].length>12)S.hist[id]=S.hist[id].slice(-12);try{sH()}catch(e){}}}
 S.manual.forEach(function(m){var id='m-'+m.name;if(!S.sal[id])S.sal[id]={amt:m.salary||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:m.start||new Date().toISOString().slice(0,10),split:m.split||50}});
 try{sS()}catch(e){log('sS error: '+e.message,'er')}
-var total=S.accts.length+S.manual.length;E('sf-traders').textContent=S.accts.length+' accounts · '+total+' traders';E('sf-status').textContent='Refresh: 20s';
+var total=S.accts.length+S.manual.length;var ctrlCount=allIds().filter(function(i){return isControl(i)}).length;var realT=total-ctrlCount;E('sf-traders').textContent=S.accts.length+' accounts · '+realT+' traders'+(ctrlCount?' · '+ctrlCount+' ctrl':'');E('sf-status').textContent='Refresh: 20s';
 updateTopbarPnl();
 ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
 S.lastBal={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastBal[id]=t.l.balance||0});
@@ -607,7 +615,7 @@ function selectSearch(id){E('searchInput').value='';E('searchResults').classList
 document.addEventListener('click',function(e){if(!e.target.closest('.search-wrap'))E('searchResults').classList.remove('open')});
 
 // ── OVERVIEW ──
-function rOv(){var ids=allIds();if(!ids.length){E('fk').innerHTML='<div class="nil">No traders — add via Roster</div>';E('leaderboards').innerHTML='';E('ovPositions').innerHTML='';return}
+function rOv(){var ids=nonCtrlIds();if(!ids.length){E('fk').innerHTML='<div class="nil">No traders — add via Roster</div>';E('leaderboards').innerHTML='';E('ovPositions').innerHTML='';return}
 var tb=0,te=0,tu=0,tp=0,ts=0,paidSal=0;
 ids.forEach(function(id){var t=gt(id);if(!t)return;var l=t.l;if(l){tb+=l.balance||0;te+=l.equity||0;tu+=(l.equity||0)-(l.balance||0)}tp+=(t.pos||[]).length;var s=S.sal[id]||{};ts+=s.amt||0;var di=salDueInfo(s);if(di.paidThisCycle)paidSal+=s.amt||0});
 var totalSalPaid2=0;ids.forEach(function(id){totalSalPaid2+=(S.sal[id]?.paid||0)});var firmFE=0;ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};firmFE+=(t.q?.pnl||0)*(1-(s.split||50)/100)});firmFE-=totalSalPaid2;
@@ -714,7 +722,7 @@ function rCa(){
   if(calTab==='salary'){rCaSalary();return}
   if(calTab==='payouts'){rCaPayouts();return}
   // Trading calendar (original)
-  var yr=S.calYear,mo=S.calMonth,ids=allIds();var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();var today=new Date();var todayStr=today.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
+  var yr=S.calYear,mo=S.calMonth,ids=nonCtrlIds();var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();var today=new Date();var todayStr=today.toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
 CAL={dayPnl:{},dayTraders:{},salaryEvents:{},tradesByDay:{}};
 ids.forEach(function(id){var t=gt(id);if(!t||!t.q||!t.q.dailyPnl)return;var dp=t.q.dailyPnl;Object.keys(dp).forEach(function(dt){if(dt.slice(0,7)===moKey){CAL.dayPnl[dt]=(CAL.dayPnl[dt]||0)+dp[dt];if(!CAL.dayTraders[dt])CAL.dayTraders[dt]=[];CAL.dayTraders[dt].push({name:t.a.name,pnl:dp[dt]})}});(t.hist||[]).forEach(function(tr){var dt=tr.time?new Date(tr.time).toISOString().slice(0,10):'';if(dt&&dt.slice(0,7)===moKey){if(!CAL.tradesByDay[dt])CAL.tradesByDay[dt]=[];CAL.tradesByDay[dt].push({sym:tr.symbol,type:tr.type,vol:tr.volume,profit:tr.profit,time:tr.time,trader:t.a.name})}})});
 ids.forEach(function(id){var t=gt(id);if(!t)return;var s=S.sal[id]||{};var st=s.start?new Date(s.start):new Date();var cy=s.cycle||30;var nx=new Date(st);while(nx<new Date(yr,mo,1))nx.setDate(nx.getDate()+cy);while(nx<=new Date(yr,mo+1,0)){var ds=nx.toISOString().slice(0,10);if(!CAL.salaryEvents[ds])CAL.salaryEvents[ds]=[];CAL.salaryEvents[ds].push({name:t.a.name,amt:s.amt||0});nx.setDate(nx.getDate()+cy)}});
@@ -736,7 +744,7 @@ function closeDay(){E('dayPanel').classList.remove('open');E('dayPanel').innerHT
 
 // ── SALARY CALENDAR ──
 function rCaSalary(){
-  var yr=S.calYear,mo=S.calMonth,ids=allIds();
+  var yr=S.calYear,mo=S.calMonth,ids=nonCtrlIds();
   var moNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
   var daysInMonth=new Date(yr,mo+1,0).getDate();var firstDay=new Date(yr,mo,1).getDay();
   var todayStr=new Date().toISOString().slice(0,10);var moKey=yr+'-'+(mo<9?'0':'')+(mo+1);
@@ -1221,7 +1229,7 @@ sortData.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return
 ids=sortData.map(function(d){return d.id});
 var arrow=rosterSort.dir==='asc'?' ↑':' ↓';
 function sBtn(key,label){return'<button class="sort-btn'+(rosterSort.key===key?' active':'')+'" onclick="sortRoster(\''+key+'\')">'+label+(rosterSort.key===key?arrow:'')+'</button>'}
-E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span><span class="sh-btn" onclick="showCompare()" style="margin-left:.5rem">☰ Compare</span><span class="sh-btn" onclick="exportRoster()" style="margin-left:.5rem">↤ Export CSV</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+sBtn('nextDue','Next Due')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>DD %</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Split</th><th>Cycle</th><th>Next Due</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
+E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span><span class="sh-btn" onclick="showAddControl()" style="margin-left:.5rem">+ Control Account</span><span class="sh-btn" onclick="showCompare()" style="margin-left:.5rem">☰ Compare</span><span class="sh-btn" onclick="exportRoster()" style="margin-left:.5rem">↤ Export CSV</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+sBtn('nextDue','Next Due')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>DD %</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Split</th><th>Cycle</th><th>Next Due</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0;
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
@@ -1323,7 +1331,7 @@ if(S.deleted.indexOf(id)<0)S.deleted.push(id);
   sM();sS();sH();sD();renderAll()}
 
 // ── SALARY ──
-function rSa(){var ids=allIds(),tot=0,tp=0;ids.forEach(function(id){tot+=(S.sal[id]?.amt||0);tp+=(S.sal[id]?.paid||0)});
+function rSa(){var ids=nonCtrlIds(),tot=0,tp=0;ids.forEach(function(id){tot+=(S.sal[id]?.amt||0);tp+=(S.sal[id]?.paid||0)});
 E('salc').innerHTML='<div class="sh"><span class="sh-t">Salary Management</span><span class="sh-l"></span><span class="sh-btn" onclick="exportSalaries()">↤ Export CSV</span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Monthly Obligation</div><div class="kpi-v">$'+tot.toLocaleString()+'</div></div><div class="kpi"><div class="kpi-l">Traders</div><div class="kpi-v">'+ids.length+'</div></div><div class="kpi"><div class="kpi-l">Lifetime Paid</div><div class="kpi-v">$'+tp.toLocaleString()+'</div></div></div><div class="sg">'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,s=S.sal[id]||{amt:0};var di=salDueInfo(s);var np=netPosition(id);
   var ph=(s.payments||[]).slice(-4).map(function(p){return'<div>'+p.date+' · $'+(p.amt||0).toLocaleString()+' · '+p.type+'</div>'}).join('');
@@ -1377,7 +1385,7 @@ function calcCorrelation(a,b){var n=Math.min(a.length,b.length);if(n<5)return nu
 function corrColor(v){if(v===null)return'var(--w4)';return v>=.7?'var(--dn)':v>=.4?'var(--warn)':v>=-.4?'var(--up)':'var(--accent)'}
 
 // ── RISK PROTOCOL TAB ──
-function rRisk(){var ids=allIds();
+function rRisk(){var ids=nonCtrlIds();
   var h='<div class="sh"><span class="sh-t">Risk Protocol</span><span class="sh-l"></span></div>';
 
   // Firm-wide drawdown
@@ -1596,7 +1604,12 @@ function deleteGroup(gi){if(!confirm('Delete this cluster?'))return;S.groups.spl
 
 // ── AUTO CLUSTERS ──
 function rAC(){
-  var ids=allIds();
+  var idsAll=allIds();var ids=nonCtrlIds();
+  var tradersAll=idsAll.map(function(id){
+    var t=gt(id);if(!t)return null;
+    var q=t.q||{};var b=t.l?.balance||0;
+    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),score:q.score||0,pending:q.pending,bal:b}
+  }).filter(Boolean);
   var traders=ids.map(function(id){
     var t=gt(id);if(!t)return null;
     var q=t.q||{};var b=t.l?.balance||0;
@@ -1660,7 +1673,7 @@ function rAC(){
 
   // ALL TRADERS
   h+='<div class="sh"><span class="sh-t">All Traders</span><span class="sh-l"></span></div><div class="tg">';
-  h+=buildAC('all','All Traders','Every trader on the dashboard',traders.slice().sort(function(a,b){return b.bal-a.bal}),function(tr){return'$'+R(tr.bal).toLocaleString()},function(tr){return'var(--accent)'});
+  h+=buildAC('all','All Traders','Every trader on the dashboard',tradersAll.slice().sort(function(a,b){return b.bal-a.bal}),function(tr){return'$'+R(tr.bal).toLocaleString()},function(tr){return'var(--accent)'});
   h+='</div>';
 
   // RISK WARNINGS
@@ -1718,7 +1731,12 @@ function viewAutoCluster(key){
 
 // ── TRADERS MATRIX ──
 function rMatrix(){
-  var ids=allIds();
+  var ids=nonCtrlIds();
+  var tradersAll=idsAll.map(function(id){
+    var t=gt(id);if(!t)return null;
+    var q=t.q||{};var b=t.l?.balance||0;
+    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),score:q.score||0,pending:q.pending,bal:b}
+  }).filter(Boolean);
   var traders=ids.map(function(id){
     var t=gt(id);if(!t)return null;
     var q=t.q||{};var b=t.l?.balance||0;
@@ -2306,6 +2324,41 @@ function exportAllTradersXLSX(){
   var filename='QTCapital-AllTraders-'+new Date().toISOString().slice(0,10)+'.xlsx';
   XLSX.writeFile(wb,filename);
   log('Exported '+ids.length+' trader sheet(s) to '+filename,'ok');
+}
+
+// ── ADD CONTROL ACCOUNT ──
+function showAddControl(){
+  var h='<div class="modal-header"><div class="modal-title">Add Control Account</div><span class="modal-close" onclick="closeEdit()">\u00d7</span></div><div class="modal-body">';
+  h+='<div style="margin-bottom:1rem;font-size:.7rem;color:var(--w3);padding:.6rem .8rem;background:rgba(229,192,11,.06);border-left:2px solid var(--warn);border-radius:4px">A control account is connected to MetaAPI for live data but is <strong>excluded from all firm-wide metrics</strong> except the \"All Traders\" auto cluster.</div>';
+  h+='<div class="mf-group"><div class="mf-label">Account Name</div><input class="mf-input" id="ctrl-name" placeholder="e.g. Control Account" value="Control Account"></div>';
+  h+='<div class="mf-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">';
+  h+='<div class="mf-group"><div class="mf-label">Login</div><input class="mf-input" id="ctrl-login" placeholder="1000071"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Platform</div><select class="mf-input" id="ctrl-platform"><option value="mt5">MT5</option><option value="mt4">MT4</option></select></div></div>';
+  h+='<div class="mf-group"><div class="mf-label">Server</div><input class="mf-input" id="ctrl-server" placeholder="e.g. PolarisCapital-Trade"></div>';
+  h+='<div class="mf-group"><div class="mf-label">Password (investor read-only recommended)</div><input class="mf-input" id="ctrl-pass" type="password" placeholder="Account password"></div>';
+  h+='<div id="ctrl-status" style="margin:.6rem 0;min-height:1.2rem"></div>';
+  h+='<div class="br" style="margin-top:.8rem"><button class="btn btn-s" id="ctrl-submit" onclick="connectControlMT5()">Connect Control Account</button></div></div>';
+  E('editModalContent').innerHTML=h;E('editModal').classList.add('open')}
+
+async function connectControlMT5(){
+  var name=E('ctrl-name').value.trim();
+  var login=E('ctrl-login').value.trim();
+  var pass=E('ctrl-pass').value;
+  var server=E('ctrl-server').value.trim();
+  var platform=E('ctrl-platform').value;
+  if(!name||!login||!pass||!server){E('ctrl-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">All fields required</span>';return}
+  E('ctrl-submit').disabled=true;E('ctrl-submit').textContent='Connecting...';
+  E('ctrl-status').innerHTML='<span style="color:var(--accent);font-size:.7rem">Creating account on MetaAPI...</span>';
+  try{
+    var r=await fetch('/api/metaapi?action=create-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,login:login,password:pass,server:server,platform:platform})});
+    var d=await r.json();
+    if(!r.ok||d.error){E('ctrl-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Error: '+(d.error||'Unknown')+'</span>';E('ctrl-submit').disabled=false;E('ctrl-submit').textContent='Connect Control Account';return}
+    E('ctrl-status').innerHTML='<span style="color:var(--up);font-size:.7rem">Control account created (ID: '+String(d.id).slice(0,8)+'...)</span>';
+    // Mark as control account
+    S.sal[d.id]={amt:0,status:'control',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:0,isControl:true};
+    sS();
+    setTimeout(function(){location.reload()},2000);
+  }catch(e){E('ctrl-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Network error: '+e.message+'</span>';E('ctrl-submit').disabled=false;E('ctrl-submit').textContent='Connect Control Account'}
 }
 
 // ── SYSTEM ──
