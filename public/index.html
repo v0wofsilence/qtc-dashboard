@@ -303,6 +303,14 @@ body.light .sh-l{background:linear-gradient(90deg,#DDE2EA,transparent)!important
 .sidebar.collapsed .sb-icon{font-size:1rem}
 .sidebar.collapsed .sidebar-label{display:none}
 .sidebar.collapsed .sidebar-footer{font-size:0}
+
+/* Positions & P&L spacing improvements */
+#v-positions .kpis,#v-positions .kpis.kpis-stacked{gap:1rem!important;margin-bottom:1.5rem}
+#v-positions .kpi{padding:1.2rem 1.4rem}
+#v-positions .kpi-l{margin-bottom:.5rem}
+#v-positions .kpi-v{font-size:1.5rem!important;line-height:1.1}
+#v-positions .sh{margin-top:2.5rem!important;margin-bottom:1.2rem!important}
+#v-positions .sh:first-child{margin-top:0!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -524,7 +532,7 @@ setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i]
   S.lastBal[id]=newBal}
 S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.l.equity||0});
 rOv();rPo();updateTopbarPnl()},20000)})();
-function updateTopbarPnl(){var tu=0;allIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
+function updateTopbarPnl(){var tu=0;nonCtrlIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
 function renderAll(){
   var fns=[['rOv',rOv],['rPo',rPo],['rCa',rCa],['rRo',rRo],['rSa',rSa],['rPay',rPay],['rDep',rDep],['rRisk',rRisk],['rMatrix',rMatrix],['rGr',rGr],['rAC',rAC],['rSy',rSy]];
   fns.forEach(function(p){try{p[1]()}catch(e){console.error('Render error in '+p[0]+':',e);log('Err in '+p[0]+': '+e.message,'er')}});
@@ -712,7 +720,7 @@ if(ids.length){
 }
 
 // ── POSITIONS ──
-function rPo(){var ids=allIds(),now=new Date(),todayStr=now.toISOString().slice(0,10);var d7=new Date(now);d7.setDate(d7.getDate()-7);var d30=new Date(now);d30.setDate(d30.getDate()-30);var allOpen=[],allClosed=[],dayPnl=0,weekPnl=0,monthPnl=0;
+function rPo(){var ids=nonCtrlIds(),now=new Date(),todayStr=now.toISOString().slice(0,10);var d7=new Date(now);d7.setDate(d7.getDate()-7);var d30=new Date(now);d30.setDate(d30.getDate()-30);var allOpen=[],allClosed=[],dayPnl=0,weekPnl=0,monthPnl=0;
 ids.forEach(function(id){var t=gt(id);if(!t)return;(t.pos||[]).forEach(function(p){p._t=t.a.name;p._id=id;allOpen.push(p)});(t.hist||[]).forEach(function(tr){tr._t=t.a.name;tr._id=id;var dt=tr.time?new Date(tr.time):null;if(!dt)return;var p=tr.profit||0;if(dt.toISOString().slice(0,10)===todayStr)dayPnl+=p;if(dt>=d7)weekPnl+=p;if(dt>=d30){monthPnl+=p;if(p!==0)allClosed.push(tr)}})});allClosed.sort(function(a,b){return new Date(b.time)-new Date(a.time)});var recent=allClosed.slice(0,30);
 E('posc').innerHTML='<div class="sh"><span class="sh-t">Positions & P&L</span><span class="sh-l"></span><span class="sh-ts">'+T()+'</span></div><div class="kpis"><div class="kpi"><div class="kpi-l">Open</div><div class="kpi-v">'+allOpen.length+'</div></div><div class="kpi"><div class="kpi-l">Today</div><div class="kpi-v" style="color:'+(dayPnl>=0?'var(--up)':'var(--dn)')+'">'+(dayPnl>=0?'+':'')+'$'+F(dayPnl)+'</div></div><div class="kpi"><div class="kpi-l">Week</div><div class="kpi-v" style="color:'+(weekPnl>=0?'var(--up)':'var(--dn)')+'">'+(weekPnl>=0?'+':'')+'$'+F(weekPnl)+'</div></div><div class="kpi"><div class="kpi-l">Month</div><div class="kpi-v" style="color:'+(monthPnl>=0?'var(--up)':'var(--dn)')+'">'+(monthPnl>=0?'+':'')+'$'+F(monthPnl)+'</div></div><div class="kpi"><div class="kpi-l">Closed 30d</div><div class="kpi-v">'+allClosed.length+'</div></div></div>'+(allOpen.length?'<div class="sh"><span class="sh-t">Open Positions</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Entry</th><th>Current</th><th>P&L</th></tr></thead><tbody>'+allOpen.map(function(p){var pn=p.profit||0,buy=p.type&&p.type.includes('BUY');return'<tr><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+p._id+'\')">'+p._t+'</td><td>'+p.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(p.volume||'—')+'</td><td>'+F(p.openPrice)+'</td><td>'+F(p.currentPrice)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="nil">No open positions</div>')+(recent.length?'<div class="sh"><span class="sh-t">Recent Closed</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Time</th><th>Trader</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th>P&L</th></tr></thead><tbody>'+recent.map(function(t){var pn=t.profit||0,d=new Date(t.time),buy=t.type==='DEAL_TYPE_SELL';return'<tr><td>'+d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+t._id+'\')">'+t._t+'</td><td>'+t.symbol+'</td><td><span class="tag tag-'+(buy?'buy':'sell')+'">'+(buy?'BUY':'SELL')+'</span></td><td>'+(t.volume||'—')+'</td><td>'+F(t.price)+'</td><td style="color:'+(pn>=0?'var(--up)':'var(--dn)')+';font-weight:600">'+(pn>=0?'+':'')+'$'+F(pn)+'</td></tr>'}).join('')+'</tbody></table></div>':'')}
 
