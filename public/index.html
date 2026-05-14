@@ -515,6 +515,7 @@ var total=S.accts.length+S.manual.length;var ctrlCount=allIds().filter(function(
 updateTopbarPnl();
 ss(S.accts.length?'ok':'err',S.accts.length?'Live · '+S.accts.length+' accounts':'No accounts');log('All systems operational','ok');
 S.lastBal={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastBal[id]=t.l.balance||0});
+try{checkDailyRisk()}catch(e){}
 try{renderAll()}catch(e){log('Render error: '+e.message,'er');ss('err','Render fail')}
 }catch(e){log('INIT CRASH: '+e.message,'er');ss('err','Init failed');console.error('Init crash:',e)}
 setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i].id;if(S.deleted&&S.deleted.indexOf(id)>=0)continue;
@@ -531,7 +532,7 @@ setInterval(async function(){for(var i=0;i<S.accts.length;i++){var id=S.accts[i]
         sP();log('Payout detected: '+((t&&t.a.name)||id)+' — $'+R(drop).toLocaleString(),'wrn');rPay()}}}
   S.lastBal[id]=newBal}
 S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.l.equity||0});
-rOv();rPo();updateTopbarPnl()},20000)})();
+checkDailyRisk();rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;nonCtrlIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
 function renderAll(){
   var fns=[['rOv',rOv],['rPo',rPo],['rCa',rCa],['rRo',rRo],['rSa',rSa],['rPay',rPay],['rDep',rDep],['rRisk',rRisk],['rMatrix',rMatrix],['rGr',rGr],['rAC',rAC],['rSy',rSy]];
@@ -1412,7 +1413,20 @@ function calcCorrelation(a,b){var n=Math.min(a.length,b.length);if(n<5)return nu
 function corrColor(v){if(v===null)return'var(--w4)';return v>=.7?'var(--dn)':v>=.4?'var(--warn)':v>=-.4?'var(--up)':'var(--accent)'}
 
 // ── RISK PROTOCOL TAB ──
-function rRisk(){var ids=nonCtrlIds();
+function rRisk(){
+  // Sub-tabs
+  var tabsH='<div style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid var(--b5)">';
+  var tabs=[['protocol','Risk Protocol'],['daily2','Daily 2% Rule'],['violations','Violation History']];
+  tabs.forEach(function(t){
+    var active=riskTab===t[0];
+    tabsH+='<div onclick="setRiskTab(\''+t[0]+'\')" style="padding:10px 18px;cursor:pointer;font-size:.78rem;font-weight:'+(active?'600':'500')+';color:'+(active?'var(--accent)':'var(--w3)')+';border-bottom:2px solid '+(active?'var(--accent)':'transparent')+';margin-bottom:-1px;transition:all .15s">'+t[1]+'</div>'});
+  tabsH+='</div>';
+  
+  if(riskTab==='daily2'){E('riskc').innerHTML=tabsH+rDaily2();return}
+  if(riskTab==='violations'){E('riskc').innerHTML=tabsH+rViolationHist();return}
+  
+  // Protocol view (existing)
+  var ids=nonCtrlIds();
   var h='<div class="sh"><span class="sh-t">Risk Protocol</span><span class="sh-l"></span></div>';
 
   // Firm-wide drawdown
@@ -1512,12 +1526,12 @@ function genPDF(id){
 // Example: var SUPA_URL='https://abcdefg.supabase.co',SUPA_KEY='eyJ...';
 var SUPA_URL='https://ozluadwsmtqvafnkqhvn.supabase.co',SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHVhZHdzbXRxdmFmbmtxaHZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjI3MjAsImV4cCI6MjA5NDA5ODcyMH0.9Ife2ypKut8OX1w-GIgviQuVS9TOH2ygnUjDKfVel54';
 async function supaSync(){if(!SUPA_URL||!SUPA_KEY)return;
-  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups,deleted:S.deleted,deletedAt:S.deletedAt,payouts:S.payouts,deposits:S.deposits,tierHist:S.tierHist};
+  try{var payload={manual:S.manual,sal:S.sal,hist:S.hist,groups:S.groups,deleted:S.deleted,deletedAt:S.deletedAt,payouts:S.payouts,deposits:S.deposits,tierHist:S.tierHist,dailyRisk:S.dailyRisk,riskViolations:S.riskViolations};
     await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1',{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({data:payload,updated_at:new Date().toISOString()})});
   }catch(e){console.error('Supabase sync error:',e)}}
 async function supaLoad(){if(!SUPA_URL||!SUPA_KEY)return false;
   try{var r=await fetch(SUPA_URL+'/rest/v1/qtc_state?id=eq.1&select=data',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
-    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;if(d.deleted)S.deleted=d.deleted;if(d.payouts)S.payouts=d.payouts;if(d.deposits)S.deposits=d.deposits;if(d.tierHist)S.tierHist=d.tierHist;if(d.deletedAt)S.deletedAt=d.deletedAt;sM();sS();sH();return true}
+    var rows=await r.json();if(rows.length&&rows[0].data){var d=rows[0].data;if(d.manual)S.manual=d.manual;if(d.sal)S.sal=d.sal;if(d.hist)S.hist=d.hist;if(d.groups)S.groups=d.groups;if(d.deleted)S.deleted=d.deleted;if(d.payouts)S.payouts=d.payouts;if(d.deposits)S.deposits=d.deposits;if(d.tierHist)S.tierHist=d.tierHist;if(d.deletedAt)S.deletedAt=d.deletedAt;if(d.dailyRisk)S.dailyRisk=d.dailyRisk;if(d.riskViolations)S.riskViolations=d.riskViolations;sM();sS();sH();return true}
   }catch(e){console.error('Supabase load error:',e)}return false}
 // Auto-sync on save
 var _sS=sS,_sM=sM,_sH=sH;
@@ -1540,6 +1554,10 @@ function sD(){localStorage.setItem('qtc_d',JSON.stringify(S.deleted));supaSync()
 if(!S.payouts)S.payouts=JSON.parse(localStorage.getItem('qtc_p')||'[]');
 if(!S.deposits)S.deposits=JSON.parse(localStorage.getItem('qtc_dep')||'[]');
 if(!S.tierHist)S.tierHist=JSON.parse(localStorage.getItem('qtc_tier')||'{}');
+if(!S.dailyRisk)S.dailyRisk=JSON.parse(localStorage.getItem('qtc_drisk')||'{}');
+if(!S.riskViolations)S.riskViolations=JSON.parse(localStorage.getItem('qtc_rviol')||'{}');
+function sDRisk(){localStorage.setItem('qtc_drisk',JSON.stringify(S.dailyRisk));supaSync()}
+function sRViol(){localStorage.setItem('qtc_rviol',JSON.stringify(S.riskViolations));supaSync()}
 function sTier(){localStorage.setItem('qtc_tier',JSON.stringify(S.tierHist));supaSync()}
 function sDep(){localStorage.setItem('qtc_dep',JSON.stringify(S.deposits));supaSync()}
 function sP(){localStorage.setItem('qtc_p',JSON.stringify(S.payouts));supaSync()}
@@ -2486,6 +2504,175 @@ async function submitBulk(){
   if(succeeded>0){setTimeout(function(){location.reload()},3000)}
   else{E('bulk-submit').disabled=false;E('bulk-submit').textContent='Provision All'}
 }
+
+// ── DAILY 2% RISK MONITORING ──
+// Risk day key: returns YYYY-MM-DD for current trading day (resets at 23:00 GMT)
+function getRiskDayKey(d){
+  d=d||new Date();
+  // If hour < 23 GMT, day is today; if hour >= 23 GMT, day is tomorrow
+  var utc=new Date(d.getTime());
+  if(utc.getUTCHours()>=23){utc.setUTCDate(utc.getUTCDate()+1)}
+  return utc.toISOString().slice(0,10)}
+
+function getRiskDayLabel(d){
+  d=d||new Date();
+  var key=getRiskDayKey(d);
+  return key+' (23:00 GMT reset)'}
+
+// Check & record risk for every trader. Run on each refresh.
+function checkDailyRisk(){
+  var dayKey=getRiskDayKey();
+  if(!S.dailyRisk[dayKey])S.dailyRisk[dayKey]={};
+  var changed=false;
+  allIds().forEach(function(id){
+    var t=gt(id);if(!t||!t.l)return;
+    var bal=t.l.balance||0;
+    var eq=t.l.equity||0;
+    var dayData=S.dailyRisk[dayKey];
+    // First time seeing this trader today - snapshot starting balance
+    if(!dayData[id]){
+      dayData[id]={startBal:bal,maxLoss:0,maxLossPct:0,breached:false,breachTime:null,currentEq:eq,startTime:new Date().toISOString()};
+      changed=true;
+    }
+    var entry=dayData[id];
+    // Calculate current loss (equity drop from start of day balance)
+    var currentLoss=entry.startBal-eq;
+    var currentLossPct=entry.startBal>0?(currentLoss/entry.startBal*100):0;
+    entry.currentEq=eq;
+    // Track max loss
+    if(currentLoss>entry.maxLoss){entry.maxLoss=currentLoss;entry.maxLossPct=currentLossPct;changed=true}
+    // Check for breach (2% loss)
+    if(currentLossPct>=2&&!entry.breached){
+      entry.breached=true;entry.breachTime=new Date().toISOString();
+      // Add to violations log
+      if(!S.riskViolations[id])S.riskViolations[id]=[];
+      S.riskViolations[id].push({date:dayKey,startBal:entry.startBal,lossAmount:currentLoss,lossPct:currentLossPct,time:entry.breachTime});
+      sRViol();
+      log('\u26a0 2% RULE BREACH: '+t.a.name+' down $'+R(currentLoss).toLocaleString()+' ('+currentLossPct.toFixed(2)+'%)','er');
+      changed=true;
+    }
+  });
+  if(changed)sDRisk();
+}
+
+// rRisk now has sub-tabs: Protocol (existing) + Daily 2% Rule + Violation History
+var riskTab='daily2';
+function setRiskTab(t){riskTab=t;rRisk()}
+
+function rDaily2(){
+  checkDailyRisk();
+  var dayKey=getRiskDayKey();
+  var dayData=S.dailyRisk[dayKey]||{};
+  
+  // Real traders (excluding control)
+  var realIds=nonCtrlIds();
+  var ctrlIds=allIds().filter(function(i){return isControl(i)});
+  
+  // Sort: breached first, then by loss% descending
+  function sortIds(idList){
+    return idList.slice().sort(function(a,b){
+      var da=dayData[a]||{},db=dayData[b]||{};
+      if(da.breached&&!db.breached)return-1;
+      if(!da.breached&&db.breached)return 1;
+      return(db.maxLossPct||0)-(da.maxLossPct||0)});
+  }
+  
+  var sortedReal=sortIds(realIds);
+  var sortedCtrl=sortIds(ctrlIds);
+  
+  // Counts
+  var breachedToday=realIds.filter(function(id){return(dayData[id]||{}).breached}).length;
+  var atRisk=realIds.filter(function(id){var e=dayData[id]||{};return!e.breached&&(e.maxLossPct||0)>=1.5}).length;
+  
+  // Next reset countdown
+  var now=new Date();var nextReset=new Date(now);
+  if(now.getUTCHours()>=23){nextReset.setUTCDate(nextReset.getUTCDate()+1)}
+  nextReset.setUTCHours(23,0,0,0);
+  var msUntilReset=nextReset-now;
+  var hUntil=Math.floor(msUntilReset/3600000);
+  var mUntil=Math.floor((msUntilReset%3600000)/60000);
+  
+  var h='<div class="sh"><span class="sh-t">Daily 2% Loss Rule</span><span class="sh-l"></span><span class="sh-ts">Resets at 23:00 GMT \u00b7 Next reset in '+hUntil+'h '+mUntil+'m</span></div>';
+  
+  // KPIs
+  h+='<div class="kpis" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.5rem"><div class="kpi"><div class="kpi-l">Trading Day</div><div class="kpi-v" style="font-size:1.1rem">'+dayKey+'</div></div><div class="kpi"><div class="kpi-l">Traders Monitored</div><div class="kpi-v">'+realIds.length+'</div></div><div class="kpi"><div class="kpi-l">Breached Today</div><div class="kpi-v" style="color:'+(breachedToday>0?'var(--dn)':'var(--up)')+'">'+breachedToday+'</div></div><div class="kpi"><div class="kpi-l">At Risk (>1.5%)</div><div class="kpi-v" style="color:'+(atRisk>0?'var(--warn)':'var(--w2)')+'">'+atRisk+'</div></div></div>';
+  
+  // Table builder
+  function buildTable(idList){
+    if(!idList.length)return'<div class="placeholder-box">No traders to monitor.</div>';
+    var t='<div class="tw"><table><thead><tr><th>Trader</th><th>Account</th><th>Start Balance</th><th>2% Limit</th><th>Current Loss</th><th>Loss %</th><th>Status</th></tr></thead><tbody>';
+    idList.forEach(function(id){
+      var tr=gt(id);if(!tr)return;
+      var e=dayData[id]||{};
+      var sb=e.startBal||(tr.l?tr.l.balance:0);
+      var limit=sb*0.02;
+      var loss=e.maxLoss||0;
+      var lossPct=e.maxLossPct||0;
+      var pctOfLimit=Math.min(100,(lossPct/2*100));
+      var statusBg=e.breached?'rgba(255,85,100,.08)':(lossPct>=1.5?'rgba(242,180,65,.06)':(lossPct>=1?'rgba(242,180,65,.03)':''));
+      t+='<tr style="background:'+statusBg+'"><td class="sym" style="cursor:pointer;color:var(--accent)" onclick="viewTrader(\''+id+'\')">'+tr.a.name+(isControl(id)?' <span style="background:var(--w5);color:var(--w2);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.55rem;font-weight:600;letter-spacing:.08em;margin-left:.3rem">CONTROL</span>':'')+'</td><td style="font-family:var(--mono);font-size:.7rem">'+(tr.a.login||'\u2014')+'</td><td>$'+R(sb).toLocaleString()+'</td><td style="color:var(--warn);font-weight:600">$'+R(limit).toLocaleString()+'</td><td style="color:'+(loss>0?'var(--dn)':'var(--w2)')+';font-weight:600">$'+R(loss).toLocaleString()+'</td><td style="font-weight:600;color:'+(lossPct>=2?'var(--dn)':lossPct>=1.5?'var(--warn)':lossPct>=1?'var(--w2)':'var(--up)')+'"><div style="display:flex;align-items:center;gap:.5rem"><span>'+lossPct.toFixed(2)+'%</span><div style="flex:1;max-width:80px;height:6px;background:var(--b4);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pctOfLimit+'%;background:'+(lossPct>=2?'var(--dn)':lossPct>=1.5?'var(--warn)':'var(--accent)')+';transition:width .3s"></div></div></div></td><td>'+(e.breached?'<span style="background:rgba(255,85,100,.15);color:var(--dn);padding:3px 10px;border-radius:4px;font-size:.66rem;font-weight:700;letter-spacing:.05em">\u2715 BREACHED</span>':lossPct>=1.5?'<span style="background:rgba(242,180,65,.12);color:var(--warn);padding:3px 10px;border-radius:4px;font-size:.66rem;font-weight:600">AT RISK</span>':lossPct>=1?'<span style="color:var(--w2);font-size:.7rem">Caution</span>':'<span style="color:var(--up);font-size:.7rem">\u2713 OK</span>')+'</td></tr>'});
+    t+='</tbody></table></div>';
+    return t}
+  
+  // Main traders section
+  h+='<div class="sh"><span class="sh-t">Main Traders</span><span class="sh-l"></span></div>';
+  h+=buildTable(sortedReal);
+  
+  // Control accounts separated
+  if(sortedCtrl.length){
+    h+='<div class="sh" style="margin-top:2.5rem"><span class="sh-t">Control Accounts</span><span class="sh-l"></span><span class="sh-ts">Excluded from firm metrics</span></div>';
+    h+=buildTable(sortedCtrl)}
+  
+  return h}
+
+function rViolationHist(){
+  var violations=S.riskViolations||{};
+  var realIds=nonCtrlIds();
+  
+  // Sort traders by violation count descending
+  var summary=realIds.map(function(id){
+    var t=gt(id);if(!t)return null;
+    var v=violations[id]||[];
+    return{id:id,name:t.a.name,login:t.a.login,count:v.length,violations:v,lastDate:v.length?v[v.length-1].date:null}
+  }).filter(Boolean).sort(function(a,b){return b.count-a.count});
+  
+  var totalViolations=summary.reduce(function(s,r){return s+r.count},0);
+  var tradersWithViolations=summary.filter(function(r){return r.count>0}).length;
+  
+  var h='<div class="sh"><span class="sh-t">Violation History</span><span class="sh-l"></span><span class="sh-ts">All 2% rule breaches since tracking began</span></div>';
+  
+  // KPIs
+  h+='<div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.5rem"><div class="kpi"><div class="kpi-l">Total Violations</div><div class="kpi-v" style="color:'+(totalViolations>0?'var(--dn)':'var(--up)')+'">'+totalViolations+'</div></div><div class="kpi"><div class="kpi-l">Traders With Breaches</div><div class="kpi-v" style="color:'+(tradersWithViolations>0?'var(--warn)':'var(--up)')+'">'+tradersWithViolations+' / '+realIds.length+'</div></div><div class="kpi"><div class="kpi-l">Compliance Rate</div><div class="kpi-v" style="color:var(--up)">'+(realIds.length?Math.round((realIds.length-tradersWithViolations)/realIds.length*100):100)+'%</div></div></div>';
+  
+  // Per-trader breakdown with breach day badges
+  if(!tradersWithViolations){
+    h+='<div class="placeholder-box" style="padding:2rem;text-align:center"><div style="color:var(--up);font-size:1.2rem;margin-bottom:.5rem">\u2713</div><div style="color:var(--w2)">No violations recorded. All traders compliant with the 2% daily loss rule.</div></div>';
+    return h}
+  
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:1rem">';
+  summary.forEach(function(r){
+    if(r.count===0)return;
+    h+='<div style="background:var(--b2);border:1px solid '+(r.count>=3?'rgba(255,85,100,.4)':'var(--b5)')+';border-radius:8px;padding:1.2rem 1.4rem">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><div><div style="font-weight:600;font-size:1rem;color:var(--accent);cursor:pointer" onclick="viewTrader(\''+r.id+'\')">'+r.name+'</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--w4);margin-top:.2rem">'+(r.login||'\u2014')+'</div></div><div style="background:'+(r.count>=3?'rgba(255,85,100,.15)':'rgba(242,180,65,.12)')+';color:'+(r.count>=3?'var(--dn)':'var(--warn)')+';padding:6px 12px;border-radius:6px;font-family:var(--mono);font-size:.8rem;font-weight:700">'+r.count+' breach'+(r.count>1?'es':'')+'</div></div>';
+    
+    // Breach days as visual badges
+    h+='<div style="font-size:.62rem;color:var(--w3);letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:.5rem">Breach Days</div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:.4rem">';
+    r.violations.slice().reverse().forEach(function(v){
+      var dt=new Date(v.date);
+      var dayShort=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+      h+='<div title="Lost $'+R(v.lossAmount).toLocaleString()+' ('+v.lossPct.toFixed(2)+'%) on '+v.date+'" style="background:rgba(255,85,100,.08);border:1px solid rgba(255,85,100,.3);color:var(--dn);padding:5px 10px;border-radius:5px;font-family:var(--mono);font-size:.66rem;font-weight:600;cursor:help">'+dayShort+'</div>'});
+    h+='</div>';
+    
+    // Average loss summary
+    var avgLoss=r.violations.reduce(function(s,v){return s+v.lossPct},0)/r.violations.length;
+    var maxLoss=Math.max.apply(null,r.violations.map(function(v){return v.lossPct}));
+    h+='<div style="display:flex;justify-content:space-between;margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--b5);font-size:.7rem"><div><span style="color:var(--w3)">Avg Loss</span> <span style="color:var(--dn);font-weight:600;margin-left:.4rem">'+avgLoss.toFixed(2)+'%</span></div><div><span style="color:var(--w3)">Worst Day</span> <span style="color:var(--dn);font-weight:600;margin-left:.4rem">'+maxLoss.toFixed(2)+'%</span></div></div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  
+  return h}
 
 // ── SYSTEM ──
 function rSy(){var ids=Object.keys(S.traders);E('sysc').innerHTML=rTrash()+'<div class="sh"><span class="sh-t">Data Tools</span><span class="sh-l"></span></div><div style="display:flex;gap:.5rem;margin-bottom:2rem"><button class="btn" onclick="showDataCorrect()">Manual Data Correction</button><button class="btn" onclick="runQScoreBacktest()">Q-Score Backtest</button></div><div class="sh"><span class="sh-t">System Status</span><span class="sh-l"></span></div><div class="conn">'+ids.map(function(id){var a=S.traders[id].a;return'<div class="ci"><span class="cl">'+a.name+'</span><span class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</span></div>'}).join('')+'<div class="ci"><span class="cl">Manual Traders</span><span class="cv ac">'+S.manual.length+'</span></div><div class="ci"><span class="cl">Proxy</span><span class="cv up">ACTIVE</span></div><div class="ci"><span class="cl">Refresh</span><span class="cv">20s</span></div><div class="ci"><span class="cl">Supabase</span><span class="cv '+(SUPA_URL?'up':'dn')+'">'+(SUPA_URL?'CONNECTED':'NOT SET')+'</span></div></div><div class="sh"><span class="sh-t">Accounts</span><span class="sh-l"></span></div><div class="tw"><table><thead><tr><th>Name</th><th>Login</th><th>Server</th><th>Platform</th><th>State</th><th>Link</th></tr></thead><tbody>'+ids.map(function(id){var a=S.traders[id].a;return'<tr><td class="sym">'+(a.name||'—')+'</td><td>'+(a.login||'—')+'</td><td>'+(a.server||'—')+'</td><td>'+(a.platform||'—')+'</td><td class="cv up">'+(a.state||'—')+'</td><td class="cv '+(a.connectionStatus==='CONNECTED'?'up':'dn')+'">'+a.connectionStatus+'</td></tr>'}).join('')+'</tbody></table></div><div class="sh"><span class="sh-t">Data Persistence</span><span class="sh-l"></span></div><div class="fp"><div class="fg"><div><div class="fl">Supabase URL</div><input class="fi" id="supa-url" value="'+SUPA_URL+'" placeholder="https://xxx.supabase.co"></div><div><div class="fl">Supabase Anon Key</div><input class="fi" id="supa-key" type="password" value="'+SUPA_KEY+'" placeholder="eyJ..."></div></div><div class="br"><button class="btn btn-s" onclick="saveSupa()">Save & Sync</button><button class="btn" onclick="loadSupa()">Load from Supabase</button></div><div style="font-family:var(--mono);font-size:.52rem;color:var(--w4);margin-top:.5rem">Create a table: <code>qtc_state</code> with columns: <code>id</code> (int, default 1), <code>data</code> (jsonb), <code>updated_at</code> (timestamptz). Enable RLS with anon read/write on id=1.</div></div>'}
