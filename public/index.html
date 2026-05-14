@@ -373,7 +373,7 @@ function ss(s,m){var d=E('dot');d.style.background=s==='ok'?'var(--up)':s==='err
 var prevView='overview';
 function nav(id){prevView=document.querySelector('.vw.active')?.id?.replace('v-','')||'overview';document.querySelectorAll('.vw').forEach(function(v){v.classList.remove('active')});document.querySelectorAll('.sb').forEach(function(b){b.classList.remove('active')});E('v-'+id).classList.add('active');var btns=document.querySelectorAll('.sb');for(var i=0;i<btns.length;i++){if(btns[i].textContent.toLowerCase().indexOf(id.slice(0,4))>=0)btns[i].classList.add('active')}}
 function goBack(){nav(prevView||'roster')}
-function px(ep,aid){var u='/api/metaapi?endpoint='+ep;if(aid)u+='&accountId='+aid;return fetch(u).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||r.status);return d})})}
+function px(ep,aid){var u='/api/metaapi?endpoint='+ep;if(aid)u+='&accountId='+aid;u+='&_='+Date.now();return fetch(u,{cache:'no-store'}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||r.status);return d})})}
 
 // ── Q-Score ──
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function lerp(v,a,b,c,d){return c+Math.max(0,Math.min(1,(v-a)/(b-a)))*(d-c)}function iLerp(v,a,b,c,d){return c+Math.max(0,Math.min(1,(b-v)/(b-a)))*(d-c)}
@@ -1740,11 +1740,6 @@ function viewAutoCluster(key){
 // ── TRADERS MATRIX ──
 function rMatrix(){
   var ids=nonCtrlIds();
-  var tradersAll=idsAll.map(function(id){
-    var t=gt(id);if(!t)return null;
-    var q=t.q||{};var b=t.l?.balance||0;
-    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),score:q.score||0,pending:q.pending,bal:b}
-  }).filter(Boolean);
   var traders=ids.map(function(id){
     var t=gt(id);if(!t)return null;
     var q=t.q||{};var b=t.l?.balance||0;
