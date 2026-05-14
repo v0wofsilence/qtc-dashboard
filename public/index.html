@@ -335,6 +335,7 @@ body.light .sh-l{background:linear-gradient(90deg,#DDE2EA,transparent)!important
   </div>
   <div class="sidebar-section"><div class="sidebar-label">Risk</div>
     <button class="sb" onclick="nav('risk')"><span class="sb-icon">⚑</span>Risk Protocol</button>
+    <button class="sb" onclick="nav('daily2')"><span class="sb-icon">⚠</span>Daily 2% Rule</button>
     <button class="sb" onclick="nav('matrix')"><span class="sb-icon">▥</span>Traders Matrix</button>
   </div>
 
@@ -353,6 +354,7 @@ body.light .sh-l{background:linear-gradient(90deg,#DDE2EA,transparent)!important
 <div id="v-payouts" class="vw"><div id="payc"></div></div>
 <div id="v-trader" class="vw"><div id="tdetail"></div></div>
 <div id="v-risk" class="vw"><div id="riskc"></div></div>
+<div id="v-daily2" class="vw"><div id="daily2c"></div></div>
 <div id="v-matrix" class="vw"><div id="matrixc"></div></div>
 <div id="v-groups" class="vw"><div id="grpc"></div></div>
 <div id="v-autoclusters" class="vw"><div id="autogrpc"></div></div>
@@ -535,7 +537,7 @@ S.lastEq={};allIds().forEach(function(id){var t=gt(id);if(t&&t.l)S.lastEq[id]=t.
 checkDailyRisk();rOv();rPo();updateTopbarPnl()},20000)})();
 function updateTopbarPnl(){var tu=0;nonCtrlIds().forEach(function(id){var t=gt(id);if(t&&t.l)tu+=(t.l.equity||0)-(t.l.balance||0)});var el=E('openPnl');if(el){el.textContent=(tu>=0?'+':'')+'$'+F(tu);el.style.color=tu>=0?'var(--up)':'var(--dn)'}}
 function renderAll(){
-  var fns=[['rOv',rOv],['rPo',rPo],['rCa',rCa],['rRo',rRo],['rSa',rSa],['rPay',rPay],['rDep',rDep],['rRisk',rRisk],['rMatrix',rMatrix],['rGr',rGr],['rAC',rAC],['rSy',rSy]];
+  var fns=[['rOv',rOv],['rPo',rPo],['rCa',rCa],['rRo',rRo],['rSa',rSa],['rPay',rPay],['rDep',rDep],['rRisk',rRisk],['rDaily2Page',rDaily2Page],['rMatrix',rMatrix],['rGr',rGr],['rAC',rAC],['rSy',rSy]];
   fns.forEach(function(p){try{p[1]()}catch(e){console.error('Render error in '+p[0]+':',e);log('Err in '+p[0]+': '+e.message,'er')}});
   try{updateTopbarPnl()}catch(e){}
 }
@@ -1413,20 +1415,7 @@ function calcCorrelation(a,b){var n=Math.min(a.length,b.length);if(n<5)return nu
 function corrColor(v){if(v===null)return'var(--w4)';return v>=.7?'var(--dn)':v>=.4?'var(--warn)':v>=-.4?'var(--up)':'var(--accent)'}
 
 // ── RISK PROTOCOL TAB ──
-function rRisk(){
-  // Sub-tabs
-  var tabsH='<div style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid var(--b5)">';
-  var tabs=[['protocol','Risk Protocol'],['daily2','Daily 2% Rule'],['violations','Violation History']];
-  tabs.forEach(function(t){
-    var active=riskTab===t[0];
-    tabsH+='<div onclick="setRiskTab(\''+t[0]+'\')" style="padding:10px 18px;cursor:pointer;font-size:.78rem;font-weight:'+(active?'600':'500')+';color:'+(active?'var(--accent)':'var(--w3)')+';border-bottom:2px solid '+(active?'var(--accent)':'transparent')+';margin-bottom:-1px;transition:all .15s">'+t[1]+'</div>'});
-  tabsH+='</div>';
-  
-  if(riskTab==='daily2'){E('riskc').innerHTML=tabsH+rDaily2();return}
-  if(riskTab==='violations'){E('riskc').innerHTML=tabsH+rViolationHist();return}
-  
-  // Protocol view (existing)
-  var ids=nonCtrlIds();
+function rRisk(){var ids=nonCtrlIds();
   var h='<div class="sh"><span class="sh-t">Risk Protocol</span><span class="sh-l"></span></div>';
 
   // Firm-wide drawdown
@@ -2556,8 +2545,20 @@ function checkDailyRisk(){
 }
 
 // rRisk now has sub-tabs: Protocol (existing) + Daily 2% Rule + Violation History
-var riskTab='daily2';
-function setRiskTab(t){riskTab=t;rRisk()}
+var daily2Tab='rule';
+function setDaily2Tab(t){daily2Tab=t;rDaily2Page()}
+
+function rDaily2Page(){
+  // Sub-tabs at the page level
+  var tabsH='<div style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid var(--b5)">';
+  var tabs=[['rule','Live Monitor'],['violations','Violation History']];
+  tabs.forEach(function(t){
+    var active=daily2Tab===t[0];
+    tabsH+='<div onclick="setDaily2Tab(\''+t[0]+'\')" style="padding:10px 18px;cursor:pointer;font-size:.78rem;font-weight:'+(active?'600':'500')+';color:'+(active?'var(--accent)':'var(--w3)')+';border-bottom:2px solid '+(active?'var(--accent)':'transparent')+';margin-bottom:-1px;transition:all .15s">'+t[1]+'</div>'});
+  tabsH+='</div>';
+  
+  if(daily2Tab==='violations'){E('daily2c').innerHTML=tabsH+rViolationHist();return}
+  E('daily2c').innerHTML=tabsH+rDaily2()}
 
 function rDaily2(){
   checkDailyRisk();
