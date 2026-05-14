@@ -1277,13 +1277,28 @@ E('addTab').innerHTML=
 async function connectMT5(){
   var name=E('mt-name').value.trim(),login=E('mt-login').value.trim(),pass=E('mt-pass').value,server=E('mt-server').value.trim(),platform=E('mt-platform').value;
   if(!name||!login||!pass||!server){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">All credential fields required</span>';return}
+  // Sanity checks
+  if(/[$!@#%^&*()=+]/.test(server)){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">\u26a0 Server "'+server+'" contains password-like chars. Did you swap Password and Server? Server should be like "QuantTekel-Server"</span>';return}
+  if(!/^\d{4,12}$/.test(login)){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">\u26a0 Login "'+login+'" should be numeric only (e.g. 10539503)</span>';return}
+  // Show what's about to be sent so user can verify
+  E('mt-status').innerHTML='<span style="color:var(--accent);font-size:.7rem">Connecting with: Login='+login+' \u00b7 Server='+server+' \u00b7 Platform='+platform+'</span>';
   E('mt-submit').disabled=true;E('mt-submit').textContent='Connecting...';
-  E('mt-status').innerHTML='<span style="color:var(--accent);font-size:.7rem">Creating account on MetaAPI...</span>';
   try{
     var r=await fetch('/api/metaapi?action=create-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,login:login,password:pass,server:server,platform:platform})});
     var d=await r.json();
     if(!r.ok||d.error){E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Error: '+(d.error||'Unknown')+'</span>';E('mt-submit').disabled=false;E('mt-submit').textContent='Connect & Deploy';return}
-    E('mt-status').innerHTML='<span style="color:var(--up);font-size:.7rem">Account created'+(d.deployed?' & deployed':'')+' (ID: '+String(d.id).slice(0,8)+'...)</span>';
+    E('mt-status').innerHTML='<span style="color:var(--accent);font-size:.7rem">Account created (ID: '+String(d.id).slice(0,8)+'...). Verifying...</span>';
+    
+    // Verify account actually persists in list-accounts
+    await new Promise(function(res){setTimeout(res,3000)});
+    var verifyList=await px('list-accounts').catch(function(){return[]});
+    var found=verifyList.some(function(a){return a.id===d.id});
+    if(!found){
+      E('mt-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">\u26a0 Account created with ID '+d.id+' but VANISHED from MetaAPI list. Likely cause: invalid credentials (login/password/server does not match a real broker account). MetaAPI silently deletes accounts that fail initial broker connection.</span>';
+      E('mt-submit').disabled=false;E('mt-submit').textContent='Connect & Deploy';
+      return;
+    }
+    E('mt-status').innerHTML='<span style="color:var(--up);font-size:.7rem">\u2713 Account verified on MetaAPI list ('+verifyList.length+' total accounts). Reloading...</span>';
     // Save salary/eval config for this account
     var sd=E('mt-start').value||new Date().toISOString().slice(0,10);
     var salObj={amt:parseInt(E('mt-sal').value)||3000,status:'active',cycle:30,paid:0,months:0,payments:[],start:sd,split:50,inst:E('mt-inst').value,hold:E('mt-hold').value};
@@ -2350,6 +2365,7 @@ async function connectControlMT5(){
   var server=E('ctrl-server').value.trim();
   var platform=E('ctrl-platform').value;
   if(!name||!login||!pass||!server){E('ctrl-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">All fields required</span>';return}
+  if(/[$!@#%^&*()=+]/.test(server)){E('ctrl-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">\u26a0 Server name contains password-like characters. Did you swap the Password and Server fields?</span>';return}
   E('ctrl-submit').disabled=true;E('ctrl-submit').textContent='Connecting...';
   E('ctrl-status').innerHTML='<span style="color:var(--accent);font-size:.7rem">Creating account on MetaAPI...</span>';
   try{
