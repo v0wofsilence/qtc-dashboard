@@ -2378,16 +2378,20 @@ function showBulkAdd(){
   h+='<div id="bulk-progress" style="margin-top:1rem;font-family:var(--mono);font-size:.72rem;color:var(--w3);min-height:1.5rem"></div>';
   h+='<div class="br" style="margin-top:1rem"><button class="btn btn-s" id="bulk-submit" onclick="submitBulk()">Provision All</button><button class="btn" onclick="closeEdit()">Cancel</button></div></div>';
   E('editModalContent').innerHTML=h;E('editModal').classList.add('open');
-  // Start with 4 rows
+  // Reset and start with 4 rows
+  bulkRowCount=0;
   for(var i=0;i<4;i++)addBulkRow()}
 
 var bulkRowCount=0;
 function addBulkRow(){
-  if(bulkRowCount>=20)return;
+  // Count existing cards in DOM
+  var currentCount=document.querySelectorAll('.bulk-card').length;
+  if(currentCount>=20){alert('Maximum 20 traders per batch reached.');return}
+  // Use a unique ID based on a counter that only increases (never reuses)
+  var i=bulkRowCount;
   bulkRowCount++;
-  var i=bulkRowCount-1;
   var card='<div class="bulk-card" id="bulk-card-'+i+'" style="background:var(--b2);border:1px solid var(--b5);border-radius:6px;padding:.7rem .8rem;position:relative">';
-  card+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><span style="font-family:var(--mono);font-size:.6rem;color:var(--w4);font-weight:600">#'+(i+1)+'</span><span style="cursor:pointer;color:var(--w4);font-size:.8rem" onclick="removeBulkRow('+i+')" title="Remove">\u2715</span></div>';
+  card+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><span style="font-family:var(--mono);font-size:.6rem;color:var(--w4);font-weight:600">#'+(currentCount+1)+'</span><span style="cursor:pointer;color:var(--w4);font-size:.8rem" onclick="removeBulkRow('+i+')" title="Remove">\u2715</span></div>';
   card+='<input class="mf-input" id="b-name-'+i+'" placeholder="Trader Name" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
   card+='<input class="mf-input" id="b-login-'+i+'" placeholder="Login" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
   card+='<input class="mf-input" id="b-server-'+i+'" placeholder="Server" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
@@ -2400,18 +2404,19 @@ function addBulkRow(){
 
 function removeBulkRow(i){
   var card=E('bulk-card-'+i);if(card)card.remove();
-  // Re-count
-  bulkRowCount=document.querySelectorAll('.bulk-card').length;
-  updateBulkCount()}
+  updateBulkCount();
+  // Re-number visible cards
+  document.querySelectorAll('.bulk-card').forEach(function(c,idx){
+    var numEl=c.querySelector('span');
+    if(numEl&&numEl.textContent.indexOf('#')===0)numEl.textContent='#'+(idx+1)})}
 
 function updateBulkCount(){
   var count=document.querySelectorAll('.bulk-card').length;
-  bulkRowCount=count;
   var filled=0;
   document.querySelectorAll('.bulk-card').forEach(function(c){
-    var idx=c.id.replace('bulk-card-','');
-    var name=E('b-name-'+idx);if(name&&name.value.trim())filled++});
-  E('bulk-count').textContent=filled+' / '+count+' filled \u00b7 max 20';
+    var inputs=c.querySelectorAll('input');
+    if(inputs[0]&&inputs[0].value.trim())filled++});
+  E('bulk-count').textContent=filled+' filled \u00b7 '+count+' rows \u00b7 max 20';
 }
 
 document.addEventListener('input',function(e){if(e.target.id&&e.target.id.indexOf('b-name-')===0)updateBulkCount()});
