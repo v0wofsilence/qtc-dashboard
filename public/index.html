@@ -603,7 +603,7 @@ function saveEdit(){
   }
   closeEdit();renderAll();
 }
-function closeEdit(){E('editModal').classList.remove('open');editId=null}
+function closeEdit(){E('editModal').classList.remove('open');var m=E('editModalContent');if(m)m.style.width='';editId=null}
 
 // ── SEARCH ──
 function onSearch(){var q=E('searchInput').value.trim().toLowerCase(),el=E('searchResults');
@@ -2371,7 +2371,9 @@ async function connectControlMT5(){
 
 // ── BULK ADD TRADERS ──
 function showBulkAdd(){
-  var h='<div class="modal-header"><div class="modal-title">Bulk Add Traders</div><span class="modal-close" onclick="closeEdit()">\u00d7</span></div><div class="modal-body" style="max-width:1400px;max-height:85vh">';
+  // Widen the modal for bulk add
+  var modalEl=E('editModalContent');if(modalEl)modalEl.style.width='1280px';
+  var h='<div class="modal-header"><div class="modal-title">Bulk Add Traders</div><span class="modal-close" onclick="closeEdit()">\u00d7</span></div><div class="modal-body" style="max-height:85vh">';
   h+='<div style="margin-bottom:1rem;font-size:.7rem;color:var(--w3);padding:.6rem .8rem;background:rgba(123,163,240,.06);border-left:2px solid var(--accent);border-radius:4px">Add up to 20 traders at once. Each will be provisioned on MetaAPI sequentially (10-30s each). Leave any unused rows blank.</div>';
   h+='<div style="display:flex;gap:.5rem;margin-bottom:1rem"><button class="btn btn-s" onclick="addBulkRow()">+ Add Row</button><span style="font-family:var(--mono);font-size:.7rem;color:var(--w3);align-self:center" id="bulk-count">0 / 20 traders</span></div>';
   h+='<div id="bulk-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;max-height:55vh;overflow-y:auto;padding:.3rem;border:1px solid var(--b5);border-radius:8px;background:var(--b1)"></div>';
