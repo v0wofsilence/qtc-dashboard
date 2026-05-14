@@ -1233,7 +1233,7 @@ sortData.sort(function(a,b){var va=a[sk],vb=b[sk];if(typeof va==='string')return
 ids=sortData.map(function(d){return d.id});
 var arrow=rosterSort.dir==='asc'?' ↑':' ↓';
 function sBtn(key,label){return'<button class="sort-btn'+(rosterSort.key===key?' active':'')+'" onclick="sortRoster(\''+key+'\')">'+label+(rosterSort.key===key?arrow:'')+'</button>'}
-E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span><span class="sh-btn" onclick="showAddControl()" style="margin-left:.5rem">+ Control Account</span><span class="sh-btn" onclick="showCompare()" style="margin-left:.5rem">☰ Compare</span><span class="sh-btn" onclick="exportRoster()" style="margin-left:.5rem">↤ Export CSV</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+sBtn('nextDue','Next Due')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>DD %</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Split</th><th>Cycle</th><th>Next Due</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
+E('rost').innerHTML='<div class="sh"><span class="sh-t">Trader Roster</span><span class="sh-l"></span><span class="sh-btn" onclick="showAdd()">+ Add Trader</span><span class="sh-btn" onclick="showBulkAdd()" style="margin-left:.5rem">⊞ Bulk Add</span><span class="sh-btn" onclick="showAddControl()" style="margin-left:.5rem">+ Control Account</span><span class="sh-btn" onclick="showCompare()" style="margin-left:.5rem">☰ Compare</span><span class="sh-btn" onclick="exportRoster()" style="margin-left:.5rem">↤ Export CSV</span></div><div id="addC"></div><div class="sort-bar"><span class="sort-label">Sort by</span>'+sBtn('name','Name')+sBtn('bal','Balance')+sBtn('wr','Win Rate')+sBtn('pnl','P&L')+sBtn('np','Firm Econ')+sBtn('nextDue','Next Due')+'</div><div class="tw"><table><thead><tr><th>Name</th><th>Account</th><th>Q-Score</th><th>Tier</th><th>Balance</th><th>DD %</th><th>WR</th><th>PF</th><th>P&L</th><th>Salary</th><th>Split</th><th>Cycle</th><th>Next Due</th><th>Firm Econ</th><th></th></tr></thead><tbody>'+ids.map(function(id){
   var t=gt(id);if(!t)return'';var a=t.a,l=t.l,q=t.q||{},s=S.sal[id]||{},b=l?.balance||0;
   var di=salDueInfo(s),np=netPosition(id);
   var trTier=tier(q.score||0,id),quota=tierQuota(trTier),metQuota=(q.score||0)>=quota;
@@ -2367,6 +2367,98 @@ async function connectControlMT5(){
     sS();
     setTimeout(function(){location.reload()},2000);
   }catch(e){E('ctrl-status').innerHTML='<span style="color:var(--dn);font-size:.7rem">Network error: '+e.message+'</span>';E('ctrl-submit').disabled=false;E('ctrl-submit').textContent='Connect Control Account'}
+}
+
+// ── BULK ADD TRADERS ──
+function showBulkAdd(){
+  var h='<div class="modal-header"><div class="modal-title">Bulk Add Traders</div><span class="modal-close" onclick="closeEdit()">\u00d7</span></div><div class="modal-body" style="max-width:1400px;max-height:85vh">';
+  h+='<div style="margin-bottom:1rem;font-size:.7rem;color:var(--w3);padding:.6rem .8rem;background:rgba(123,163,240,.06);border-left:2px solid var(--accent);border-radius:4px">Add up to 20 traders at once. Each will be provisioned on MetaAPI sequentially (10-30s each). Leave any unused rows blank.</div>';
+  h+='<div style="display:flex;gap:.5rem;margin-bottom:1rem"><button class="btn btn-s" onclick="addBulkRow()">+ Add Row</button><span style="font-family:var(--mono);font-size:.7rem;color:var(--w3);align-self:center" id="bulk-count">0 / 20 traders</span></div>';
+  h+='<div id="bulk-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;max-height:55vh;overflow-y:auto;padding:.3rem;border:1px solid var(--b5);border-radius:8px;background:var(--b1)"></div>';
+  h+='<div id="bulk-progress" style="margin-top:1rem;font-family:var(--mono);font-size:.72rem;color:var(--w3);min-height:1.5rem"></div>';
+  h+='<div class="br" style="margin-top:1rem"><button class="btn btn-s" id="bulk-submit" onclick="submitBulk()">Provision All</button><button class="btn" onclick="closeEdit()">Cancel</button></div></div>';
+  E('editModalContent').innerHTML=h;E('editModal').classList.add('open');
+  // Start with 4 rows
+  for(var i=0;i<4;i++)addBulkRow()}
+
+var bulkRowCount=0;
+function addBulkRow(){
+  if(bulkRowCount>=20)return;
+  bulkRowCount++;
+  var i=bulkRowCount-1;
+  var card='<div class="bulk-card" id="bulk-card-'+i+'" style="background:var(--b2);border:1px solid var(--b5);border-radius:6px;padding:.7rem .8rem;position:relative">';
+  card+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><span style="font-family:var(--mono);font-size:.6rem;color:var(--w4);font-weight:600">#'+(i+1)+'</span><span style="cursor:pointer;color:var(--w4);font-size:.8rem" onclick="removeBulkRow('+i+')" title="Remove">\u2715</span></div>';
+  card+='<input class="mf-input" id="b-name-'+i+'" placeholder="Trader Name" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
+  card+='<input class="mf-input" id="b-login-'+i+'" placeholder="Login" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
+  card+='<input class="mf-input" id="b-server-'+i+'" placeholder="Server" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
+  card+='<input class="mf-input" id="b-pass-'+i+'" type="password" placeholder="Password" style="margin-bottom:.4rem;font-size:.72rem;padding:6px 8px">';
+  card+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin-bottom:.4rem"><select class="mf-input" id="b-plat-'+i+'" style="font-size:.7rem;padding:5px"><option value="mt5">MT5</option><option value="mt4">MT4</option></select><input class="mf-input" id="b-sal-'+i+'" type="number" placeholder="$3000" value="3000" style="font-size:.7rem;padding:5px"></div>';
+  card+='<div id="b-status-'+i+'" style="font-family:var(--mono);font-size:.58rem;min-height:1rem;color:var(--w4)"></div>';
+  card+='</div>';
+  E('bulk-grid').insertAdjacentHTML('beforeend',card);
+  updateBulkCount()}
+
+function removeBulkRow(i){
+  var card=E('bulk-card-'+i);if(card)card.remove();
+  // Re-count
+  bulkRowCount=document.querySelectorAll('.bulk-card').length;
+  updateBulkCount()}
+
+function updateBulkCount(){
+  var count=document.querySelectorAll('.bulk-card').length;
+  bulkRowCount=count;
+  var filled=0;
+  document.querySelectorAll('.bulk-card').forEach(function(c){
+    var idx=c.id.replace('bulk-card-','');
+    var name=E('b-name-'+idx);if(name&&name.value.trim())filled++});
+  E('bulk-count').textContent=filled+' / '+count+' filled \u00b7 max 20';
+}
+
+document.addEventListener('input',function(e){if(e.target.id&&e.target.id.indexOf('b-name-')===0)updateBulkCount()});
+
+async function submitBulk(){
+  var rows=[];
+  document.querySelectorAll('.bulk-card').forEach(function(c){
+    var idx=c.id.replace('bulk-card-','');
+    var name=(E('b-name-'+idx)?.value||'').trim();
+    var login=(E('b-login-'+idx)?.value||'').trim();
+    var server=(E('b-server-'+idx)?.value||'').trim();
+    var pass=(E('b-pass-'+idx)?.value||'');
+    var plat=(E('b-plat-'+idx)?.value||'mt5');
+    var sal=parseInt(E('b-sal-'+idx)?.value)||3000;
+    if(name&&login&&server&&pass)rows.push({idx:idx,name:name,login:login,server:server,pass:pass,plat:plat,sal:sal})});
+  
+  if(!rows.length){alert('No valid rows to submit. Fill in name, login, server, and password.');return}
+  if(!confirm('Provision '+rows.length+' trader(s) on MetaAPI?\n\nThis will take roughly '+rows.length*15+' seconds.'))return;
+  
+  E('bulk-submit').disabled=true;E('bulk-submit').textContent='Provisioning...';
+  
+  var succeeded=0,failed=0;
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var statusEl=E('b-status-'+r.idx);
+    if(statusEl){statusEl.style.color='var(--accent)';statusEl.textContent='\u23f3 Provisioning...'}
+    E('bulk-progress').innerHTML='<span style="color:var(--accent)">Processing '+(i+1)+' of '+rows.length+': '+r.name+'</span>';
+    try{
+      var resp=await fetch('/api/metaapi?action=create-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:r.name,login:r.login,password:r.pass,server:r.server,platform:r.plat})});
+      var d=await resp.json();
+      if(!resp.ok||d.error){
+        if(statusEl){statusEl.style.color='var(--dn)';statusEl.textContent='\u2717 '+(d.error||'Failed').slice(0,40)}
+        failed++}
+      else{
+        if(statusEl){statusEl.style.color='var(--up)';statusEl.textContent='\u2713 Deployed'}
+        S.sal[d.id]={amt:r.sal,status:'active',cycle:30,paid:0,months:0,payments:[],start:new Date().toISOString().slice(0,10),split:50};
+        sS();
+        succeeded++}
+    }catch(e){
+      if(statusEl){statusEl.style.color='var(--dn)';statusEl.textContent='\u2717 '+e.message.slice(0,40)}
+      failed++}
+  }
+  
+  E('bulk-progress').innerHTML='<span style="color:'+(failed?'var(--warn)':'var(--up)')+'">Complete: '+succeeded+' succeeded, '+failed+' failed. '+(succeeded?'Reloading in 3s...':'')+'</span>';
+  E('bulk-submit').textContent='Done';
+  if(succeeded>0){setTimeout(function(){location.reload()},3000)}
+  else{E('bulk-submit').disabled=false;E('bulk-submit').textContent='Provision All'}
 }
 
 // ── SYSTEM ──
