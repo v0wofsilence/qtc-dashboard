@@ -1608,7 +1608,11 @@ function rAC(){
   var tradersAll=idsAll.map(function(id){
     var t=gt(id);if(!t)return null;
     var q=t.q||{};var b=t.l?.balance||0;
-    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),score:q.score||0,pending:q.pending,bal:b}
+    var ratios=calcRatios(q.dailyPnl||{},b);
+    var dp=q.dailyPnl||{};
+    var now=new Date();var g7=0,g14=0,g30=0;
+    Object.keys(dp).forEach(function(dt){var age=(now-new Date(dt))/(864e5);if(age<=7)g7+=dp[dt];if(age<=14)g14+=dp[dt];if(age<=30)g30+=dp[dt]});
+    return{id:id,name:t.a.name,pnl:q.pnl||0,wr:parseFloat(q.wr||0),sharpe:parseFloat(ratios.sharpe)||0,score:q.score||0,pending:q.pending,bal:b,g7:g7,g14:g14,g30:g30}
   }).filter(Boolean);
   var traders=ids.map(function(id){
     var t=gt(id);if(!t)return null;
